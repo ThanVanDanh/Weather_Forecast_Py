@@ -1,0 +1,283 @@
+/* === CÀI ĐẶT CHUNG === */
+:root {
+    --primary-green: #098d4b; /* Màu xanh lá cây chính (tương đối) */
+    --card-bg: #ffffff;
+    --text-primary: #212529;
+    --text-secondary: rgba(203, 203, 203, 0.94);
+    --page-bg: #f4f7f6;
+    --border-radius: 12px;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #ffffff;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+.current-img{
+    width: 90px;
+    height: 90px;
+}
+
+.container {
+    width: 100%;
+}
+
+.card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 10px 40px;
+    box-shadow: var(--shadow);
+}
+.weather-dashboard {
+    display: flex;
+    gap: 20px;
+    padding: 70px 70px;
+    background-image: url('../image/bg-home-lancapse.jpg');
+}
+.content-relative{
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+}
+
+/* THẺ HIỆN TẠI (TRÁI) */
+.current-weather-card {
+    flex: 2; /* Chiếm 2 phần */
+    margin-right: 20px;
+
+}
+.current-weather-card h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.current-main {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.current-temp {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.current-temp .weather-icon-large {
+    width: 80px;
+    height: 80px;
+    color: var(--text-secondary);
+}
+
+.current-temp span {
+    font-size: 4.5rem; /* 27° */
+    font-weight: 300;
+}
+
+.current-desc p {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+.current-desc span {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.weather-details {
+    display:flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.detail-item {
+    display: grid;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    grid-template-columns: 70px;
+    justify-items: center;
+    align-items: center;
+}
+
+ .detail-img {
+    width: 20px;
+    height: 20px;
+    color: var(--text-secondary);
+}
+
+.detail-item div {
+    color: var(--text-secondary);
+}
+
+.detail-item strong {
+    color: var(--text-primary);
+    margin-left: auto; /* Đẩy giá trị sang bên phải */
+    white-space: nowrap;
+}
+
+
+/* THẺ DỰ BÁO (PHẢI) */
+.forecast-cards {
+    flex: 3; /* Chiếm 3 phần */
+    display: flex;
+    gap: 20px;
+}
+
+.forecast-card {
+    flex: 1; /* Mỗi thẻ bằng nhau */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.forecast-card h3 {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+ .main-img{
+    width: 90px;
+    height: 90px;
+}
+/*.forecast-card*/
+.img-eyes {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+}
+.img-eyes span {
+    white-space: nowrap;
+    font-size: 14px;
+}
+.forecast-card p {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+.forecast-card span {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* === NỘI DUNG PHỤ (NỔI BẬT & BẢN ĐỒ) === */
+
+.secondary-content{
+    background-image: url('../image/bg0-home-2.jpg');
+    background-repeat: no-repeat;
+    /* Thêm các thuộc tính tùy chỉnh kích thước khác để ảnh hiển thị đúng */
+    /*background-size: cover;*/
+    background-size: 100% 50%;
+    background-position: center bottom;
+
+
+
+
+}
+.secondary-content .container{
+    width: 1200px;
+    margin: 50px auto;
+    display: grid;
+   grid-template-columns: 800px 400px;
+    gap: 20px;
+}
+.cities-wrapper{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+.city-card{
+    cursor: pointer;
+    border: 1px solid var(--text-secondary);
+}
+.card.city-card:hover{
+    border: 1px solid var(--primary-green);
+}
+
+.featured-cities h2,
+.windy-map h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.cities-wrapper {
+    display: flex;
+    gap: 30px;
+}
+
+.city-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    height: 220px;
+    padding-top: 5px;
+
+}
+
+.city-card h4 {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+
+.map-container {
+    width: 100%;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.map-container iframe {
+    border-radius: var(--border-radius);
+}
+
+/* === RESPONSIVE (Đơn giản) === */
+@media (max-width: 1200px) {
+    .weather-dashboard {
+        flex-direction: column;
+    }
+    .secondary-content {
+        grid-template-columns: 1fr;
+    }
+    .map-placeholder {
+        /* Điều chỉnh chiều cao cho phù hợp trên mobile */
+        height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .forecast-cards,
+    .cities-wrapper {
+        flex-direction: column;
+    }
+
+    .weather-details {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .main-nav, .header-left, .nav-location {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    .site-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
