@@ -1,0 +1,94 @@
+.site-header {
+    background-color: var(--primary-green);
+    color: white;
+    padding: 10px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 65px;
+
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo-icon {
+    width: 100px;
+    height: 100px;
+    /*border-radius: 32px ;*/
+}
+
+.search-bar {
+    display: flex;
+}
+
+.search-bar input {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 20px 0 0 20px;
+    min-width: 250px;
+}
+
+.search-bar button {
+    padding: 8px 12px;
+    border: none;
+    background: #f8f9fa;
+    border-radius: 0 20px 20px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.header-right {
+    font-size: 14px;
+}
+
+/* === NAV (THANH TRẮNG) === */
+.main-nav {
+    background: var(--card-bg);
+    padding: 10px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+
+
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 25px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--text-primary);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nav-links a:hover {
+    color: var(--primary-green);
+}
+
+.nav-location {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 14px;
+}
+
+.nav-location .location-link {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
