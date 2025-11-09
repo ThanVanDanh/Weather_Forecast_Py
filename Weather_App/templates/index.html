@@ -1,10 +1,176 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giao diện Thời tiết</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="../static/css/header.css">
+    <link rel="stylesheet" href="../static/css/footer.css">
+    <script src="../static/js/script.js"> </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
+<div id="header-placeholder"></div>
+    <main>
+        <section class="weather-dashboard">
+            <div class="content-relative">
+                <div class="card current-weather-card">
+                <h2>Thời tiết Đà Nẵng</h2>
+                <div class="current-main">
+                    <div class="current-temp">
+                        <img src="../static/image/mayden.png" alt="" class="current-img">
+                        <span>27°</span>
+                    </div>
+                    <div class="current-desc">
+                        <p>Mưa vừa</p>
+                        <span>Cảm giác như 30°</span>
+                    </div>
+                </div>
+                <div class="weather-details">
+                    <div class="detail-item">
+                        <img src="../static/image/icon-style-1-temp.svg" alt="" class="detail-img">
+                        <div class="detail-title">Thấp/Cao</div>
+                        <div class="detail-temp"><p>27°/27°</p></div>
+                    </div>
+                    <div class="detail-item">
+                        <img src="../static/image/icon-style-1-drop.svg" alt="" class="detail-img">
+                        <div class="detail-title">Độ ẩm</div>
+                        <div class="detail-temp"><p>88%</p></div>
+                    </div>
+                    <div class="detail-item">
+                        <img src="../static/image/icon-style-1-pressure.svg" alt="" class="detail-img">
+                        <div class="detail-title">Áp suất</div>
+                        <div class="detail-temp"><p>1008 hPa</p></div>
+                    </div>
+                    <div class="detail-item">
+                        <img src="../static/image/icon-style-1-eyes.svg" alt="" class="detail-img">
+                        <div class="detail-title">Tầm nhìn</div>
+                        <div class="detail-temp"><p>10km</p></div>
+                    </div>
+                    <div class="detail-item">
+                        <img src="../static/image/icon-style-1-windy.svg" alt="" class="detail-img">
+                        <div class="detail-title">Gió</div>
+                        <div class="detail-temp"><p>0.51kh/h</p></div>
+                    </div>
+                    <div class="detail-item">
+                        <img src="../static/image/icon-style-1-uv.svg" alt="" class="detail-img">
+                        <div class="detail-title">UV</div>
+                        <div class="detail-temp"><p>9.73</p></div>
+                    </div>
+                </div>
+            </div>
+            <div class="forecast-cards">
+                <div class="card forecast-card">
+                    <h3>Hôm nay</h3>
+                    <img class="main-img" src="../static/image/weather.png" alt="">
+                    <p class="img-eyes"><img class="detail-img" src="../static/image/icon-style-1-drop.svg" alt=""><span>89 %</span></p>
+                    <div class="status"><p>Mưa vừa</p></div>
+                    <div class="temp">26°/ 23°</div>
+                </div>
+                <div class="card forecast-card">
+                    <h3>T2 03/11</h3>
+                    <img class="main-img"  src="../static/image/weather.png" alt="">
+                    <p class="img-eyes"><img class="detail-img" src="../static/image/icon-style-1-drop.svg" alt=""><span>89 %</span></p>
+                    <div class="status"><p>Mưa vừa</p></div>
+                    <div class="temp">26°/ 23°</div>
+                </div>
+                <div class="card forecast-card">
+                    <h3>T3 04/11</h3>
+                    <img class="main-img" src="../static/image/weather.png" alt="">
+                    <p class="img-eyes"> <img class="detail-img" src="../static/image/icon-style-1-drop.svg" alt=""><span>89 %</span></p>
+                    <div class="status"><p>Mưa vừa</p></div>
+                    <div class="temp">26°/ 23°</div>
+                </div>
+            </div>
 
+            </div>
+        </section>
+        <section class="secondary-content">
+            <div class="container">
+                <div class="featured-cities">
+                <h2>Thời tiết nổi bật</h2>
+                <div class="cities-wrapper">
+                    <div class="card city-card">
+                        <div class="main-title">Hà Nội</div>
+                        <img src="../static/image/mayden.png" alt="" class="main-img">
+                        <p class="img-eyes"><img class="detail-img" src="../static/image/icon-style-1-drop.svg" alt=""><span>89 %</span></p>
+                        <div class="status"><p>Mưa vừa</p></div>
+                        <div class="temp">26°/ 23°</div>
+                    </div>
+                    <div class="card city-card">
+                        <div class="main-title">Hà Nội</div>
+                        <img src="../static/image/mayden.png" alt="" class="main-img">
+                        <p class="img-eyes"><img class="detail-img" src="../static/image/icon-style-1-drop.svg" alt=""><span>89 %</span></p>
+                        <div class="status"><p>Mưa vừa</p></div>
+                        <div class="temp">26°/ 23°</div>
+                    </div>
+                    <div class="card city-card">
+                        <div class="main-title">Hà Nội</div>
+                        <img src="../static/image/mayden.png" alt="" class="main-img">
+                        <p class="img-eyes"><img class="detail-img" src="../static/image/icon-style-1-drop.svg" alt=""><span>89 %</span></p>
+                        <div class="status"><p>Mưa vừa</p></div>
+                        <div class="temp">26°/ 23°</div>
+                    </div>
+                </div>
+                <div class="cities-wrapper">
+                    <div class="card city-card">
+                        <div class="main-title">Hà Nội</div>
+                        <img src="../static/image/mayden.png" alt="" class="main-img">
+                        <p class="img-eyes"><img class="detail-img" src="../static/image/icon-style-1-drop.svg" alt=""><span>89 %</span></p>
+                        <div class="status"><p>Mưa vừa</p></div>
+                        <div class="temp">26°/ 23°</div>
+                    </div>
+                    <div class="card city-card">
+                        <div class="main-title">Hà Nội</div>
+                        <img src="../static/image/mayden.png" alt="" class="main-img">
+                        <p class="img-eyes"><img class="detail-img" src="../static/image/icon-style-1-drop.svg" alt=""><span>89 %</span></p>
+                        <div class="status"><p>Mưa vừa</p></div>
+                        <div class="temp">26°/ 23°</div>
+                    </div>
+                    <div class="card city-card">
+                        <div class="main-title">Hà Nội</div>
+                        <img src="../static/image/mayden.png" alt="" class="main-img">
+                        <p class="img-eyes"><img class="detail-img" src="../static/image/icon-style-1-drop.svg" alt=""><span>89 %</span></p>
+                        <div class="status"><p>Mưa vừa</p></div>
+                        <div class="temp">26°/ 23°</div>
+                    </div>
+                </div>
+                <div class="cities-wrapper">
+                    <div class="card city-card">
+                        <div class="main-title">Hà Nội</div>
+                        <img src="../static/image/mayden.png" alt="" class="main-img">
+                        <p class="img-eyes"><img class="detail-img" src="../static/image/icon-style-1-drop.svg" alt=""><span>89 %</span></p>
+                        <div class="status"><p>Mưa vừa</p></div>
+                        <div class="temp">26°/ 23°</div>
+                    </div>
+                    <div class="card city-card">
+                        <div class="main-title">Hà Nội</div>
+                        <img src="../static/image/mayden.png" alt="" class="main-img">
+                        <p class="img-eyes"><img class="detail-img" src="../static/image/icon-style-1-drop.svg" alt=""><span>89 %</span></p>
+                        <div class="status"><p>Mưa vừa</p></div>
+                        <div class="temp">26°/ 23°</div>
+                    </div>
+                    <div class="card city-card">
+                        <div class="main-title">Hà Nội</div>
+                        <img src="../static/image/mayden.png" alt="" class="main-img">
+                        <p class="img-eyes"><img class="detail-img" src="../static/image/icon-style-1-drop.svg" alt=""><span>89 %</span></p>
+                        <div class="status"><p>Mưa vừa</p></div>
+                        <div class="temp">26°/ 23°</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="windy-map">
+                <h2>Bản đồ thời tiết Windy</h2>
+                <div class="map-container">
+                    <iframe width="650" height="450" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricTemperature=°C&metricRain=mm&metricWind=km/h&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=16.0544&lon=108.2021&detailLat=16.0544&detailLon=108.2021" frameborder="0"></iframe>
+
+                </div>
+            </div>
+            </div>
+        </section>
+    </main>
+<div id="footer-placeholder"></div>
 </body>
 </html>
