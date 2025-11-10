@@ -15,11 +15,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-
-from Weather_App.views import index
-
+from django.urls import path, include
+from Weather_App import views as weather_views  # Import view render trang
 urlpatterns = [
-    # path('admin/', admin.site.urls),
-    path('', index),
+    path('admin/', admin.site.urls),
+
+    # 1. Đường dẫn trang chủ (trang dashboard)
+    path('', weather_views.weather_dashboard, name='home'),
+
+    # 2. Đường dẫn cho tất cả API
+    path('api/weather/', include('Weather_App.urls', namespace='weather_api')),
 ]
