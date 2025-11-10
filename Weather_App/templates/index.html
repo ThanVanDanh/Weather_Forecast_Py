@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -11,52 +12,52 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
-<div id="header-placeholder"></div>
-    <main>
+{% include 'header.html' %}
+<main>
         <section class="weather-dashboard">
             <div class="content-relative">
                 <div class="card current-weather-card">
-                <h2>Thời tiết Đà Nẵng</h2>
+                <h2 id="current-city-name">Đang tải...</h2>
                 <div class="current-main">
                     <div class="current-temp">
-                        <img src="../static/image/mayden.png" alt="" class="current-img">
-                        <span>27°</span>
+                        <img src="{% static 'image/mayden.png' %}" alt="" class="current-img" id="current-icon">
+                        <span id="current-temp">--°</span>
                     </div>
                     <div class="current-desc">
-                        <p>Mưa vừa</p>
-                        <span>Cảm giác như 30°</span>
+                        <p id="current-description">--</p>
+                        <span id="current-feels-like">Cảm giác như --°</span>
                     </div>
                 </div>
                 <div class="weather-details">
                     <div class="detail-item">
-                        <img src="../static/image/icon-style-1-temp.svg" alt="" class="detail-img">
+                        <img src="{% static 'image/icon-style-1-temp.svg' %}" alt="" class="detail-img">
                         <div class="detail-title">Thấp/Cao</div>
-                        <div class="detail-temp"><p>27°/27°</p></div>
+                        <div class="detail-temp"><p id="current-temp-minmax">--°/--°</p></div>
                     </div>
                     <div class="detail-item">
-                        <img src="../static/image/icon-style-1-drop.svg" alt="" class="detail-img">
+                        <img src="{% static 'image/icon-style-1-drop.svg' %}" alt="" class="detail-img">
                         <div class="detail-title">Độ ẩm</div>
-                        <div class="detail-temp"><p>88%</p></div>
+                        <div class="detail-temp"><p id="current-humidity">--%</p></div>
                     </div>
                     <div class="detail-item">
-                        <img src="../static/image/icon-style-1-pressure.svg" alt="" class="detail-img">
+                        <img src="{% static 'image/icon-style-1-pressure.svg' %}" alt="" class="detail-img">
                         <div class="detail-title">Áp suất</div>
-                        <div class="detail-temp"><p>1008 hPa</p></div>
+                        <div class="detail-temp"><p id="current-pressure">-- hPa</p></div>
                     </div>
                     <div class="detail-item">
-                        <img src="../static/image/icon-style-1-eyes.svg" alt="" class="detail-img">
+                        <img src="{% static 'image/icon-style-1-eyes.svg' %}" alt="" class="detail-img">
                         <div class="detail-title">Tầm nhìn</div>
-                        <div class="detail-temp"><p>10km</p></div>
+                        <div class="detail-temp"><p id="current-visibility">-- km</p></div>
                     </div>
                     <div class="detail-item">
-                        <img src="../static/image/icon-style-1-windy.svg" alt="" class="detail-img">
+                        <img src="{% static 'image/icon-style-1-windy.svg' %}" alt="" class="detail-img">
                         <div class="detail-title">Gió</div>
-                        <div class="detail-temp"><p>0.51kh/h</p></div>
+                        <div class="detail-temp"><p id="current-wind">-- kh/h</p></div>
                     </div>
                     <div class="detail-item">
-                        <img src="../static/image/icon-style-1-uv.svg" alt="" class="detail-img">
+                        <img src="{% static 'image/icon-style-1-uv.svg' %}" alt="" class="detail-img">
                         <div class="detail-title">UV</div>
-                        <div class="detail-temp"><p>9.73</p></div>
+                        <div class="detail-temp"><p id="current-uvi">--</p></div>
                     </div>
                 </div>
             </div>
@@ -171,6 +172,6 @@
             </div>
         </section>
     </main>
-<div id="footer-placeholder"></div>
+{% include 'footer.html' %}
 </body>
 </html>
