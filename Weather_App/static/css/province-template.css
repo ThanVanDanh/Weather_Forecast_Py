@@ -1,0 +1,926 @@
+/*.breadcrumb-bar {*/
+/*    background: #e0ece9;*/
+/*    padding: 10px 5%;*/
+/*}*/
+/*.weather-forecast{*/
+/*	background: var(--primary-green);*/
+/*	padding: 10px 100px;*/
+/*}*/
+/*.timeframe-tabs {*/
+/*    padding: 10px;*/
+/*}*/
+
+/*.timeframe-tabs ul {*/
+/*    display: flex;*/
+/*    list-style: none;*/
+/*	justify-content: space-between;*/
+/*	width: 800px;*/
+/*    gap: 15px;*/
+/*    padding: 0;*/
+/*}*/
+
+/*.timeframe-tabs li a{*/
+/*	display: flex;*/
+/*	text-decoration: none;*/
+/*	align-items: center;*/
+/*	text-align: center;*/
+/*	color: #212529;*/
+/*	padding: 8px 10px;*/
+/*	background: #ffffff;*/
+/*	border-radius: 10px;*/
+/*	border: 1px solid rgba(0, 121, 107, 0.38);*/
+/*}*/
+/*.weather-forecast-content{*/
+/*	display: flex;*/
+/*	flex-direction: row;*/
+/*	gap: 30px;*/
+/*	padding: 10px;*/
+/*}*/
+/*.current-main{*/
+/*	display: flex;*/
+/*	flex-direction: row;*/
+/*	padding: 20px;*/
+/*}*/
+/*.current-main span{*/
+/*	font-size: 35px;*/
+/*	font-weight: 500;*/
+/*	letter-spacing: -1px;*/
+/*}*/
+/*.current-main p{*/
+/*	color: #00796b;*/
+/*}*/
+/*.current-weather-card .current-main i {*/
+/*    font-size: 80px;*/
+/*    color: #8dc4e1;*/
+/*    margin-right: 20px;*/
+/*}*/
+/*.weather-details-grid{*/
+/*	display: flex;*/
+/*	flex-direction: row;*/
+/*	justify-content: space-between;*/
+/*	padding: 10px;*/
+/*	gap: 10px;*/
+/*}*/
+/*.weather-details-grid .weather-item{*/
+/*	display: flex;*/
+/*	flex-direction: column;*/
+/*}*/
+/*.card.temperature-by-time-card{*/
+/*	width: auto;*/
+/*}*/
+/*.temp-by-time-grid{*/
+/*	display: flex;*/
+/*	flex-direction: row;*/
+/*	padding: 10px;*/
+/*}*/
+/*.temp-item{*/
+/*	display: flex;*/
+/*	flex-direction: column;*/
+/*	align-items: center;*/
+/*	padding: 10px;*/
+/*}*/
+
+/*.weather-main-column {*/
+/*    !* Cột trái *!*/
+/*}*/
+
+/*.weather-sidebar-column {*/
+/*    !* Cột phải *!*/
+/*}*/
+
+/*.current-dashboard {*/
+/*    display: flex;*/
+/*    gap: 20px;*/
+/*}*/
+
+/*.current-weather-card {*/
+/*    flex: 1;*/
+/*}*/
+
+/*.temperature-by-time-card {*/
+/*    flex: 1;*/
+/*}*/
+
+/*footer {*/
+/*    background: #333;*/
+/*    color: white;*/
+/*    padding: 30px 5%;*/
+/*    text-align: center;*/
+/*}*/
+/*.card {*/
+/*	background-color: #ffffff;*/
+/*	border-radius: 16px;*/
+/*	padding: 24px;*/
+/*	margin-bottom: 20px;*/
+/*	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);*/
+/*	border: none;*/
+/*}*/
+/*        */
+/*        !* --- Bố cục chính --- *!*/
+/*        .container-province {*/
+/*            max-width: 1400px;*/
+/*            margin: 0 auto;*/
+/*        }*/
+
+/*        .content-province-wrapper {*/
+/*            display: grid;*/
+/*            grid-template-columns: 1fr 360px; !* Cột chính và cột bên *!*/
+/*            gap: 20px;*/
+/*            padding: 20px;*/
+/*        }*/
+
+/*        !* --- Cột bên --- *!*/
+/*        .weather-sidebar-column {*/
+/*            grid-column: 2 / 3;*/
+/*        }*/
+
+/*        !* --- Cột chính --- *!*/
+/*        .weather-main-column {*/
+/*            grid-column: 1 / 2;*/
+/*            grid-row: 2 / 3; !* Đẩy xuống dưới 2 thẻ đầu tiên *!*/
+/*        }*/
+/*        */
+/*        !* --- Phần Thời tiết Hiện tại (Hàng đầu) --- *!*/
+/*        .weather-forecast {*/
+/*            grid-column: 1 / 3; !* Trải dài cả 2 cột *!*/
+/*            grid-row: 1 / 2;*/
+/*        }*/
+
+/*        .weather-forecast-content {*/
+/*            display: grid;*/
+/*            grid-template-columns: 1fr 1fr;*/
+/*            gap: 20px;*/
+/*        }*/
+
+/*        !* Tabs (Hiện tại, theo giờ...) *!*/
+/*        .timeframe-tabs ul {*/
+/*            display: flex;*/
+/*            list-style: none;*/
+/*            padding: 5px;*/
+/*            margin: 0 0 15px 0;*/
+/*            background: #fff;*/
+/*            border-radius: 30px;*/
+/*            display: inline-flex;*/
+/*            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);*/
+/*        }*/
+/*        .timeframe-tabs li {*/
+/*            margin: 0;*/
+/*        }*/
+/*        .timeframe-tabs li a {*/
+/*            padding: 10px 20px;*/
+/*            text-decoration: none;*/
+/*            color: #555;*/
+/*            border-radius: 30px;*/
+/*            font-weight: 500;*/
+/*            display: block;*/
+/*        }*/
+/*        .timeframe-tabs li a.active {*/
+/*            background-color: #e0f0e9;*/
+/*            color: #008a4c;*/
+/*            font-weight: 700;*/
+/*        }*/
+
+/*        !* Thẻ thời tiết hiện tại *!*/
+/*        .current-weather-card .current-main {*/
+/*            display: flex;*/
+/*            align-items: center;*/
+/*            gap: 15px;*/
+/*            margin-bottom: 20px;*/
+/*        }*/
+/*        .current-weather-card .current-main span:first-child {*/
+/*            font-size: 3.5rem; !* Kích thước icon *!*/
+/*            color: #f09819; !* Màu icon (ví dụ) *!*/
+/*        }*/
+/*        .current-weather-card .current-main span:nth-child(2) {*/
+/*            font-size: 3.5rem;*/
+/*            font-weight: 700;*/
+/*            line-height: 1;*/
+/*        }*/
+/*        .current-weather-card .current-main div {*/
+/*            line-height: 1.4;*/
+/*        }*/
+/*        .current-weather-card .current-main div span {*/
+/*            font-size: 1.1rem;*/
+/*            font-weight: 600;*/
+/*        }*/
+/*        .current-weather-card .current-main div p {*/
+/*            font-size: 0.9rem;*/
+/*            color: #555;*/
+/*            margin: 0;*/
+/*        }*/
+/*        .weather-details-grid {*/
+/*            display: grid;*/
+/*            grid-template-columns: 1fr 1fr;*/
+/*            gap: 12px;*/
+/*            font-size: 0.95rem;*/
+/*        }*/
+/*        .weather-item {*/
+/*            color: #444;*/
+/*        }*/
+/*        .weather-item i {*/
+/*            margin-right: 8px;*/
+/*            color: #007bff;*/
+/*        }*/
+/*        */
+/*        !* Thẻ nhiệt độ (Ngày/Đêm/Sáng/Tối) *!*/
+/*        .temp-by-time-grid {*/
+/*            display: grid;*/
+/*            grid-template-columns: repeat(4, 1fr);*/
+/*            gap: 15px;*/
+/*        }*/
+/*        .temp-item {*/
+/*            display: flex;*/
+/*            flex-direction: column;*/
+/*            align-items: center;*/
+/*            text-align: center;*/
+/*            background: #f9f9f9;*/
+/*            padding: 15px 10px;*/
+/*            border-radius: 12px;*/
+/*        }*/
+/*        .temp-item p {*/
+/*            font-weight: 600;*/
+/*            margin: 0 0 10px 0;*/
+/*        }*/
+/*        .temp-item img {*/
+/*            width: 50px;*/
+/*            height: 50px;*/
+/*            margin-bottom: 10px;*/
+/*        }*/
+/*        .temp-item strong {*/
+/*            font-size: 1rem;*/
+/*        }*/
+
+/*        !* --- CỘT CHÍNH (Bên trái) --- *!*/
+
+/*        !* Dự báo theo giờ *!*/
+/*        .hourly-scroll-container {*/
+/*            display: flex;*/
+/*            overflow-x: auto;*/
+/*            gap: 15px;*/
+/*            padding-bottom: 10px; !* Cho thanh cuộn *!*/
+/*        }*/
+/*        .hourly-item {*/
+/*            flex: 0 0 90px; !* Không co, không giãn, rộng 90px *!*/
+/*            display: flex;*/
+/*            flex-direction: column;*/
+/*            align-items: center;*/
+/*            text-align: center;*/
+/*            background: #f9f9f9;*/
+/*            padding: 15px 10px;*/
+/*            border-radius: 12px;*/
+/*            font-size: 0.9rem;*/
+/*        }*/
+/*        .hourly-item p {*/
+/*            margin: 0;*/
+/*        }*/
+/*        .hourly-item p:first-child {*/
+/*            font-weight: 600;*/
+/*            margin-bottom: 10px;*/
+/*        }*/
+/*        .hourly-item img {*/
+/*            width: 40px;*/
+/*            height: 40px;*/
+/*            margin-bottom: 10px;*/
+/*        }*/
+/*        .hourly-item p:nth-of-type(2) {*/
+/*            font-weight: 600;*/
+/*            font-size: 1rem;*/
+/*            margin-bottom: 10px;*/
+/*        }*/
+/*        .hourly-item span {*/
+/*            color: #007bff;*/
+/*            font-weight: 500;*/
+/*            margin-bottom: 5px;*/
+/*        }*/
+
+/*        !* Biểu đồ *!*/
+/*        .chart-card canvas {*/
+/*            width: 100% !important;*/
+/*            height: 300px; !* Chiều cao ví dụ *!*/
+/*        }*/
+
+/*        !* Dự báo hàng ngày *!*/
+/*        .forecast-item {*/
+/*            display: grid;*/
+/*            grid-template-columns: 1.2fr 1fr 1.5fr 0.8fr 1.2fr;*/
+/*            align-items: center;*/
+/*            padding: 12px 0;*/
+/*            border-bottom: 1px solid #eee;*/
+/*            font-size: 0.95rem;*/
+/*        }*/
+/*        .forecast-item:last-child {*/
+/*            border-bottom: none;*/
+/*        }*/
+/*        .forecast-item strong {*/
+/*            font-weight: 600;*/
+/*            font-size: 1rem;*/
+/*        }*/
+/*        .forecast-item img {*/
+/*            width: 40px;*/
+/*            height: 40px;*/
+/*            justify-self: center;*/
+/*        }*/
+/*        .forecast-item span {*/
+/*            color: #333;*/
+/*        }*/
+/*        .forecast-item span i {*/
+/*            color: #007bff;*/
+/*            margin-right: 5px;*/
+/*        }*/
+/*        */
+/*        !* Nút (3 ngày, 5 ngày...) *!*/
+/*        .forecast-tabs-bottom {*/
+/*            display: flex;*/
+/*            gap: 10px;*/
+/*            margin-top: 20px;*/
+/*            flex-wrap: wrap;*/
+/*        }*/
+/*        .forecast-tabs-bottom button {*/
+/*            background: #e0f0e9;*/
+/*            border: 1px solid #b6dccb;*/
+/*            color: #008a4c;*/
+/*            padding: 8px 16px;*/
+/*            border-radius: 20px;*/
+/*            cursor: pointer;*/
+/*            font-weight: 500;*/
+/*            transition: background-color 0.2s;*/
+/*        }*/
+/*        .forecast-tabs-bottom button:hover {*/
+/*            background-color: #b6dccb;*/
+/*        }*/
+
+/*        !* Địa điểm khác *!*/
+/*        .locations-grid {*/
+/*            display: grid;*/
+/*            grid-template-columns: 1fr 1fr 1fr;*/
+/*            gap: 12px;*/
+/*        }*/
+/*        .locations-grid a {*/
+/*            text-decoration: none;*/
+/*            color: #007bff;*/
+/*            background: #f0f7ff;*/
+/*            padding: 12px 15px;*/
+/*            border-radius: 8px;*/
+/*            font-weight: 500;*/
+/*            transition: background-color 0.2s;*/
+/*        }*/
+/*        .locations-grid a:hover {*/
+/*            background-color: #ddeeff;*/
+/*        }*/
+/*        .locations-grid a i {*/
+/*            margin-right: 8px;*/
+/*        }*/
+
+/*        !* --- CỘT BÊN (Bên phải) --- *!*/
+/*        */
+/*        !* Bình minh / Hoàng hôn *!*/
+/*        .sunrise-sunset-card .sunrise-sunset-content {*/
+/*            display: flex;*/
+/*            justify-content: space-between;*/
+/*            align-items: center;*/
+/*            background: linear-gradient(to right, #ffc107, #ff9800); !* Giả lập ảnh nền *!*/
+/*            color: white;*/
+/*            padding: 20px 30px;*/
+/*            border-radius: 12px;*/
+/*            text-align: center;*/
+/*            font-size: 1.5rem;*/
+/*            font-weight: 700;*/
+/*            !* Thêm ảnh nền nếu có *!*/
+/*            !* background: url('path/to/sunrise-image.png') no-repeat center center; *!*/
+/*            !* background-size: cover; *!*/
+/*        }*/
+
+/*        !* Chất lượng không khí (AQI) *!*/
+/*        .aqi-card .aqi-main {*/
+/*            display: flex;*/
+/*            gap: 15px;*/
+/*            align-items: center;*/
+/*            margin-bottom: 20px;*/
+/*        }*/
+/*        .aqi-gauge {*/
+/*            flex-shrink: 0;*/
+/*            width: 90px;*/
+/*            height: 90px;*/
+/*            border-radius: 50%;*/
+/*            background: #a5d6a7; !* Màu xanh lá "Bình thường" *!*/
+/*            display: flex;*/
+/*            align-items: center;*/
+/*            justify-content: center;*/
+/*            text-align: center;*/
+/*            font-weight: 700;*/
+/*            color: #1b5e20;*/
+/*            font-size: 1.1rem;*/
+/*            padding: 10px;*/
+/*            border: 5px solid #dceddd;*/
+/*        }*/
+/*        .aqi-main p {*/
+/*            font-size: 0.9rem;*/
+/*            color: #555;*/
+/*            line-height: 1.5;*/
+/*        }*/
+/*        .aqi-details-grid {*/
+/*            display: grid;*/
+/*            grid-template-columns: 1fr 1fr 1fr;*/
+/*            gap: 10px;*/
+/*            font-size: 0.9rem;*/
+/*        }*/
+/*        .aqi-details-grid div {*/
+/*            background: #f9f9f9;*/
+/*            padding: 8px;*/
+/*            border-radius: 6px;*/
+/*            text-align: center;*/
+/*        }*/
+/*        .aqi-details-grid div strong {*/
+/*            display: block;*/
+/*            font-size: 1rem;*/
+/*            color: #000;*/
+/*        }*/
+
+/*        !* Bản đồ Windy *!*/
+/*        .windy-map-card .map-container {*/
+/*            overflow: hidden;*/
+/*            border-radius: 12px;*/
+/*            border: 1px solid #ddd;*/
+/*        }*/
+/*        .windy-map-card iframe {*/
+/*            border: none;*/
+/*            width: 100%;*/
+/*            height: 400px;*/
+/*            display: block;*/
+/*        }*/
+
+/*        !* --- Tính tương thích (Responsive) --- *!*/
+/*        @media (max-width: 1200px) {*/
+/*            .content-province-wrapper {*/
+/*                grid-template-columns: 1fr 320px; !* Thu nhỏ cột bên *!*/
+/*            }*/
+/*            .locations-grid {*/
+/*                grid-template-columns: 1fr 1fr;*/
+/*            }*/
+/*        }*/
+
+/*        @media (max-width: 992px) {*/
+/*            .content-province-wrapper {*/
+/*                grid-template-columns: 1fr; !* 1 cột duy nhất *!*/
+/*                padding: 10px;*/
+/*            }*/
+/*            !* Đảo ngược thứ tự: Hiển thị Cột bên (Sidebar) TRƯỚC Cột chính (Main) *!*/
+/*            .weather-sidebar-column {*/
+/*                grid-column: 1 / 2;*/
+/*                grid-row: 2 / 3;*/
+/*            }*/
+/*            .weather-main-column {*/
+/*                grid-column: 1 / 2;*/
+/*                grid-row: 3 / 4; !* Đẩy xuống dưới cột bên *!*/
+/*            }*/
+/*            .weather-forecast {*/
+/*                grid-column: 1 / 2;*/
+/*                grid-row: 1 / 2;*/
+/*            }*/
+/*            .weather-forecast-content {*/
+/*                grid-template-columns: 1fr; !* Xếp chồng 2 thẻ thời tiết đầu *!*/
+/*            }*/
+/*            .temp-by-time-grid {*/
+/*                 grid-template-columns: 1fr 1fr; !* Chỉ 2 cột trên di động *!*/
+/*            }*/
+/*        }*/
+/*        */
+/*        @media (max-width: 576px) {*/
+/*            .locations-grid {*/
+/*                grid-template-columns: 1fr; !* 1 cột trên điện thoại nhỏ *!*/
+/*            }*/
+/*            .aqi-details-grid {*/
+/*                grid-template-columns: 1fr 1fr; !* 2 cột AQI *!*/
+/*            }*/
+/*            .timeframe-tabs ul {*/
+/*                display: block; !* Xếp chồng các tab nếu cần *!*/
+/*                border-radius: 12px;*/
+/*            }*/
+/*            .timeframe-tabs li a {*/
+/*                border-radius: 10px;*/
+/*            }*/
+/*        }*/
+/* === CÀI ĐẶT CHUNG CỦA TRANG === */
+.container-province {
+    max-width: 1400px;
+    margin: 0 auto;
+    background-color: var(--page-bg); /* Sử dụng màu nền chung từ style.css */
+}
+
+/* === BỐ CỤC GRID CHÍNH === */
+.content-province-wrapper {
+    display: grid;
+    /* Cột chính 1fr, cột bên 360px */
+    grid-template-columns: 1fr 360px;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* Cột bên phải (sidebar) */
+.weather-sidebar-column {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3; /* Đảm bảo nó ở hàng thứ 2 */
+}
+
+/* Cột chính (main content) */
+.weather-main-column {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3; /* Đảm bảo nó ở hàng thứ 2 */
+}
+
+/* === KHỐI DỰ BÁO TOP (TRẢI DÀI) === */
+.weather-forecast {
+    grid-column: 1 / 3; /* Trải dài cả 2 cột */
+    grid-row: 1 / 2;    /* Nằm ở hàng đầu tiên */
+    background: var(--primary-green); /* Dùng màu xanh lá chính */
+    padding: 24px;
+    border-radius: var(--border-radius); /* Dùng bo góc chung */
+    box-shadow: var(--shadow); /* Dùng bóng đổ chung */
+}
+
+.weather-forecast-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Tabs (Hiện tại, theo giờ...) */
+.timeframe-tabs ul {
+    display: flex;
+    list-style: none;
+    padding: 5px;
+    margin: 0 0 15px 0;
+    background: var(--card-bg); /* Dùng màu nền card */
+    border-radius: 30px;
+    display: inline-flex;
+    box-shadow: var(--shadow);
+}
+.timeframe-tabs li {
+    margin: 0;
+}
+.timeframe-tabs li a {
+    padding: 10px 20px;
+    text-decoration: none;
+    color: var(--text-primary); /* Dùng màu chữ chính */
+    border-radius: 30px;
+    font-weight: 500;
+    display: block;
+}
+.timeframe-tabs li a.active {
+    /* Các màu này đặc trưng cho component, có thể giữ lại */
+    background-color: #e0f0e9;
+    color: var(--primary-green); /* Dùng màu xanh lá chính */
+    font-weight: 700;
+}
+
+/* Thẻ thời tiết hiện tại (Bên trong khối .weather-forecast) */
+/* (Bootstrap .card đã xử lý nền, bo góc, bóng đổ) */
+.current-weather-card .current-main {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.current-weather-card .current-main span:first-child {
+    font-size: 3.5rem;
+    color: #f09819; /* Màu icon (ví dụ: mặt trời) */
+}
+.current-weather-card .current-main span:nth-child(2) {
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-primary);
+}
+.current-weather-card .current-main div {
+    line-height: 1.4;
+}
+.current-weather-card .current-main div span {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.current-weather-card .current-main div p {
+    font-size: 0.9rem;
+    color: #555; /* Màu chữ phụ */
+    margin: 0;
+}
+.weather-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    font-size: 0.95rem;
+}
+.weather-item {
+    color: #444;
+}
+.weather-item i {
+    margin-right: 8px;
+    color: var(--primary-green); /* Đồng bộ màu icon với theme */
+}
+
+/* Thẻ nhiệt độ (Ngày/Đêm/Sáng/Tối) */
+.temp-by-time-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+.temp-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: var(--page-bg); /* Dùng màu nền trang cho các khối con */
+    padding: 15px 10px;
+    border-radius: var(--border-radius);
+}
+.temp-item p {
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: var(--text-primary);
+}
+.temp-item img {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 10px;
+}
+.temp-item strong {
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+/* --- CỘT CHÍNH (Bên trái) --- */
+
+/* Dự báo theo giờ */
+.hourly-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 15px;
+    padding-bottom: 10px; /* Cho thanh cuộn */
+}
+.hourly-item {
+    flex: 0 0 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: var(--page-bg); /* Dùng màu nền trang */
+    padding: 15px 10px;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+}
+.hourly-item p {
+    margin: 0;
+    color: var(--text-primary);
+}
+.hourly-item p:first-child {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+.hourly-item img {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 10px;
+}
+.hourly-item p:nth-of-type(2) {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+.hourly-item span {
+    color: var(--primary-green); /* Đồng bộ màu icon */
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+/* Biểu đồ */
+.chart-card canvas {
+    width: 100% !important;
+    height: 300px;
+}
+
+/* Dự báo hàng ngày */
+.forecast-item {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr 1.5fr 0.8fr 1.2fr;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 0.95rem;
+}
+.forecast-item:last-child {
+    border-bottom: none;
+}
+.forecast-item strong {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+.forecast-item img {
+    width: 40px;
+    height: 40px;
+    justify-self: center;
+}
+.forecast-item span {
+    color: #333;
+}
+.forecast-item span i {
+    color: var(--primary-green); /* Đồng bộ màu icon */
+    margin-right: 5px;
+}
+
+/* Nút (3 ngày, 5 ngày...) */
+.forecast-tabs-bottom {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+.forecast-tabs-bottom button {
+    background: #e0f0e9; /* Màu xanh lá nhạt */
+    border: 1px solid #b6dccb;
+    color: var(--primary-green); /* Dùng màu xanh lá chính */
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.forecast-tabs-bottom button:hover {
+    background-color: #b6dccb;
+}
+
+/* Địa điểm khác */
+.locations-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+}
+.locations-grid a {
+    text-decoration: none;
+    color: var(--primary-green); /* Dùng màu xanh lá chính */
+    background: #e0f0e9; /* Dùng màu xanh lá nhạt */
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.locations-grid a:hover {
+    background-color: #b6dccb; /* Màu xanh lá đậm hơn khi hover */
+}
+.locations-grid a i {
+    margin-right: 8px;
+}
+
+/* --- CỘT BÊN (Bên phải) --- */
+
+/* Bình minh / Hoàng hôn */
+.sunrise-sunset-card .sunrise-sunset-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Giữ gradient này vì nó đặc trưng cho mặt trời */
+    background: linear-gradient(to right, #ffc107, #ff9800);
+    color: white;
+    padding: 20px 30px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Chất lượng không khí (AQI) */
+.aqi-card .aqi-main {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.aqi-gauge {
+    flex-shrink: 0;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    /* Các màu này là data-driven (tùy theo chỉ số) nên giữ lại */
+    background: #a5d6a7;
+    color: #1b5e20;
+    border: 5px solid #dceddd;
+    /* --- */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 10px;
+}
+.aqi-main p {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.5;
+}
+.aqi-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+.aqi-details-grid div {
+    background: var(--page-bg); /* Dùng màu nền trang */
+    padding: 8px;
+    border-radius: 6px;
+    text-align: center;
+}
+.aqi-details-grid div strong {
+    display: block;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+/* Bản đồ Windy */
+.windy-map-card .map-container {
+    overflow: hidden;
+    border-radius: var(--border-radius);
+    border: 1px solid #ddd;
+}
+.windy-map-card iframe {
+    border: none;
+    width: 100%;
+    height: 400px;
+    display: block;
+}
+
+/* --- TÍNH TƯƠNG THÍCH (RESPONSIVE) --- */
+/* (Giữ nguyên từ file brouillon vì đã tối ưu cho layout) */
+
+@media (max-width: 1200px) {
+    .content-province-wrapper {
+        grid-template-columns: 1fr 320px;
+    }
+    .locations-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 992px) {
+    .content-province-wrapper {
+        grid-template-columns: 1fr; /* 1 cột duy nhất */
+        padding: 10px;
+    }
+    /* Đảo ngược thứ tự: Hiển thị Cột bên (Sidebar) LÊN TRÊN Cột chính (Main) */
+    .weather-sidebar-column {
+        grid-column: 1 / 2;
+        grid-row: 2 / 3;
+    }
+    .weather-main-column {
+        grid-column: 1 / 2;
+        grid-row: 3 / 4; /* Đẩy xuống dưới cột bên */
+    }
+    .weather-forecast {
+        grid-column: 1 / 2;
+        grid-row: 1 / 2;
+    }
+    .weather-forecast-content {
+        grid-template-columns: 1fr; /* Xếp chồng 2 thẻ thời tiết đầu */
+    }
+    .temp-by-time-grid {
+         grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Điều chỉnh lại grid dự báo hàng ngày cho hẹp hơn */
+    .forecast-item {
+        grid-template-columns: 1.5fr 1fr 1fr;
+        gap: 10px;
+        grid-template-areas:
+            "day temp icon"
+            "day status humidity"
+            "day wind wind";
+        padding-bottom: 15px;
+    }
+    .forecast-item strong { grid-area: day; }
+    .forecast-item span:nth-of-type(1) { grid-area: temp; }
+    .forecast-item img { grid-area: icon; }
+    .forecast-item span:nth-of-type(2) { grid-area: status; }
+    .forecast-item span:nth-of-type(3) { grid-area: humidity; }
+    .forecast-item span:nth-of-type(4) { grid-area: wind; }
+}
+
+@media (max-width: 576px) {
+    .locations-grid {
+        grid-template-columns: 1fr;
+    }
+    .aqi-details-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .timeframe-tabs ul {
+        display: block;
+        border-radius: 12px;
+    }
+    .timeframe-tabs li {
+        margin: 5px 0;
+    }
+    .timeframe-tabs li a {
+        border-radius: 10px;
+    }
+}

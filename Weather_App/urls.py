@@ -2,7 +2,6 @@
 from django.urls import path
 from . import views
 
-
 app_name = 'Weather_App'
 
 urlpatterns = [
@@ -25,4 +24,11 @@ urlpatterns = [
     # 5. API lấy các TP nổi bật
     # GET /api/weather/featured/
     path('featured/', views.get_featured_weather, name='api_featured_weather'),
+    # 6. URL cho trang chi tiết tỉnh
+    # Sẽ khớp với các URL như /tinh/ha-noi/, /tinh/tuyen-quang/
+    path('tinh/<slug:slug>/', views.province_view, name='province_detail'),
+
+    # 7. URL cho trang chủ (dashboard)
+    # (View này đã có trong views.py nhưng chưa được gán URL)
+    path('', views.weather_dashboard, name='dashboard'),
 ]
