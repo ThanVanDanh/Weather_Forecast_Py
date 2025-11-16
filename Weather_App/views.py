@@ -166,3 +166,13 @@ def get_featured_weather(request):
 
     serializer = FeaturedCitySerializer(locations, many=True)
     return Response(serializer.data)
+
+def province_view(request, slug):
+    """
+    Render trang chi tiết của tỉnh (province-template.html).
+    'slug' sẽ là 'tuyen-quang', 'ha-noi', v.v.
+    """
+    context = {
+        'province_name_slug': slug,
+    }
+    return render(request, 'province-template.html', context)
