@@ -76,7 +76,83 @@
 .nav-links a:hover {
     color: var(--primary-green);
 }
+.main-nav .nav-links > li {
+    position: relative;
+}
+.city-container{
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 
+    position: absolute;
+    z-index: 1000;
+    top: 100%;
+    left: 50%;
+}
+.city-container{
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(3, 1fr);
+
+    width: 900px;
+    max-width: 1000px;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 24px;
+    box-sizing: border-box;
+}
+/*.city-container {*/
+/*    !* Vị trí & Ẩn/Hiện (từ khối 1) *!*/
+/*    opacity: 0;*/
+/*    visibility: hidden;*/
+/*    position: absolute;*/
+/*    z-index: 1000;*/
+/*    top: 100%;*/
+/*    left: 50%;*/
+/*    */
+/*    !* DÒNG MỚI: Thêm dòng này để căn giữa menu *!*/
+/*    transform: translateX(-50%);*/
+
+/*    transition: opacity 0.3s ease; !* (Đã tinh gọn) *!*/
+
+/*    !* Layout (từ khối 2) *!*/
+/*    display: grid;*/
+/*    gap: 10px;*/
+/*    grid-template-columns: repeat(3, 1fr);*/
+/*    width: 900px;*/
+/*    max-width: 1000px;*/
+/*    background: #ffffff;*/
+/*    border: 1px solid #e0e0e0;*/
+/*    box-shadow: 0 8px 16px rgba(0,0,0,0.1);*/
+/*    border-radius: 8px;*/
+/*    padding: 24px;*/
+/*    box-sizing: border-box;*/
+/*}*/
+.main-nav .nav-links > li:hover .city-container{
+    opacity: 1;
+    visibility: visible;
+}
+.province-list{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.city-container h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary-green);
+}
+.city-container a {
+    font-size: 12px;
+    color: #333;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.city-container a:hover {
+    background: rgba(0, 121, 107, 0.2);
+}
 .nav-location {
     display: flex;
     align-items: center;
