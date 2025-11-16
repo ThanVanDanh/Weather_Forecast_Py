@@ -1,13 +1,13 @@
-fetch("../templates/header.html")
-    .then(response => response.text())
-    .then(data => {
-        document.getElementById("header-placeholder").innerHTML = data;
-    });
-fetch("../templates/footer.html")
-    .then(response => response.text())
-    .then(data => {
-        document.getElementById("footer-placeholder").innerHTML = data;
-    });
+// fetch("../templates/header.html")
+//     .then(response => response.text())
+//     .then(data => {
+//         document.getElementById("header-placeholder").innerHTML = data;
+//     });
+// fetch("../templates/footer.html")
+//     .then(response => response.text())
+//     .then(data => {
+//         document.getElementById("footer-placeholder").innerHTML = data;
+//     });
 // weather/static/weather/js/script.js
 
 // Chờ cho toàn bộ HTML tải xong mới chạy
@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ID của tỉnh/thành phố mặc định khi tải trang
     // (Kiểm tra ID của 'Da Nang' trong Bảng Location sau khi import)
-    const DEFAULT_LOCATION_ID = 6;
-    const DEFAULT_CITY_NAME = "Đà Nẵng";
+    const DEFAULT_LOCATION_ID = 1;
+    const DEFAULT_CITY_NAME = "An Giang";
 
     // 1. Tải dữ liệu mặc định khi mở trang
     loadWeatherForLocation(DEFAULT_LOCATION_ID, DEFAULT_CITY_NAME);
@@ -65,18 +65,18 @@ async function loadWeatherForLocation(locationId, cityName) {
         // Gọi song song 2 API: Hiện tại (từ Meteo) và Tương lai (từ AI)
         const [currentResponse, forecastResponse] = await Promise.all([
             fetch(`/api/weather/current/?location_id=${locationId}`),
-            fetch(`/api/weather/forecast/ai/?location_id=${locationId}`)
+            // fetch(`/api/weather/forecast/ai/?location_id=${locationId}`)
         ]);
 
         if (!currentResponse.ok) throw new Error('Không thể tải thời tiết hiện tại');
-        if (!forecastResponse.ok) throw new Error('Không thể tải dự báo AI');
+        // if (!forecastResponse.ok) throw new Error('Không thể tải dự báo AI');
 
         const currentData = await currentResponse.json();
-        const forecastData = await forecastResponse.json();
+        // const forecastData = await forecastResponse.json();
 
         // Cập nhật DOM
         updateCurrentWeatherDOM(currentData);
-        updateAIForecastDOM(forecastData);
+        // updateAIForecastDOM(forecastData);
 
     } catch (error) {
         console.error("Lỗi tải dữ liệu:", error);
