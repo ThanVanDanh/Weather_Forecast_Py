@@ -115,7 +115,7 @@ function updateCurrentWeatherDOM(data) {
 
     // Đổi code ra icon
     const iconName = getWeatherIcon(current.weathercode);
-    document.getElementById('current-icon').src = `/static/weather/image/${iconName}`;
+    document.getElementById('current-icon').src = `/static/image/${iconName}`;
 }
 
 /**
@@ -149,9 +149,9 @@ function updateAIForecastDOM(forecastData) {
         card.className = 'card forecast-card';
         card.innerHTML = `
             <h3>${dayDisplay}</h3>
-            <img class="main-img" src="/static/weather/image/${iconName}" alt="">
+            <img class="main-img" src="/static/image/${iconName}" alt="">
             <p class="img-eyes">
-                <img class="detail-img" src="/static/weather/image/icon-style-1-drop.svg" alt="">
+                <img class="detail-img" src="/static/image/icon-style-1-drop.svg" alt="">
                 <span>${day.predicted_precipitation_probability || '--'} %</span>
             </p>
             <div class="status"><p>${statusText}</p></div>
