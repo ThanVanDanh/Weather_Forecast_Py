@@ -15,16 +15,19 @@
     <link rel="stylesheet" href="{% static 'css/header.css' %}">
 	<link rel="stylesheet" href="{% static 'css/footer.css' %}">
     <link rel="stylesheet" href="{% static 'css/province-template.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
 </head>
 <body>
 {% include 'header.html' %}
-<main class="container-province">
-		<nav aria-label="breadcrumb" class="">
-			<ol class="breadcrumb">
-				<li class="breadcrumb-item"><a href="#">Trang chủ</a></li>
-				<li class="breadcrumb-item active" aria-current="page">Hà Giang</li>
-			</ol>
-		</nav>
+    <nav aria-label="breadcrumb" class="bg-light p-2">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="#">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Hà Giang</li>
+        </ol>
+    </nav>
+<main>
+
+	<main class="container-province">
         <div class="content-province-wrapper">
             <section class="weather-forecast">
                 <div class="timeframe-tabs">
