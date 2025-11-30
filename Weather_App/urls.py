@@ -28,7 +28,10 @@ urlpatterns = [
     # Sẽ khớp với các URL như /tinh/ha-noi/, /tinh/tuyen-quang/
     path('tinh/<slug:slug>/', views.province_view, name='province_detail'),
 
-    # 7. URL cho trang chủ (dashboard)
+    #7. URL cho trang cảnh báo thời tiết
+    path('warning/', views.warning_view, name='api_weather_warning'),
+
+    # 8. URL cho trang chủ (dashboard)
     # (View này đã có trong views.py nhưng chưa được gán URL)
     path('', views.weather_dashboard, name='dashboard'),
 ]
