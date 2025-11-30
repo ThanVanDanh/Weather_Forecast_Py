@@ -1,0 +1,56 @@
+# ============================================
+# Python
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# ============================================
+# Django
+# ============================================
+# Local database
+*.sqlite3
+db.sqlite3
+
+# Django static & media (tự sinh hoặc upload)
+staticfiles/
+static/
+media/
+
+# Logs
+*.log
+
+# dotenv (thường chứa SECRET_KEY)
+.env
+
+# ============================================
+# IDEs & Editors
+# ============================================
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
+# ============================================
+# OS junk files
+# ============================================
+.DS_Store
+Thumbs.db
+
+# ============================================
+# Others
+# ============================================
+*.bak
+*.tmp
+*.swp

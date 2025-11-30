@@ -176,3 +176,6 @@ def province_view(request, slug):
         'province_name_slug': slug,
     }
     return render(request, 'province-template.html', context)
+def warning_view(request):
+
+    return render(request, 'warningweather.html')
