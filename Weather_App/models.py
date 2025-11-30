@@ -22,19 +22,14 @@ class Location(models.Model):
         verbose_name_plural = "1. Vị trí"
 
     def __str__(self):
-        return f"{self.city_name}, {self.country_code}"
+        return f"{self.city_name} ({self.country_code})" if f"{self.country_code}" else f"{self.city_name}"
 
 
 # ======================================================================
 # BẢNG 2: CURRENT_WEATHER_CACHE (Cache cho thời tiết hiện tại)
 # ======================================================================
 class CurrentWeatherCache(models.Model):
-    location = models.OneToOneField(
-        Location,
-        on_delete=models.CASCADE,
-        primary_key=True,
-        related_name='current_weather_cache'
-    )
+    location = models.OneToOneField(Location, on_delete=models.CASCADE, primary_key=True, related_name='current_weather_cache')
     data = models.JSONField(verbose_name="Dữ liệu JSON từ API")
     last_updated = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lần cuối")
 

@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ID của tỉnh/thành phố mặc định khi tải trang
     // (Kiểm tra ID của 'Da Nang' trong Bảng Location sau khi import)
-    const DEFAULT_LOCATION_ID = 1;
-    const DEFAULT_CITY_NAME = "An Giang";
+    const DEFAULT_LOCATION_ID = 30;
+    const DEFAULT_CITY_NAME = "Ho Chi Minh City";
 
     // 1. Tải dữ liệu mặc định khi mở trang
     loadWeatherForLocation(DEFAULT_LOCATION_ID, DEFAULT_CITY_NAME);
