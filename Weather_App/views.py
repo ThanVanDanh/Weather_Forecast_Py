@@ -168,12 +168,17 @@ def get_featured_weather(request):
     return Response(serializer.data)
 
 def province_view(request, slug):
-    """
-    Render trang chi tiết của tỉnh (province-template.html).
-    'slug' sẽ là 'tuyen-quang', 'ha-noi', v.v.
-    """
+    city_name_from_slug = slug.replace('-', ' ')
+    try:
+        location = Location.objects.filter(city_name__icontains=city_name_from_slug).first()
+
+    except Location.DoesNotExist:
+        return render(request, 'index.html', {'error': 'Không tìm thấy địa điểm'})
     context = {
-        'province_name_slug': slug,
+        'location_id': location.id,
+        'city_name': location.city_name,
+        'latitude': location.latitude,
+        'longitude': location.longitude,
     }
     return render(request, 'province-template.html', context)
 def warning_view(request):

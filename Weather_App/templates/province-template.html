@@ -2,237 +2,229 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+	<script>
+        const LOCATION_ID = "{{ location_id }}";
+        const CITY_NAME = "{{ city_name }}";
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giao diện Thời tiết</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="{% static 'js/script.js' %}"></script>
-	<script src="{% static 'js/province-template.js' %}"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="{% static 'js/script.js' %}"></script>
+	<script src="{% static 'js/province-template.js' %}"></script>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/header.css' %}">
+	<link rel="stylesheet" href="{% static 'css/breadcrumb.css' %}">
 	<link rel="stylesheet" href="{% static 'css/footer.css' %}">
     <link rel="stylesheet" href="{% static 'css/province-template.css' %}">
     <link rel="stylesheet" href="{% static 'css/footer.css' %}">
 </head>
 <body>
 {% include 'header.html' %}
-    <nav aria-label="breadcrumb" class="bg-light p-2">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="#">Trang chủ</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Hà Giang</li>
-        </ol>
-    </nav>
-<main>
-
+{% include 'breadcrumb.html' with current_page=city_name %}
 	<main class="container-province">
-        <div class="content-province-wrapper">
-            <section class="weather-forecast">
-                <div class="timeframe-tabs">
-					<ul>
-						<li><a href="#" class="active">Hiện tại</a></li>
-						<li><a href="#">Theo giờ</a></li>
-						<li><a href="#">1 ngày tới</a></li>
-						<li><a href="#">2 ngày tới</a></li>
-						<li><a href="#">3 ngày tới</a></li>
-						<li><a href="#">4 ngày tới</a></li>
-						<li><a href="#">5 ngày tới</a></li>
-					</ul>
-    			</div>
-				<div class="weather-forecast-content">
-                    <div class="card current-weather-card">
-                        <h3>Dự báo thời tiết Hà Giang</h3>
-                        <div class="current-main">
-							<div class="gr">
-								<span><i class="fa-solid fa-cloud-sun"></i></span>
-                            	<span>18°</span>
+			<div class="content-province-wrapper">
+				<section class="weather-forecast">
+					<div class="timeframe-tabs">
+						<ul>
+							<li><a href="#" class="active">Hiện tại</a></li>
+							<li><a href="#">Theo giờ</a></li>
+							<li><a href="#">1 ngày tới</a></li>
+							<li><a href="#">2 ngày tới</a></li>
+							<li><a href="#">3 ngày tới</a></li>
+							<li><a href="#">4 ngày tới</a></li>
+							<li><a href="#">5 ngày tới</a></li>
+						</ul>
+					</div>
+					<div class="weather-forecast-content">
+						<div class="card current-weather-card">
+							<h3>Dự báo thời tiết {{ city_name }}</h3>
+							<div class="current-main">
+								<div class="gr">
+									<span id="current-icon">
+										<i class="fa-solid fa-cloud-sun"></i>
+									</span>
+									<span id="current-temperature">--°</span>
+								</div>
+								<div>
+									<span id="current-status-text">--</span>
+									<p>Cảm giác như <span id="current-feels-like">--°</span></p>
+								</div>
 							</div>
-                            <div>
-                                <span>Mây đen u ám</span>
-                                <p>Cảm giác như 19°</p>
-                            </div>
-                        </div>
-                        <div class="weather-details">
-                    <div class="detail-item">
-                        <img src="{% static 'image/icon-style-1-temp.svg' %}" alt="" class="detail-img">
-                        <div class="detail-title">Thấp/Cao</div>
-                        <div class="detail-temp"><p id="current-temp-minmax">--°/--°</p></div>
-                    </div>
-                    <div class="detail-item">
-                        <img src="{% static 'image/icon-style-1-drop.svg' %}" alt="" class="detail-img">
-                        <div class="detail-title">Độ ẩm</div>
-                        <div class="detail-temp"><p id="current-humidity">--%</p></div>
-                    </div>
-                    <div class="detail-item">
-                        <img src="{% static 'image/icon-style-1-pressure.svg' %}" alt="" class="detail-img">
-                        <div class="detail-title">Áp suất</div>
-                        <div class="detail-temp"><p id="current-pressure">-- hPa</p></div>
-                    </div>
-                    <div class="detail-item">
-                        <img src="{% static 'image/icon-style-1-eyes.svg' %}" alt="" class="detail-img">
-                        <div class="detail-title">Tầm nhìn</div>
-                        <div class="detail-temp"><p id="current-visibility">-- km</p></div>
-                    </div>
-                    <div class="detail-item">
-                        <img src="{% static 'image/icon-style-1-windy.svg' %}" alt="" class="detail-img">
-                        <div class="detail-title">Gió</div>
-                        <div class="detail-temp"><p id="current-wind">-- kh/h</p></div>
-                    </div>
-                    <div class="detail-item">
-                        <img src="{% static 'image/icon-style-1-uv.svg' %}" alt="" class="detail-img">
-                        <div class="detail-title">UV</div>
-                        <div class="detail-temp"><p id="current-uvi">--</p></div>
-                    </div>
-                </div>
-				</div>
-                    <div class="card temperature-by-time-card">
-                        <h3>Nhiệt độ Hà Giang</h3>
-                        <div class="temp-by-time-grid">
-                            <div class="temp-item">
-                                <p>Ngày</p>
-                                <img src="{% static 'image/ngay.png' %}" alt="Ngày"> <strong>18°/19°</strong>
-                            </div>
-                            <div class="temp-item">
-                                <p>Đêm</p>
-                                <img src="{% static 'image/dem.png' %}" alt="Đêm"> <strong>17°/18°</strong>
-                            </div>
-                            <div class="temp-item">
-                                <p>Sáng</p>
-                                <img src="{% static 'image/sang.png' %}" alt="Sáng"> <strong>18°/18°</strong>
-                            </div>
-                            <div class="temp-item">
-                                <p>Tối</p>
-                                <img src="{% static 'image/toi.png' %}" alt="Tối"> <strong>18°/18°</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            <section class="weather-forecast-detail">
-				<section class="weather-main-column">
-                	<div class="card hourly-forecast-card">
-                    	<h3>Thời tiết Hà Giang theo giờ</h3>
-						<div class="hourly-scroll-container" id="hourly-forecast-container">
-{#							<div class="hourly-item">#}
-{#							   <p class="hourly-time">01:00 PM</p>#}
-{#							   <img class="hourly-icon" src="{% static 'image/mayden.png' %}" alt="Mây đen u ám">#}
-{#							   <p class="hourly-temp">18° / 18°</p>#}
-{#							   <span class="hourly-humidity"><i class="fa-solid fa-droplet"></i> 94%</span>#}
-{#							   <p class="hourly-desc">Mây đen u ám</p>#}
-{#        					</div>#}
+							<div class="weather-details">
+								<div class="detail-item">
+									<img src="{% static 'image/icon-style-1-temp.svg' %}" alt="" class="detail-img">
+									<div class="detail-title">Thấp/Cao</div>
+									<div class="detail-temp"><strong id="detail-temp-minmax">--°/--°</strong></div>
+								</div>
+								<div class="detail-item">
+									<img src="{% static 'image/icon-style-1-drop.svg' %}" alt="" class="detail-img">
+									<div class="detail-title">Độ ẩm</div>
+									<div class="detail-temp"><strong id="detail-humidity">--%</strong></div>
+								</div>
+								<div class="detail-item">
+									<img src="{% static 'image/icon-style-1-pressure.svg' %}" alt="" class="detail-img">
+									<div class="detail-title">Áp suất</div>
+									<div class="detail-temp"><strong id="detail-pressure">-- hPa</strong></div>
+								</div>
+								<div class="detail-item">
+									<img src="{% static 'image/icon-style-1-eyes.svg' %}" alt="" class="detail-img">
+									<div class="detail-title">Tầm nhìn</div>
+									<div class="detail-temp"><strong id="detail-visibility">-- km</strong></div>
+								</div>
+								<div class="detail-item">
+									<img src="{% static 'image/icon-style-1-windy.svg' %}" alt="" class="detail-img">
+									<div class="detail-title">Gió</div>
+									<div class="detail-temp"><strong id="detail-wind-speed">-- km/h</strong></div>
+								</div>
+								<div class="detail-item">
+									<img src="{% static 'image/icon-style-1-uv.svg' %}" alt="" class="detail-img">
+									<div class="detail-title">UV</div>
+									<div class="detail-temp"><strong id="detail-uv-max">--</strong></div>
+								</div>
+					</div>
 						</div>
-                	</div>
-					<div class="card daily-forecast-card">
-						<h3>Dự báo thời tiết Hà Giang những ngày tới</h3>
-						<div class="daily-forecast-list">
-							<div class="forecast-item">
-								<strong>Hôm nay</strong>
-								<span>17° / 18°</span>
-								<img src="{% static 'image/weather.png' %}" alt="Mưa nhẹ">
-								<span>Mưa nhẹ</span>
-								<span><i class="fa-solid fa-droplet"></i> 94%</span>
-								<span><i class="fa-solid fa-wind"></i> 1.24 km/h</span>
-							</div>
-							<div class="forecast-item">
-								<strong>T3 04/11</strong>
-								<span>17° / 20°</span>
-								<img src="{% static 'image/weather.png' %}" alt="Mưa nhẹ">
-								<span>Mưa nhẹ</span>
-								<span><i class="fa-solid fa-droplet"></i> 89%</span>
-								<span><i class="fa-solid fa-wind"></i> 1.3 km/h</span>
-							</div>
-							<div class="forecast-item">
-								<strong>T4 05/11</strong>
-								<span>17° / 26°</span>
-								<img src="{% static 'image/weather.png' %}" alt="Mây cụm">
-								<span>Mây cụm</span>
-								<span><i class="fa-solid fa-droplet"></i> 61%</span>
-								<span><i class="fa-solid fa-wind"></i> 1.95 km/h</span>
-							</div>
-							 <div class="forecast-item">
-								<strong>T5 06/11</strong>
-								<span>18° / 27°</span>
-								<img src="{% static 'image/weather.png' %}" alt="Mây cụm">
-								<span>Mây cụm</span>
-								<span><i class="fa-solid fa-droplet"></i> 55%</span>
-								<span><i class="fa-solid fa-wind"></i> 1.5 km/h</span>
-							</div>
-							<div class="forecast-item">
-								<strong>T6 07/11</strong>
-								<span>19° / 28°</span>
-								<img src="{% static 'image/weather.png' %}" alt="Mưa nhẹ">
-								<span>Mưa nhẹ</span>
-								<span><i class="fa-solid fa-droplet"></i> 70%</span>
-								<span><i class="fa-solid fa-wind"></i> 1.1 km/h</span>
+						<div class="card temperature-by-time-card">
+							<h3>Nhiệt độ {{ city_name }}</h3>
+							<div class="temp-by-time-grid">
+							   <div class="temp-item">
+								  <p>Ngày</p>
+								  <img src="{% static 'image/ngay.png' %}" alt="Ngày"> <strong id="temp-ngay">--°/--°</strong>
+							   </div>
+							   <div class="temp-item">
+								  <p>Đêm</p>
+								  <img src="{% static 'image/dem.png' %}" alt="Đêm"> <strong id="temp-dem">--°/--°</strong>
+							   </div>
 							</div>
 						</div>
-						<div class="forecast-tabs-bottom">
-							<button>3 ngày tới</button>
-							<button>5 ngày tới</button>
-							<button>7 ngày tới</button>
-							<button>10 ngày tới</button>
-							<button>20 ngày tới</button>
+					</div>
+				</section>
+				<section class="weather-forecast-detail">
+					<section class="weather-main-column">
+						<div class="card hourly-forecast-card">
+							<h3>Thời tiết Hà Giang theo giờ</h3>
+							<div class="hourly-scroll-container" id="hourly-forecast-container">
+	{#							<div class="hourly-item">#}
+	{#							   <p class="hourly-time">01:00 PM</p>#}
+	{#							   <img class="hourly-icon" src="{% static 'image/mayden.png' %}" alt="Mây đen u ám">#}
+	{#							   <p class="hourly-temp">18° / 18°</p>#}
+	{#							   <span class="hourly-humidity"><i class="fa-solid fa-droplet"></i> 94%</span>#}
+	{#							   <p class="hourly-desc">Mây đen u ám</p>#}
+	{#        					</div>#}
+							</div>
 						</div>
-                </div>
-					<div class="card chart-card">
-						<h3>Nhiệt độ và khả năng có mưa Hà Giang trong 12h tới</h3>
-						<canvas id="hourlyChart"></canvas>
-                	</div>
-                	<div class="card chart-card">
-                    	<h3>Nhiệt độ và khả năng có mưa Hà Giang những ngày tới</h3>
-                    	<canvas id="dailyWeatherChart"></canvas>
-                	</div>
-                	<div class="card chart-card">
-                    	<h3>Lượng mưa Hà Giang những ngày tới</h3>
-                    	<canvas id="dailyRainChart"></canvas>
-                	</div>
-            	</section>
-				<aside class="weather-sidebar-column">
-					<div class="card sunrise-sunset-card">
-						<div class="sunrise-sunset-content">
-						   <h3>Bình minh / Hoàng hôn</h3>
-							<div class="time-wrapper">
-								<strong>6:05 AM</strong>
-							    <strong>5:21 PM</strong>
+						<div class="card daily-forecast-card">
+							<h3>Dự báo thời tiết Hà Giang những ngày tới</h3>
+							<div class="daily-forecast-list">
+								<div class="forecast-item">
+									<strong>Hôm nay</strong>
+									<span>17° / 18°</span>
+									<img src="{% static 'image/weather.png' %}" alt="Mưa nhẹ">
+									<span>Mưa nhẹ</span>
+									<span><i class="fa-solid fa-droplet"></i> 94%</span>
+									<span><i class="fa-solid fa-wind"></i> 1.24 km/h</span>
+								</div>
+								<div class="forecast-item">
+									<strong>T3 04/11</strong>
+									<span>17° / 20°</span>
+									<img src="{% static 'image/weather.png' %}" alt="Mưa nhẹ">
+									<span>Mưa nhẹ</span>
+									<span><i class="fa-solid fa-droplet"></i> 89%</span>
+									<span><i class="fa-solid fa-wind"></i> 1.3 km/h</span>
+								</div>
+								<div class="forecast-item">
+									<strong>T4 05/11</strong>
+									<span>17° / 26°</span>
+									<img src="{% static 'image/weather.png' %}" alt="Mây cụm">
+									<span>Mây cụm</span>
+									<span><i class="fa-solid fa-droplet"></i> 61%</span>
+									<span><i class="fa-solid fa-wind"></i> 1.95 km/h</span>
+								</div>
+								 <div class="forecast-item">
+									<strong>T5 06/11</strong>
+									<span>18° / 27°</span>
+									<img src="{% static 'image/weather.png' %}" alt="Mây cụm">
+									<span>Mây cụm</span>
+									<span><i class="fa-solid fa-droplet"></i> 55%</span>
+									<span><i class="fa-solid fa-wind"></i> 1.5 km/h</span>
+								</div>
+								<div class="forecast-item">
+									<strong>T6 07/11</strong>
+									<span>19° / 28°</span>
+									<img src="{% static 'image/weather.png' %}" alt="Mưa nhẹ">
+									<span>Mưa nhẹ</span>
+									<span><i class="fa-solid fa-droplet"></i> 70%</span>
+									<span><i class="fa-solid fa-wind"></i> 1.1 km/h</span>
+								</div>
+							</div>
+							<div class="forecast-tabs-bottom">
+								<button>3 ngày tới</button>
+								<button>5 ngày tới</button>
+								<button>7 ngày tới</button>
+								<button>10 ngày tới</button>
+								<button>20 ngày tới</button>
+							</div>
+					</div>
+						<div class="card chart-card">
+							<h3>Nhiệt độ và khả năng có mưa Hà Giang trong 12h tới</h3>
+							<canvas id="hourlyChart"></canvas>
+						</div>
+						<div class="card chart-card">
+							<h3>Nhiệt độ và khả năng có mưa Hà Giang những ngày tới</h3>
+							<canvas id="dailyWeatherChart"></canvas>
+						</div>
+						<div class="card chart-card">
+							<h3>Lượng mưa Hà Giang những ngày tới</h3>
+							<canvas id="dailyRainChart"></canvas>
+						</div>
+					</section>
+					<aside class="weather-sidebar-column">
+						<div class="card sunrise-sunset-card">
+						   <div class="sunrise-sunset-content">
+							  <h3>Bình minh / Hoàng hôn</h3>
+							  <div class="time-wrapper">
+								 <strong id="sunrise-time">--:--</strong>
+								 <strong id="sunset-time">--:--</strong>
+							  </div>
 						   </div>
 						</div>
-					</div>
-					<div class="card aqi-card">
-						<h3>Chất lượng không khí</h3>
-						<div class="aqi-main">
-							<div class="aqi-gauge">
-								<span>Bình thường</span>
+						<div class="card aqi-card">
+							<h3>Chất lượng không khí</h3>
+							<div class="aqi-main">
+								<div class="aqi-gauge">
+									<span>Bình thường</span>
+								</div>
+								<p>Chất lượng không khí ở mức chấp nhận được...</p>
 							</div>
-							<p>Chất lượng không khí ở mức chấp nhận được...</p>
+							<div class="aqi-details-grid">
+								<div>CO <strong>241.82</strong></div>
+								<div>NH<sub>3</sub> <strong>0.34</strong></div>
+								<div>NO<sub>2</sub> <strong>0.94</strong></div>
+								<div>O<sub>3</sub> <strong>45.5</strong></div>
+								<div>PM10 <strong>20.66</strong></div>
+								<div>PM2.5 <strong>20.15</strong></div>
+								<div>SO<sub>2</sub> <strong>0.22</strong></div>
+							</div>
 						</div>
-						<div class="aqi-details-grid">
-							<div>CO <strong>241.82</strong></div>
-							<div>NH<sub>3</sub> <strong>0.34</strong></div>
-							<div>NO<sub>2</sub> <strong>0.94</strong></div>
-							<div>O<sub>3</sub> <strong>45.5</strong></div>
-							<div>PM10 <strong>20.66</strong></div>
-							<div>PM2.5 <strong>20.15</strong></div>
-							<div>SO<sub>2</sub> <strong>0.22</strong></div>
+						<div class="card windy-map-card">
+							<h3>Bản đồ thời tiết Hà Giang</h3>
+							<div class="map-container">
+								<iframe width="100%" height="400" src="https://embed.windy.com/embed.html?type=map&location=coordinates&zoom=5&lat=22.825&lon=104.988" frameborder="0"></iframe>
+							</div>
 						</div>
-					</div>
-					<div class="card windy-map-card">
-						<h3>Bản đồ thời tiết Hà Giang</h3>
-						<div class="map-container">
-							<iframe width="100%" height="400" src="https://embed.windy.com/embed.html?type=map&location=coordinates&zoom=5&lat=22.825&lon=104.988" frameborder="0"></iframe>
-						</div>
-					</div>
-{#					<div class="windy-map">#}
-{#                		<h2>Bản đồ thời tiết Hà Giang</h2>#}
-{#                		<div class="map-container">#}
-{#                    		<iframe width="650" height="450" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricTemperature=°C&metricRain=mm&metricWind=km/h&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=16.0544&lon=108.2021&detailLat=16.0544&detailLon=108.2021" frameborder="0"></iframe>#}
-{#               			</div>#}
-{#           			</div>#}
-            	</aside>
-			</section>
-        </div>
-    </main>
+	{#					<div class="windy-map">#}
+	{#                		<h2>Bản đồ thời tiết Hà Giang</h2>#}
+	{#                		<div class="map-container">#}
+	{#                    		<iframe width="650" height="450" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricTemperature=°C&metricRain=mm&metricWind=km/h&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=16.0544&lon=108.2021&detailLat=16.0544&detailLon=108.2021" frameborder="0"></iframe>#}
+	{#               			</div>#}
+	{#           			</div>#}
+					</aside>
+				</section>
+			</div>
+		</main>
 {% include 'footer.html' %}
 </body>
 </html>
