@@ -1,3 +1,10 @@
+.sticky-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    width: 100%;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
 .site-header {
     background-color: var(--primary-green);
     color: white;
@@ -108,33 +115,7 @@
     padding: 24px;
     box-sizing: border-box;
 }
-/*.city-container {*/
-/*    !* Vị trí & Ẩn/Hiện (từ khối 1) *!*/
-/*    opacity: 0;*/
-/*    visibility: hidden;*/
-/*    position: absolute;*/
-/*    z-index: 1000;*/
-/*    top: 100%;*/
-/*    left: 50%;*/
-/*    */
-/*    !* DÒNG MỚI: Thêm dòng này để căn giữa menu *!*/
-/*    transform: translateX(-50%);*/
 
-/*    transition: opacity 0.3s ease; !* (Đã tinh gọn) *!*/
-
-/*    !* Layout (từ khối 2) *!*/
-/*    display: grid;*/
-/*    gap: 10px;*/
-/*    grid-template-columns: repeat(3, 1fr);*/
-/*    width: 900px;*/
-/*    max-width: 1000px;*/
-/*    background: #ffffff;*/
-/*    border: 1px solid #e0e0e0;*/
-/*    box-shadow: 0 8px 16px rgba(0,0,0,0.1);*/
-/*    border-radius: 8px;*/
-/*    padding: 24px;*/
-/*    box-sizing: border-box;*/
-/*}*/
 .main-nav .nav-links > li:hover .city-container{
     opacity: 1;
     visibility: visible;
@@ -172,4 +153,8 @@
     display: flex;
     align-items: center;
     gap: 4px;
+}
+.nav-links a.active {
+    color: var(--primary-green);
+    border-bottom: 2px solid var(--primary-green);
 }
