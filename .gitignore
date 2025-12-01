@@ -25,11 +25,6 @@ db.sqlite3
 # dotenv (thường chứa SECRET_KEY)
 .env
 
-# ============================================
-# IDEs & Editors
-# ============================================
-# PyCharm
-.idea/
 
 # VS Code
 .vscode/
@@ -50,3 +45,10 @@ Thumbs.db
 *.bak
 *.tmp
 *.swp
+
+
+# PyCharm IDE configs
+.idea/
+*.iml
+*.ipr
+*.iws
