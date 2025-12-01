@@ -17,10 +17,8 @@ FEATURED_IDS = [
     3  # Ca Mau
 ]
 
-
 class Command(BaseCommand):
     help = 'Nạp (warm up) cache cho 9 thành phố nổi bật'
-
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS('Bắt đầu "Warm Up" Bảng 2 (Cache)...'))
 
