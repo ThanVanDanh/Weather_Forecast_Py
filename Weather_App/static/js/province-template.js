@@ -1,6 +1,8 @@
 // Hàm tiện ích để cập nhật DOM
 // province-template.js
 function updateCurrentWeatherDOM(data, cityName) {
+    console.log("Dữ liệu API trả về:", data);
+    console.log("Hourly Temp:", data?.hourly?.temperature_2m);
     if (!data || !data.current_weather) {
         console.error("Dữ liệu API thiếu current_weather.");
         return;
@@ -33,7 +35,6 @@ function updateCurrentWeatherDOM(data, cityName) {
     }
 
     // 3. Cập nhật Cảm giác như (Apparent Temperature)
-    // Lưu ý: hourly.apparent_temperature là mảng, cần lấy đúng index giờ hiện tại
     if (hourly && hourly.apparent_temperature) {
         const feelsLike = Math.round(hourly.apparent_temperature[currentHourIndex]);
         const feelsLikeElement = document.getElementById('current-feels-like');
@@ -79,6 +80,33 @@ function updateCurrentWeatherDOM(data, cityName) {
         const uvElement = document.getElementById('detail-uv-max');
         if (uvElement) uvElement.textContent = uvMax;
     }
+    // Nhiệt độ theo khoảng thời gian (Ngày/Đêm)
+    if (hourly && hourly.temperature_2m) {
+        const hourlyTemps = hourly.temperature_2m;
+
+        // Ngày: 7h sáng đến 7h tối (12 tiếng)
+        const NGAY_HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+        // Đêm: 7h tối đến 7h sáng (12 tiếng, bao gồm qua nửa đêm)
+        const DEM_HOURS = [19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6];
+
+        const tempNgayElement = document.getElementById('temp-ngay');
+        if (tempNgayElement) tempNgayElement.textContent = getMinMaxTempForPeriod(hourlyTemps, NGAY_HOURS);
+
+        const tempDemElement = document.getElementById('temp-dem');
+        if (tempDemElement) tempDemElement.textContent = getMinMaxTempForPeriod(hourlyTemps, DEM_HOURS);
+    }
+    //Cập nhật Bình minh / Hoàng hôn ===
+    if (daily && daily.sunrise && daily.sunset) {
+        // API trả về dạng: "2023-11-01T06:05" -> Cần format thành "06:05 AM"
+        const sunriseTime = formatTime(daily.sunrise[0]);
+        const sunsetTime = formatTime(daily.sunset[0]);
+
+        const sunriseElement = document.getElementById('sunrise-time');
+        if (sunriseElement) sunriseElement.textContent = sunriseTime;
+
+        const sunsetElement = document.getElementById('sunset-time');
+        if (sunsetElement) sunsetElement.textContent = sunsetTime;
+    }
 }
 // Hàm tải dữ liệu chi tiết cho trang tỉnh/thành phố
 async function loadProvinceDetails(locationId, cityName) {
@@ -111,7 +139,36 @@ async function loadProvinceDetails(locationId, cityName) {
     }
 }
 
+//Hàm tiện ích để tính Min/Max nhiệt độ
+    /**
+     * Tính toán nhiệt độ Min/Max trong một khoảng giờ (ví dụ: Sáng, Tối)
+     * @param {Array<number>} hourlyTemps Mảng nhiệt độ theo giờ (24 giá trị)
+     * @param {number[]} hoursToInclude Các chỉ số giờ cần tính (ví dụ: [5, 6, 7, 8, 9, 10])
+     * @returns {string} Chuỗi định dạng "Min°/Max°"
+     */
+    function getMinMaxTempForPeriod(hourlyTemps, hoursToInclude) {
+        if (!hourlyTemps || hourlyTemps.length < 24) return "--°/--°";
 
+        const temperatures = hoursToInclude.map(h => hourlyTemps[h]).filter(temp => temp !== null && temp !== undefined);
+
+        if (temperatures.length === 0) return "--°/--°";
+
+        const minTemp = Math.round(Math.min(...temperatures));
+        const maxTemp = Math.round(Math.max(...temperatures));
+
+        return `${minTemp}°/${maxTemp}°`;
+    }
+
+// === HÀM TIỆN ÍCH chuyển đổi thoi gian ===
+/**
+ * Hàm chuyển đổi thời gian ISO (2023-11-01T06:05) sang giờ phút (06:05 AM)
+ */
+function formatTime(isoString) {
+    if (!isoString) return '--:--';
+    const date = new Date(isoString);
+    // Format theo kiểu 12 giờ (AM/PM)
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
 // Chờ cho toàn bộ HTML tải xong mới chạy
 document.addEventListener('DOMContentLoaded', () => {
     // Dữ liệu giả lập (thay cho dữ liệu thật từ API)

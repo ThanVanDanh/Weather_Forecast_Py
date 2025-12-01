@@ -92,24 +92,16 @@
 					</div>
 						</div>
 						<div class="card temperature-by-time-card">
-							<h3>Nhiệt độ Hà Giang</h3>
+							<h3>Nhiệt độ {{ city_name }}</h3>
 							<div class="temp-by-time-grid">
-								<div class="temp-item">
-									<p>Ngày</p>
-									<img src="{% static 'image/ngay.png' %}" alt="Ngày"> <strong>18°/19°</strong>
-								</div>
-								<div class="temp-item">
-									<p>Đêm</p>
-									<img src="{% static 'image/dem.png' %}" alt="Đêm"> <strong>17°/18°</strong>
-								</div>
-								<div class="temp-item">
-									<p>Sáng</p>
-									<img src="{% static 'image/sang.png' %}" alt="Sáng"> <strong>18°/18°</strong>
-								</div>
-								<div class="temp-item">
-									<p>Tối</p>
-									<img src="{% static 'image/toi.png' %}" alt="Tối"> <strong>18°/18°</strong>
-								</div>
+							   <div class="temp-item">
+								  <p>Ngày</p>
+								  <img src="{% static 'image/ngay.png' %}" alt="Ngày"> <strong id="temp-ngay">--°/--°</strong>
+							   </div>
+							   <div class="temp-item">
+								  <p>Đêm</p>
+								  <img src="{% static 'image/dem.png' %}" alt="Đêm"> <strong id="temp-dem">--°/--°</strong>
+							   </div>
 							</div>
 						</div>
 					</div>
@@ -195,13 +187,13 @@
 					</section>
 					<aside class="weather-sidebar-column">
 						<div class="card sunrise-sunset-card">
-							<div class="sunrise-sunset-content">
-							   <h3>Bình minh / Hoàng hôn</h3>
-								<div class="time-wrapper">
-									<strong>6:05 AM</strong>
-									<strong>5:21 PM</strong>
-							   </div>
-							</div>
+						   <div class="sunrise-sunset-content">
+							  <h3>Bình minh / Hoàng hôn</h3>
+							  <div class="time-wrapper">
+								 <strong id="sunrise-time">--:--</strong>
+								 <strong id="sunset-time">--:--</strong>
+							  </div>
+						   </div>
 						</div>
 						<div class="card aqi-card">
 							<h3>Chất lượng không khí</h3>

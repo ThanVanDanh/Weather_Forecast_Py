@@ -24,10 +24,10 @@ class MeteoAPIService:
             'current_weather': 'true',
 
             # 2. Dữ liệu hôm nay (để lấy Thấp/Cao, UV)
-            'daily': 'weathercode,temperature_2m_max,temperature_2m_min,uv_index_max',
+            'daily': 'weathercode,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset',
 
             # 3. Dữ liệu giờ (để lấy Cảm giác như, Độ ẩm, Áp suất, Tầm nhìn)
-            'hourly': 'apparent_temperature,relativehumidity_2m,pressure_msl,visibility',
+            'hourly': 'temperature_2m,apparent_temperature,relativehumidity_2m,pressure_msl,visibility',
 
             # Chỉ lấy 1 ngày (hôm nay)
             'forecast_days': 1
