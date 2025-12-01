@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/script.js' %}"></script>
     <link rel="stylesheet" href="{% static 'css/header.css' %}">
+	<link rel="stylesheet" href="{% static 'css/breadcrumb.css' %}">
     <link rel="stylesheet" href="{% static 'css/footer.css' %}">
     <link rel="stylesheet" href="{% static 'css/warning-template.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -18,80 +19,76 @@
 <body>
 
 {% include 'header.html' %}
+{% include 'breadcrumb.html' with current_page="Cảnh báo thời tiết" %}
+
 <main>
-    <nav aria-label="breadcrumb" class="bg-light p-2">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="index.html">Trang chủ</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Cảnh báo thời tiết</li>
-        </ol>
-    </nav>
-<div class="weather-alert-body">
-    <div class="alert-header-section">
-        <div class="alert-hero">
-            <h1 class="alert-title">Cảnh báo Thời tiết Khẩn cấp!</h1>
+	<div class="weather-alert-body">
+		<div class="alert-header-section">
+			<div class="alert-hero">
+				<h1 class="alert-title">Cảnh báo Thời tiết Khẩn cấp!</h1>
 
-            <div class="alert-details">
-                <i class="fas fa-bullhorn alert-icon"></i>
-                <div class="alert-text-content">
-                    <p class="warning-type"><strong>Bão số 9 đang tiến vào...</strong></p>
-                    <p class="warning-level">⚠️ Mức độ: **Cực kỳ nguy hiểm** (Cấp 4)</p>
-                    <p class="warning-area">Khu vực bị ảnh hưởng: **TP. Hồ Chí Minh, Bà Rịa - Vũng Tàu, Bình Thuận, Ninh Thuận.**</p>
-                    <p class="warning-time">Thời gian: Từ Giờ/Ngày/Tháng, dự kiến đổ bộ vào bờ biển Nam Trung Bộ.</p>
-                </div>
-            </div>
-        </div>
+				<div class="alert-details">
+					<i class="fas fa-bullhorn alert-icon"></i>
+					<div class="alert-text-content">
+						<p class="warning-type"><strong>Bão số 9 đang tiến vào...</strong></p>
+						<p class="warning-level">⚠️ Mức độ: **Cực kỳ nguy hiểm** (Cấp 4)</p>
+						<p class="warning-area">Khu vực bị ảnh hưởng: **TP. Hồ Chí Minh, Bà Rịa - Vũng Tàu, Bình Thuận, Ninh Thuận.**</p>
+						<p class="warning-time">Thời gian: Từ Giờ/Ngày/Tháng, dự kiến đổ bộ vào bờ biển Nam Trung Bộ.</p>
+					</div>
+				</div>
+			</div>
 
-        <div class="call-to-action">
-            <h2 class="cta-title">Hãy hành động ngay để bảo vệ bạn và gia đình!</h2>
-            <p class="cta-instruction">
-                • Gia cố nhà cửa, cắt tỉa cây cối. • Sơ tán đến nơi an toàn theo hướng dẫn của chính quyền địa phương. • Chuẩn bị lương thực và vật dụng thiết yếu.
-            </p>
-            <div class="cta-buttons">
-                <a href="#" class="btn btn-primary">Xem chi tiết Khuyến cáo</a>
-                <a href="#" class="btn btn-secondary">Danh sách điểm Sơ tán</a>
-                <a href="#" class="btn btn-tertiary">Liên hệ Khẩn cấp</a>
-            </div>
-        </div>
-    </div>
+			<div class="call-to-action">
+				<h2 class="cta-title">Hãy hành động ngay để bảo vệ bạn và gia đình!</h2>
+				<p class="cta-instruction">
+					• Gia cố nhà cửa, cắt tỉa cây cối. • Sơ tán đến nơi an toàn theo hướng dẫn của chính quyền địa phương. • Chuẩn bị lương thực và vật dụng thiết yếu.
+				</p>
+				<div class="cta-buttons">
+					<a href="#" class="btn btn-primary">Xem chi tiết Khuyến cáo</a>
+					<a href="#" class="btn btn-secondary">Danh sách điểm Sơ tán</a>
+					<a href="#" class="btn btn-tertiary">Liên hệ Khẩn cấp</a>
+				</div>
+			</div>
+		</div>
 
-    <div class="map-and-sidebar-container">
+		<div class="map-and-sidebar-container">
 
-        <div class="map-and-other-alerts">
-            <div class="alert-map-placeholder">
-                <iframe class="map-windy-style" width="650" height="450" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricTemperature=°C&metricRain=mm&metricWind=km/h&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=16.0544&lon=108.2021&detailLat=16.0544&detailLon=108.2021" frameborder="0"></iframe>
-            </div>
-            <div class="other-alerts-list">
-                <h3>Danh sách các Cảnh báo khác</h3>
-                <ul>
-                    <li class="alert-item red">
-                        <span class="alert-type">Cảnh báo Lũ quét:</span> Miền Trung (21/10 - ngày/giờ)
-                        <i class="fas fa-water"></i>
-                    </li>
-                    <li class="alert-item yellow">
-                        <span class="alert-type">Cảnh báo Sạt lở đất:</span> Miền Bắc (25/10 - ngày/giờ)
-                        <i class="fas fa-mountain"></i>
-                    </li>
-                </ul>
-            </div>
-        </div>
+			<div class="map-and-other-alerts">
+				<div class="alert-map-placeholder">
+					<iframe class="map-windy-style" width="650" height="450" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricTemperature=°C&metricRain=mm&metricWind=km/h&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=16.0544&lon=108.2021&detailLat=16.0544&detailLon=108.2021" frameborder="0"></iframe>
+				</div>
+				<div class="other-alerts-list">
+					<h3>Danh sách các Cảnh báo khác</h3>
+					<ul>
+						<li class="alert-item red">
+							<span class="alert-type">Cảnh báo Lũ quét:</span> Miền Trung (21/10 - ngày/giờ)
+							<i class="fas fa-water"></i>
+						</li>
+						<li class="alert-item yellow">
+							<span class="alert-type">Cảnh báo Sạt lở đất:</span> Miền Bắc (25/10 - ngày/giờ)
+							<i class="fas fa-mountain"></i>
+						</li>
+					</ul>
+				</div>
+			</div>
 
-        <div class="sidebar-forecast">
-            <h3>Dự báo thời tiết ngoài khơi</h3>
-            <div class="current-forecast">
-                <div class="icon-temp">
-                    <i class="fas fa-cloud-sun"></i>
-                    <span class="temperature">25°C</span>
-                </div>
-                <div class="details">
-                    <p>Độ ẩm: 78%</p>
-                    <p>Gió: 15km/h</p>
-                </div>
-            </div>
-            <a href="#" class="btn btn-secondary full-width">Dự báo chi tiết 7 ngày</a>
-            <a href="#" class="btn btn-secondary full-width">Dự báo 24 giờ</a>
-        </div>
-    </div>
-</div>
+			<div class="sidebar-forecast">
+				<h3>Dự báo thời tiết ngoài khơi</h3>
+				<div class="current-forecast">
+					<div class="icon-temp">
+						<i class="fas fa-cloud-sun"></i>
+						<span class="temperature">25°C</span>
+					</div>
+					<div class="details">
+						<p>Độ ẩm: 78%</p>
+						<p>Gió: 15km/h</p>
+					</div>
+				</div>
+				<a href="#" class="btn btn-secondary full-width">Dự báo chi tiết 7 ngày</a>
+				<a href="#" class="btn btn-secondary full-width">Dự báo 24 giờ</a>
+			</div>
+		</div>
+	</div>
 </main>
 {% include 'footer.html' %}
 </body>
