@@ -74,7 +74,6 @@
 	display: flex;
 	flex-direction: row;
 	gap: 30px;
-	max-height: 400px;
 }
 .card {
 	display: flex;
@@ -90,31 +89,41 @@
 }
 
 .temperature-by-time-card {
-    flex: 1;
-}
-.current-weather-card h3{
-
+	display: flex;
+	flex-direction: column;
+    /*flex: 1;*/
 }
 .current-weather-card .current-main{
 	display: flex;
 	flex-direction: row;
-	justify-content: space-around;
-	padding: 10px;
+	justify-content: flex-start;
 	align-items: center;
-	gap: 15px;
+	gap: 20px;
+	padding: 0;
+}
+.current-weather-card .current-main .gr {
+    align-items: center;
+    gap: 15px;
 }
 .current-weather-card .current-main .gr span{
-	font-size: 35px;
+	font-size: 60px;
 	font-weight: 500;
 	letter-spacing: -1px;
+}
+.current-weather-card .current-main .gr span#current-temperature {
+    font-size: 60px;
 }
 .current-weather-card .current-main .gr p{
 	color: #00796b;
 }
+.current-weather-card .current-main .gr img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+}
 .current-weather-card .current-main .gr i {
     font-size: 80px;
     color: #8dc4e1;
-    margin-right: 20px;
 }
 
 .current-weather-card .current-main div span {
@@ -161,13 +170,45 @@
 .temp-item strong {
 	font-size: 14px;
 }
-        
+
 /*///////////////////////////////////////////////////////////*/
 .weather-forecast-detail{
 	display: flex;
 	flex-direction: row;
 	gap: 30px;
 	padding: 20px 100px 50px 100px;
+}
+.weather-details {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 20px;
+}
+.weather-details .detail-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1; /* Chia đều không gian */
+    min-width: 80px;
+    margin: 5px 0;
+}
+.weather-details .detail-img {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 5px;
+}
+.weather-details .detail-title {
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 2px;
+}
+.weather-details .detail-temp strong,
+.weather-details .detail-temp p {
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
 }
 .weather-main-column {
 	flex-grow: 1;
@@ -255,65 +296,6 @@
 	max-width: 100%;
 	margin: 20px 0;
 }
-
-/* --- CSS cho danh sách các ngày --- */
-.daily-list-container {
-    display: flex;
-    flex-direction: column;
-}
-
-
-
-
-/* Ẩn đường viền của item cuối cùng */
-.daily-item:last-child {
-    border-bottom: none;
-}
-
-/* Căn giữa các icon và mô tả */
-.daily-condition {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.daily-icon {
-    width: 35px;
-    height: 35px;
-}
-
-/* Định dạng các cột thông số (Độ ẩm, Gió) */
-.daily-humidity,
-.daily-wind {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    color: #555;
-}
-
-.daily-day-name {
-    font-weight: bold;
-}
-
-.daily-temp {
-    font-weight: bold;
-    color: #111;
-}
-
-.daily-expand-btn {
-    color: #777;
-    cursor: pointer;
-}
-
-/*////////////////////////////////////////////*/
-/*.card.chart-card {*/
-/*    border-radius: 10px;*/
-/*    padding: 20px;*/
-/*    max-width: 90vw;*/
-/*    margin: 20px auto;*/
-/*    background-color: #ffffff;*/
-/*    box-shadow: 0 4px 12px rgba(0,0,0,0.05);*/
-/*}*/
 
 .chart-card h3 {
     margin-top: 0;
@@ -470,9 +452,7 @@
     color: #000;
 }
 /*///////////////////////////////////////////////////////*/
-.windy-map-card {
-    padding: 0;
-}
+
 
 .windy-map-card h3 {
     padding: 24px 24px 20px 24px;
