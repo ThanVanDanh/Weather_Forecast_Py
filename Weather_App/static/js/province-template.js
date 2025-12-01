@@ -85,9 +85,9 @@ function updateCurrentWeatherDOM(data, cityName) {
         const hourlyTemps = hourly.temperature_2m;
 
         // Ngày: 7h sáng đến 7h tối (12 tiếng)
-        const NGAY_HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+        const NGAY_HOURS = [6,7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
         // Đêm: 7h tối đến 7h sáng (12 tiếng, bao gồm qua nửa đêm)
-        const DEM_HOURS = [19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6];
+        const DEM_HOURS = [18,19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5];
 
         const tempNgayElement = document.getElementById('temp-ngay');
         if (tempNgayElement) tempNgayElement.textContent = getMinMaxTempForPeriod(hourlyTemps, NGAY_HOURS);
