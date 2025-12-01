@@ -50,7 +50,7 @@
     color: #ffffff;
     border-color: var(--primary-green);
 }
-.weather-forecast-content{
+.weather-forecast-content-province{
 	display: flex;
 	flex-direction: row;
 	gap: 30px;
@@ -64,7 +64,7 @@
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 	border: none;
 }
-.current-weather-card {
+.current-weather-card-province {
     flex: 1;
 }
 
@@ -73,7 +73,7 @@
 	flex-direction: column;
     /*flex: 1;*/
 }
-.current-weather-card .current-main{
+.current-weather-card-province .current-main-province{
 	display: flex;
 	flex-direction: row;
 	justify-content: flex-start;
@@ -81,36 +81,36 @@
 	gap: 20px;
 	padding: 0;
 }
-.current-weather-card .current-main .gr {
+.current-weather-card-province .current-main-province .gr {
     align-items: center;
     gap: 15px;
 }
-.current-weather-card .current-main .gr span{
+.current-weather-card-province .current-main-province .gr span{
 	font-size: 60px;
 	font-weight: 500;
 	letter-spacing: -1px;
 }
-.current-weather-card .current-main .gr span#current-temperature {
+.current-weather-card-province .current-main-province .gr span#current-temperature {
     font-size: 60px;
 }
-.current-weather-card .current-main .gr p{
+.current-weather-card-province .current-main-province .gr p{
 	color: #00796b;
 }
-.current-weather-card .current-main .gr img {
+.current-weather-card-province .current-main-province .gr img {
     width: 80px;
     height: 80px;
     object-fit: contain;
 }
-.current-weather-card .current-main .gr i {
+.current-weather-card-province .current-main-province .gr i {
     font-size: 80px;
     color: #8dc4e1;
 }
 
-.current-weather-card .current-main div span {
+.current-weather-card-province .current-main-province div span {
 	font-size: 18px;
 	font-weight: 600;
 }
-.current-weather-card .current-main div p {
+.current-weather-card-province .current-main-province div p {
 	font-size: 14px;
 	color: #555;
 	margin: 0;
@@ -267,9 +267,10 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
-.daily-forecast-card h3 {
+.daily-forecast-card, .weather-forecast-content-province h3 {
     margin-top: 0;
     margin-bottom: 20px;
+	font-weight: bold;
 }
 .daily-forecast-card,
 .card.chart-card {
@@ -455,7 +456,7 @@
 /* --- CSS CHO RESPONSIVE (DI ĐỘNG) --- */
 /* ========================================= */
 @media (max-width: 768px) {
-    .weather-forecast-content {
+    .weather-forecast-content-province {
         flex-direction: column;
         max-height: none;
     }
