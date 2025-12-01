@@ -170,7 +170,7 @@ def get_featured_weather(request):
 def province_view(request, slug):
     city_name_from_slug = slug.replace('-', ' ')
     try:
-        location = get_object_or_404(Location, city_name__iexact=city_name_from_slug)
+        location = Location.objects.filter(city_name__icontains=city_name_from_slug).first()
 
     except Location.DoesNotExist:
         return render(request, 'index.html', {'error': 'Không tìm thấy địa điểm'})
