@@ -18,6 +18,7 @@ ENV/
 *.sqlite3
 db.sqlite3
 
+*.csv
 
 # Logs
 *.log
