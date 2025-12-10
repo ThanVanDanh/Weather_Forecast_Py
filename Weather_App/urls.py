@@ -1,4 +1,3 @@
-# weather/urls.py
 from django.urls import path
 from . import views
 
@@ -13,25 +12,17 @@ urlpatterns = [
     # GET /api/weather/current/?location_id=1
     path('current/', views.get_current_weather, name='api_current_weather'),
 
-    # 3. API lấy dự báo AI (theo ID)
-    # GET /api/weather/forecast/ai/?location_id=1
-    path('forecast/ai/', views.get_ai_forecast, name='api_ai_forecast'),
-
-    # 4. API lấy cảnh báo (theo ID)
-    # GET /api/weather/alerts/?location_id=1
-    path('alerts/', views.get_weather_alerts, name='api_weather_alerts'),
-
-    # 5. API lấy các TP nổi bật
+    # 3. API lấy các TP nổi bật
     # GET /api/weather/featured/
     path('featured/', views.get_featured_weather, name='api_featured_weather'),
-    # 6. URL cho trang chi tiết tỉnh
+    # 4. URL cho trang chi tiết tỉnh
     # Sẽ khớp với các URL như /tinh/ha-noi/, /tinh/tuyen-quang/
     path('tinh/<slug:slug>/', views.province_view, name='province_detail'),
 
-    #7. URL cho trang cảnh báo thời tiết
+    #5. URL cho trang cảnh báo thời tiết
     path('warning/', views.warning_view, name='api_weather_warning'),
 
-    # 8. URL cho trang chủ (dashboard)
+    # 6. URL cho trang chủ (dashboard)
     # (View này đã có trong views.py nhưng chưa được gán URL)
     path('', views.weather_dashboard, name='dashboard'),
 ]
