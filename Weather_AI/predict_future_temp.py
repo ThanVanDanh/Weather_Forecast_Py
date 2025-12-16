@@ -145,5 +145,5 @@ def forecast_temperature(province: str, steps: int = 120) -> pd.DataFrame:
 # ==============================
 
 if __name__ == "__main__":
-    df = forecast_temperature("An_Giang", steps=120)
+    df = forecast_temperature("Tuyen_Quang", steps=120)
     print(df)
