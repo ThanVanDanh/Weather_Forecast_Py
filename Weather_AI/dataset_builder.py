@@ -111,7 +111,7 @@ def fetch_full_dataset(lat, lon):
     params = {
         "latitude": lat,
         "longitude": lon,
-        "start_date": "2025-01-02",
+        "start_date": "2024-12-28",
         "end_date": "2025-01-06",
         "hourly": HOURLY,
         "timezone": TIMEZONE,

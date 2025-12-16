@@ -1,15 +1,6 @@
 """
-Train mô hình SARIMAX dự báo BỨC XẠ MẶT TRỜI (Solar Radiation) theo NGÀY.
-- Input: Dữ liệu Hourly từ data/
-- Process: Resample sang Daily.
-- Target: shortwave_radiation (Sum - Tổng năng lượng ngày)
-- Exog (Biến ngoại sinh):
-    1. cloudcover (Mean) - Mây
-    2. precipitation/rain (Sum) - Mưa
-    3. relative_humidity_2m (Mean) - Độ ẩm
-    4. dewpoint_2m (Mean) - Điểm sương
-    5. temperature_2m (Mean/Max) - Nhiệt độ
-    6. direct/diffuse radiation (Sum) - Thành phần bức xạ (nếu có để train)
+Train mô hình SARIMA dự báo BỨC XẠ MẶT TRỜI (Solar Radiation) theo NGÀY.
+(KHÔNG DÙNG BIẾN NGOẠI SINH - UNIVARIATE)
 """
 
 from __future__ import annotations
@@ -26,37 +17,22 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
-MODELS_DIR = BASE_DIR / "models"
+MODELS_DIR = BASE_DIR / "model_solar"
 MODELS_DIR.mkdir(exist_ok=True)
 
 # Số ngày validation
 VALIDATION_DAYS = 30
-# Cấu hình SARIMAX
+# Cấu hình SARIMA (Không có X)
 ORDER = (1, 1, 1)
 SEASONAL_ORDER = (0, 0, 0, 0)
+
 # Tên cột Target
 TARGET_COL = "shortwave_radiation"
-# Key: Tên cột trong CSV, Value:gộp theo ngày ('sum', 'mean', 'max')
-EXOG_CONFIG = {
-    "cloudcover": "mean",
-    "cloudcover_low": "mean",
-    "cloudcover_mid": "mean",
-    "cloudcover_high": "mean",
-    "precipitation": "sum",
-    "rain": "sum",
-    "relative_humidity_2m": "mean",  # Độ ẩm ảnh hưởng tán xạ
-    "dewpoint_2m": "mean",  # Điểm sương
-    "temperature_2m": "mean",  # Nhiệt độ (quan hệ với chu kỳ nắng)
-    "direct_radiation": "sum",  # Bức xạ trực tiếp
-    "diffuse_radiation": "sum",  # Bức xạ tán xạ
-    "weathercode": "max"  # Mã thời tiết
-}
 
 # ================== HÀM XỬ LÝ DỮ LIỆU ==================
-def load_and_aggregate_daily(csv_path: Path) -> Optional[Tuple[pd.DataFrame, List[str]]]:
+def load_and_aggregate_daily(csv_path: Path) -> Optional[pd.DataFrame]:
     """
-    Đọc CSV hourly -> Gộp thành Daily theo quy tắc trong EXOG_CONFIG.
-    Trả về: (DataFrame Daily, Danh sách cột Exog tìm thấy)
+    Đọc CSV hourly -> Gộp thành Daily. Chỉ lấy cột Target.
     """
     try:
         df = pd.read_csv(csv_path)
@@ -70,67 +46,46 @@ def load_and_aggregate_daily(csv_path: Path) -> Optional[Tuple[pd.DataFrame, Lis
             print(f"  [Warn] File {csv_path.name} thiếu cột target {TARGET_COL}")
             return None
 
-        # 1. Xây dựng dictionary cho hàm agg()
-        # Target luôn là sum (tổng năng lượng)
-        agg_dict = {TARGET_COL: 'sum'}
+        # 1. Chỉ lấy cột Target và resample theo ngày (Sum)
+        df_daily = df[[TARGET_COL]].resample('D').sum()
 
-        found_exog = []
-
-        # Quét xem file CSV có những cột nào trong cấu hình EXOG_CONFIG
-        for col_name, agg_method in EXOG_CONFIG.items():
-            if col_name in df.columns:
-                agg_dict[col_name] = agg_method
-                found_exog.append(col_name)
-
-        # 2. Resample sang Daily
-        df_daily = df.resample('D').agg(agg_dict)
-
-        # 3. Xử lý missing data sinh ra do resample
+        # 2. Xử lý missing data sinh ra do resample
         df_daily = df_daily.ffill().bfill()
 
-        return df_daily, found_exog
+        return df_daily
 
     except Exception as e:
         print(f"  [Error] Lỗi xử lý file {csv_path.name}: {e}")
-        return None, []
+        return None
 
 # ================== HÀM TRAIN ==================
-def train_radiation_model_3(province_name: str, csv_path: Path):
-    print(f"\n☀️  [Model 3] Training: {province_name}...")
+def train_radiation_model_no_exog(province_name: str, csv_path: Path):
+    print(f"\nTraining (No Exog): {province_name}...")
 
-    # 1. Load và Kiểm tra dữ liệu đầu vào
-    result = load_and_aggregate_daily(csv_path)
-    if result is None:
+    # 1. Load dữ liệu
+    df = load_and_aggregate_daily(csv_path)
+    if df is None:
         return
-    df, exog_cols = result
 
     if len(df) < 100:
-        print("  -> Dữ liệu quá ít, bỏ qua.")
+        print("Dữ liệu quá ít, bỏ qua.")
         return
 
-    print(f"  -> Các biến ngoại sinh sử dụng: {', '.join(exog_cols)}")
-
-    # 2. Chia tập Train / Validation
+    # 2. Chia tập Train / Validation (Chỉ có Endog, không có Exog)
     endog = df[TARGET_COL].astype(float)
-    exog = df[exog_cols].astype(float) if exog_cols else None
 
     if len(df) <= VALIDATION_DAYS * 2:
         train_endog = endog
-        train_exog = exog
         val_endog = None
-        val_exog = None
     else:
         train_endog = endog.iloc[:-VALIDATION_DAYS]
-        train_exog = exog.iloc[:-VALIDATION_DAYS] if exog is not None else None
-
         val_endog = endog.iloc[-VALIDATION_DAYS:]
-        val_exog = exog.iloc[-VALIDATION_DAYS:] if exog is not None else None
 
-    # 3. Fit SARIMAX
+    # 3. Cấu hình và Huấn luyện Fit SARIMAX (exog=None)
     try:
         model = SARIMAX(
             endog=train_endog,
-            exog=train_exog,
+            exog=None,  # <--- QUAN TRỌNG: Không dùng biến ngoại sinh
             order=ORDER,
             seasonal_order=SEASONAL_ORDER,
             enforce_stationarity=False,
@@ -141,13 +96,13 @@ def train_radiation_model_3(province_name: str, csv_path: Path):
         # 4. Đánh giá Validation
         msg = ""
         if val_endog is not None:
-            forecast = results.get_forecast(steps=VALIDATION_DAYS, exog=val_exog)
+            # Forecast không cần truyền exog
+            forecast = results.get_forecast(steps=VALIDATION_DAYS, exog=None)
             pred = forecast.predicted_mean
             pred = pred.reindex(val_endog.index).fillna(0)
-            pred[pred < 0] = 0  # Bức xạ không thể âm
+            pred[pred < 0] = 0
 
             mae = np.mean(np.abs(val_endog - pred))
-            # RMSE cho bức xạ thường khá lớn vì giá trị hàng nghìn Wh/m2
             rmse = np.sqrt(np.mean((val_endog - pred) ** 2))
 
             msg = f" | Val MAE: {mae:.2f} Wh/m², RMSE: {rmse:.2f}"
@@ -157,21 +112,21 @@ def train_radiation_model_3(province_name: str, csv_path: Path):
         # 5. Lưu model
         save_name = f"{province_name}_radiation_sarimax.pkl"
         results.save(MODELS_DIR / save_name)
-        print(f"  -> Đã lưu model: {save_name}")
+        print(f"Đã lưu model: {save_name}")
 
     except Exception as e:
-        print(f"  -> Lỗi Training: {e}")
+        print(f"Lỗi Training: {e}")
 
 # ================== MAIN ==================
 
 if __name__ == "__main__":
-    print("=== TRAIN RADIATION MODEL (DAILY SUM)===")
+    print("=== TRAIN RADIATION MODEL (NO EXOG)===")
 
     csv_files = sorted(DATA_DIR.glob("*.csv"))
     if not csv_files:
         print("Không tìm thấy file CSV nào trong thư mục data/")
     else:
         for csv_path in csv_files:
-            train_radiation_model_3(csv_path.stem, csv_path)
+            train_radiation_model_no_exog(csv_path.stem, csv_path)
 
     print("\nHoàn tất toàn bộ!")
