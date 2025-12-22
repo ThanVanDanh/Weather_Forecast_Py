@@ -9,7 +9,7 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
-PARAM_DIR = BASE_DIR / "model_params"
+PARAM_DIR = BASE_DIR / "sarima_params"
 PARAM_DIR.mkdir(exist_ok=True)
 
 
@@ -19,27 +19,13 @@ ORDER = (1, 1, 1)
 SEASONAL_ORDER = (1, 1, 1, 24)
 
 VAL_HOURS = 24 * 7
-
-TARGET_COL = "temperature_2m"
-
-EXOG_COLS = [
-    "relative_humidity_2m",
-    "dewpoint_2m",
-    "wind_speed_10m",
-    "surface_pressure",
-    "precipitation",
-    "cloudcover",
-    "shortwave_radiation",
-]
+TARGET = "temperature_2m"
 
 
 # LOAD DATA
 
-def load_dataset(csv_path: Path) -> pd.DataFrame:
+def load_dataset(csv_path: Path) -> pd.Series:
     df = pd.read_csv(csv_path)
-
-    if "time" not in df.columns:
-        raise ValueError(f"{csv_path.name} missing 'time'")
 
     df["time"] = pd.to_datetime(df["time"])
     df = df.set_index("time").sort_index()
@@ -47,38 +33,29 @@ def load_dataset(csv_path: Path) -> pd.DataFrame:
 
     df = df.ffill().bfill()
 
-    # chỉ dùng 18 tháng gần nhất
+    # dùng 18 tháng gần nhất
     cutoff = df.index.max() - pd.DateOffset(months=18)
     df = df[df.index >= cutoff]
 
-    return df
+    return df[TARGET].astype(float)
 
 
 # TRAIN ONE PROVINCE
 
 def train_province(province: str, csv_path: Path):
-    print(f"\n=== TRAINING {province} ===")
+    print(f"\n=== TRAIN {province} ===")
 
-    df = load_dataset(csv_path)
+    y = load_dataset(csv_path)
 
-    y = df[TARGET_COL].astype(float)
-    exog = df[EXOG_COLS].astype(float)
-
-    if len(df) > VAL_HOURS * 2:
+    if len(y) > VAL_HOURS * 2:
         y_train = y.iloc[:-VAL_HOURS]
         y_val = y.iloc[-VAL_HOURS:]
-
-        exog_train = exog.iloc[:-VAL_HOURS]
-        exog_val = exog.iloc[-VAL_HOURS:]
     else:
         y_train = y
-        exog_train = exog
         y_val = None
-        exog_val = None
 
     model = SARIMAX(
         y_train,
-        exog=exog_train,
         order=ORDER,
         seasonal_order=SEASONAL_ORDER,
         enforce_stationarity=False,
@@ -88,9 +65,8 @@ def train_province(province: str, csv_path: Path):
     results = model.fit(disp=False)
     print(f"[{province}] Fit done | AIC={results.aic:.2f}")
 
-    # validation
     if y_val is not None:
-        forecast = results.get_forecast(steps=VAL_HOURS, exog=exog_val)
+        forecast = results.get_forecast(steps=VAL_HOURS)
         y_pred = forecast.predicted_mean.reindex(y_val.index)
 
         mae = float(np.mean(np.abs(y_val - y_pred)))
@@ -98,44 +74,34 @@ def train_province(province: str, csv_path: Path):
 
         print(f"[{province}] MAE={mae:.3f} | RMSE={rmse:.3f}")
 
-    # SAVE PARAMS ONLY (KEY STEP)
-
+    # SAVE PARAMS ONLY
     payload = {
-        "params": results.params,              # vector tham số
+        "params": results.params,
         "order": ORDER,
         "seasonal_order": SEASONAL_ORDER,
-        "exog_cols": EXOG_COLS,
-        "last_timestamp": y_train.index[-1],   # mốc thời gian cuối
+        "last_timestamp": y_train.index[-1],
     }
 
-    save_path = PARAM_DIR / f"{province}_temp_params.pkl"
+    save_path = PARAM_DIR / f"{province}_sarima_params.pkl"
     joblib.dump(payload, save_path)
 
-    print(f"[{province}] Params saved → {save_path} ({save_path.stat().st_size / 1024:.1f} KB)")
+    print(f"[{province}] Params saved → {save_path}")
 
 
 # TRAIN ALL
 
 def train_all():
-    csv_files = sorted(DATA_DIR.glob("*.csv"))
-    if not csv_files:
-        print("❌ No CSV files found")
-        return
-
-    for csv_path in csv_files:
+    for csv_path in sorted(DATA_DIR.glob("*.csv")):
         try:
             train_province(csv_path.stem, csv_path)
         except Exception as e:
             print(f"⚠️ ERROR {csv_path.stem}: {e}")
 
-    print("\n🎉 TRAINING COMPLETED – PARAMS SAVED ONLY")
+    print("\n🎉 SARIMA TRAINING COMPLETED")
 
 
 # MAIN
 
 if __name__ == "__main__":
-    print("🚀 TRAIN SARIMAX – SAVE PARAMS ONLY")
-    print(f"📁 DATA  : {DATA_DIR}")
-    print(f"📁 PARAM : {PARAM_DIR}")
-
+    print("🚀 TRAIN SARIMA – TEMPERATURE ONLY")
     train_all()
