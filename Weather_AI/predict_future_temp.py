@@ -1,35 +1,17 @@
-"""
-PREDICT TEMPERATURE FROM SAVED PARAMS
-====================================
-
-✔ KHÔNG load SARIMAXResults
-✔ KHÔNG file GB
-✔ Rebuild model khi forecast
-✔ Chuẩn dùng cho Django / Web
-
-Function chính:
-    forecast_temperature(province, steps=120)
-
-"""
-
 from pathlib import Path
 import pandas as pd
 import joblib
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 
-# ==============================
 # PATH CONFIG
-# ==============================
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 PARAM_DIR = BASE_DIR / "model_params"
 
 
-# ==============================
 # CONFIG
-# ==============================
 
 TARGET_COL = "temperature_2m"
 
@@ -45,20 +27,13 @@ EXOG_COLS = [
 ]
 
 
-# ==============================
 # UTILS
-# ==============================
 
 def normalize_province(name: str) -> str:
-    """Chuẩn hóa tên tỉnh"""
     return name.strip().replace(" ", "_")
 
 
 def load_recent_history(province: str, history_hours: int = 24 * 7) -> pd.DataFrame:
-    """
-    Load dữ liệu gần nhất để rebuild model state.
-    7 ngày là đủ cho Kalman filter ổn định.
-    """
     csv_path = DATA_DIR / f"{province}.csv"
     if not csv_path.exists():
         raise FileNotFoundError(f"Không tìm thấy dữ liệu tỉnh {province}")
@@ -73,21 +48,15 @@ def load_recent_history(province: str, history_hours: int = 24 * 7) -> pd.DataFr
 
 
 def build_future_exog(last_row: pd.Series, steps: int) -> pd.DataFrame:
-    """
-    Persistence assumption:
-    giữ nguyên exogenous hiện tại cho tương lai gần
-    """
     future = pd.DataFrame(
         {col: [last_row[col]] * steps for col in EXOG_COLS}
     )
     return future
 
 
-# ==============================
 # FORECAST FUNCTION
-# ==============================
 
-def forecast_temperature(province: str, steps: int = 120) -> pd.DataFrame:
+def     forecast_temperature(province: str, steps: int = 120) -> pd.DataFrame:
     province = normalize_province(province)
 
     param_path = PARAM_DIR / f"{province}_temp_params.pkl"
@@ -120,7 +89,6 @@ def forecast_temperature(province: str, steps: int = 120) -> pd.DataFrame:
 
     # Future exogenous
     future_exog = build_future_exog(history.iloc[-1], steps)
-
     # Forecast
     forecast_res = results.get_forecast(steps=steps, exog=future_exog)
     mean_forecast = forecast_res.predicted_mean
@@ -140,10 +108,9 @@ def forecast_temperature(province: str, steps: int = 120) -> pd.DataFrame:
     return df_forecast
 
 
-# ==============================
 # TEST
-# ==============================
 
 if __name__ == "__main__":
-    df = forecast_temperature("Tuyen_Quang", steps=120)
-    print(df)
+    df = forecast_temperature("Cao_Bang", steps=120)
+    df.to_csv("result_demo/forecast_CaoBang_120h.csv", index=False)
+

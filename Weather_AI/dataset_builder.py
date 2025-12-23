@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 
 PROVINCE_COORDINATES = {
-    "Tuyen_Quang": (21.82356, 105.21424),
+    # "Tuyen_Quang": (21.82356, 105.21424),
     # "Lao_Cai": (21.72000, 104.91000),
     # "Thai_Nguyen": (21.59000, 105.85000),
     # "Phu_Tho": (21.32000, 105.40000),
@@ -29,7 +29,7 @@ PROVINCE_COORDINATES = {
     # "Vinh_Long": (10.25000, 105.97000),
     # "Dong_Thap": (10.36000, 106.36000),
     # "Ca_Mau": (9.18000, 105.15000),
-    # "An_Giang": (10.01000, 105.08000),
+    "An_Giang": (10.01000, 105.08000),
     # "Ha_Noi": (21.02000, 105.84000),
     # "Hue": (16.46000, 107.60000),
     # "Lai_Chau": (22.39922, 103.44532),
@@ -111,7 +111,7 @@ def fetch_full_dataset(lat, lon):
     params = {
         "latitude": lat,
         "longitude": lon,
-        "start_date": "2024-12-28",
+        "start_date": "2025-01-02",
         "end_date": "2025-01-06",
         "hourly": HOURLY,
         "timezone": TIMEZONE,
@@ -149,6 +149,7 @@ if __name__ == "__main__":
             filename = f"{province}.csv"
             # df.to_csv(os.path.join("data_test", filename), index_label="time")
             df_daily.to_csv(os.path.join("data_test", filename), index_label="time")
+            df.to_csv(os.path.join("data_test", filename), index_label="time")
             print(f"✔ {province}: {len(df)} dòng")
         except Exception as e:
             print(f"❌ Lỗi {province}: {e}")
