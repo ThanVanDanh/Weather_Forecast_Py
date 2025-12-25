@@ -17,7 +17,7 @@ def show_chart():
     # 1. Kiểm tra file tồn tại
     if not MODEL_PATH.exists():
         print(f"❌ Không tìm thấy model tại: {MODEL_PATH}")
-        print("   -> chạy 'python Weather_AI/train_radiation_model.py' chưa?")
+        print("   -> chạy 'python Weather_AI/train_radiation_model_lstm.py' chưa?")
         return
 
     if not DATA_PATH.exists():

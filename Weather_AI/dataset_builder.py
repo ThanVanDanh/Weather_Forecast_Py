@@ -111,7 +111,7 @@ def fetch_full_dataset(lat, lon):
     params = {
         "latitude": lat,
         "longitude": lon,
-        "start_date": "2025-01-02",
+        "start_date": "2025-01-01",
         "end_date": "2025-01-06",
         "hourly": HOURLY,
         "timezone": TIMEZONE,
@@ -143,13 +143,12 @@ if __name__ == "__main__":
     for province, (lat, lon) in tqdm(PROVINCE_COORDINATES.items()):
         try:
             df = fetch_full_dataset(lat, lon)
-            #Cộng tổng bức xạ các giờ lại thành 1 ngày
-            df_daily = df.resample('D').sum()
+            # #Cộng tổng bức xạ các giờ lại thành 1 ngày
+            # df_daily = df.resample('D').sum()
             # Đổi tên file cho gọn, không có dấu cách
             filename = f"{province}.csv"
-            # df.to_csv(os.path.join("data_test", filename), index_label="time")
-            df_daily.to_csv(os.path.join("data_test", filename), index_label="time")
             df.to_csv(os.path.join("data_test", filename), index_label="time")
+            # df_daily.to_csv(os.path.join("data_test", filename), index_label="time")
             print(f"✔ {province}: {len(df)} dòng")
         except Exception as e:
             print(f"❌ Lỗi {province}: {e}")
