@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iOS Weather - Demo</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "ios-blue": "#4A90E2",
+              "ios-light-blue": "#5FC7FF",
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- Bootstrap -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+      }
+
+      .ios-gradient-bg {
+        background: linear-gradient(
+          180deg,
+          #4a90e2 0%,
+          #5fc7ff 50%,
+          #87ceeb 100%
+        );
+        background-size: 200% 200%;
+        animation: gradientShift 15s ease infinite;
+        min-height: 100vh;
+      }
+
+      @keyframes gradientShift {
+        0%,
+        100% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+      }
+
+      .glass-card {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(30px) saturate(180%);
+        -webkit-backdrop-filter: blur(30px) saturate(180%);
+        border-radius: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+      }
+
+      .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ios-gradient-bg">
+      <div class="container mx-auto px-4 py-20">
+        <!-- Main Weather Card -->
+        <div class="max-w-2xl mx-auto text-center mb-8">
+          <div class="flex items-center justify-center gap-2 mb-4">
+            <i class="fas fa-location-dot text-white/80 text-xl"></i>
+            <h1 class="text-4xl font-light text-white">Hồ Chí Minh</h1>
+          </div>
+
+          <div class="text-8xl font-thin text-white mb-4">
+            32<sup class="text-5xl">°</sup>
+          </div>
+
+          <p class="text-2xl text-white/90 mb-4">Trời quang đãng</p>
+
+          <div class="flex items-center justify-center gap-4 text-white/80">
+            <span class="flex items-center gap-1">
+              <i class="fas fa-arrow-up text-red-300"></i>
+              <strong>34°</strong>
+            </span>
+            <span>•</span>
+            <span class="flex items-center gap-1">
+              <i class="fas fa-arrow-down text-blue-300"></i>
+              <strong>28°</strong>
+            </span>
+          </div>
+        </div>
+
+        <!-- Hourly Forecast -->
+        <div
+          class="glass-card p-6 mb-6 max-w-4xl mx-auto transition-all duration-300"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <h3
+              class="text-sm uppercase tracking-wider text-white/80 font-semibold flex items-center gap-2"
+            >
+              <i class="fas fa-clock"></i>
+              Dự báo theo giờ
+            </h3>
+            <span class="text-xs text-white/60">24 giờ tới</span>
+          </div>
+
+          <div class="flex gap-4 overflow-x-auto pb-2">
+            <div
+              class="glass-card p-4 min-w-[80px] text-center hover:scale-105 transition-transform cursor-pointer"
+            >
+              <div class="text-white/90 text-sm mb-2">Bây giờ</div>
+              <i class="fas fa-sun text-yellow-300 text-3xl mb-2"></i>
+              <div class="text-white font-bold text-lg">32°</div>
+            </div>
+
+            <div
+              class="glass-card p-4 min-w-[80px] text-center hover:scale-105 transition-transform cursor-pointer"
+            >
+              <div class="text-white/90 text-sm mb-2">14:00</div>
+              <i class="fas fa-cloud-sun text-blue-200 text-3xl mb-2"></i>
+              <div class="text-white font-bold text-lg">31°</div>
+            </div>
+
+            <div
+              class="glass-card p-4 min-w-[80px] text-center hover:scale-105 transition-transform cursor-pointer"
+            >
+              <div class="text-white/90 text-sm mb-2">15:00</div>
+              <i class="fas fa-cloud text-gray-200 text-3xl mb-2"></i>
+              <div class="text-white font-bold text-lg">30°</div>
+            </div>
+
+            <div
+              class="glass-card p-4 min-w-[80px] text-center hover:scale-105 transition-transform cursor-pointer"
+            >
+              <div class="text-white/90 text-sm mb-2">16:00</div>
+              <i class="fas fa-cloud-rain text-blue-300 text-3xl mb-2"></i>
+              <div class="text-xs text-blue-200 mb-1">
+                <i class="fas fa-droplet"></i> 60%
+              </div>
+              <div class="text-white font-bold text-lg">29°</div>
+            </div>
+
+            <div
+              class="glass-card p-4 min-w-[80px] text-center hover:scale-105 transition-transform cursor-pointer"
+            >
+              <div class="text-white/90 text-sm mb-2">17:00</div>
+              <i class="fas fa-cloud-sun text-orange-200 text-3xl mb-2"></i>
+              <div class="text-white font-bold text-lg">28°</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weather Details Grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          <!-- UV Index -->
+          <div
+            class="glass-card p-5 hover:scale-105 transition-all cursor-pointer"
+          >
+            <div class="flex items-center gap-2 mb-3">
+              <div
+                class="w-10 h-10 rounded-full bg-yellow-400/20 flex items-center justify-center"
+              >
+                <i class="fas fa-sun text-yellow-300 text-lg"></i>
+              </div>
+              <div class="text-xs text-white/80 uppercase tracking-wide">
+                Chỉ số UV
+              </div>
+            </div>
+            <div class="text-3xl font-bold text-white mb-1">8</div>
+            <div class="text-sm text-white/70">Rất cao</div>
+            <div
+              class="mt-3 h-1.5 bg-gradient-to-r from-green-400 via-yellow-400 via-orange-400 to-red-500 rounded-full"
+            ></div>
+          </div>
+
+          <!-- Wind -->
+          <div
+            class="glass-card p-5 hover:scale-105 transition-all cursor-pointer"
+          >
+            <div class="flex items-center gap-2 mb-3">
+              <div
+                class="w-10 h-10 rounded-full bg-cyan-400/20 flex items-center justify-center"
+              >
+                <i class="fas fa-wind text-cyan-300 text-lg"></i>
+              </div>
+              <div class="text-xs text-white/80 uppercase tracking-wide">
+                Gió
+              </div>
+            </div>
+            <div class="text-3xl font-bold text-white mb-1">12 km/h</div>
+            <div class="text-sm text-white/70">Đông Nam</div>
+          </div>
+
+          <!-- Humidity -->
+          <div
+            class="glass-card p-5 hover:scale-105 transition-all cursor-pointer"
+          >
+            <div class="flex items-center gap-2 mb-3">
+              <div
+                class="w-10 h-10 rounded-full bg-blue-400/20 flex items-center justify-center"
+              >
+                <i class="fas fa-droplet text-blue-300 text-lg"></i>
+              </div>
+              <div class="text-xs text-white/80 uppercase tracking-wide">
+                Độ ẩm
+              </div>
+            </div>
+            <div class="text-3xl font-bold text-white mb-1">75%</div>
+            <div class="text-sm text-white/70">
+              Điểm sương <span class="font-medium">26°</span>
+            </div>
+          </div>
+
+          <!-- Feels Like -->
+          <div
+            class="glass-card p-5 hover:scale-105 transition-all cursor-pointer"
+          >
+            <div class="flex items-center gap-2 mb-3">
+              <div
+                class="w-10 h-10 rounded-full bg-orange-400/20 flex items-center justify-center"
+              >
+                <i class="fas fa-temperature-half text-orange-300 text-lg"></i>
+              </div>
+              <div class="text-xs text-white/80 uppercase tracking-wide">
+                Cảm giác như
+              </div>
+            </div>
+            <div class="text-3xl font-bold text-white mb-1">35°</div>
+            <div class="text-sm text-white/70">Nóng hơn thực tế</div>
+          </div>
+
+          <!-- Visibility -->
+          <div
+            class="glass-card p-5 hover:scale-105 transition-all cursor-pointer"
+          >
+            <div class="flex items-center gap-2 mb-3">
+              <div
+                class="w-10 h-10 rounded-full bg-purple-400/20 flex items-center justify-center"
+              >
+                <i class="fas fa-eye text-purple-300 text-lg"></i>
+              </div>
+              <div class="text-xs text-white/80 uppercase tracking-wide">
+                Tầm nhìn
+              </div>
+            </div>
+            <div class="text-3xl font-bold text-white mb-1">10 km</div>
+            <div class="text-sm text-white/70">Tuyệt vời</div>
+          </div>
+
+          <!-- Pressure -->
+          <div
+            class="glass-card p-5 hover:scale-105 transition-all cursor-pointer"
+          >
+            <div class="flex items-center gap-2 mb-3">
+              <div
+                class="w-10 h-10 rounded-full bg-teal-400/20 flex items-center justify-center"
+              >
+                <i class="fas fa-gauge text-teal-300 text-lg"></i>
+              </div>
+              <div class="text-xs text-white/80 uppercase tracking-wide">
+                Áp suất
+              </div>
+            </div>
+            <div class="text-3xl font-bold text-white mb-1">1013 hPa</div>
+            <div class="text-sm text-white/70">Bình thường</div>
+          </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="text-center mt-12 text-white/60 text-sm">
+          <p>✨ iOS Weather Style with Tailwind CSS + Bootstrap</p>
+          <p class="mt-2">
+            🎨 Glassmorphism • Animated Gradients • Smooth Transitions
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

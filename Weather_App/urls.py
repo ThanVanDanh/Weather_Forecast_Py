@@ -34,4 +34,7 @@ urlpatterns = [
     # 8. URL cho trang chủ (dashboard)
     # (View này đã có trong views.py nhưng chưa được gán URL)
     path('', views.weather_dashboard, name='dashboard'),
+    
+    # 7. URL cho giao diện iOS Weather style
+    path('ios/', views.weather_dashboard_ios, name='dashboard_ios'),
 ]
