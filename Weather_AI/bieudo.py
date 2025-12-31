@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 # =========================
 truth_path = r"data_test/An_Giang.csv"      # file nhiệt độ thực tế
 sarima_path = r"result_demo/An_Giang_Sarima.csv"   # file dự báo SARIMA
-lstm_path = r"result_demo/An_Giang_LSTM_v3.csv"       # file dự báo LSTM
+lstm_path = r"result_lstm_v4/An_Giang_LSTM_v4.csv"       # file dự báo LSTM
 
 
 # =========================
