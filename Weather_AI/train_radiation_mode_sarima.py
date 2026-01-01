@@ -1,100 +1,109 @@
-import os
-from pathlib import Path
-from typing import Optional
-import numpy as np
 import pandas as pd
+import numpy as np
+from pathlib import Path
 from statsmodels.tsa.statespace.sarimax import SARIMAX
+import warnings
 
-# ================== CẤU HÌNH CHUẨN ==================
-# Lấy đường dẫn thư mục chứa file code hiện tại (Weather_AI)
+warnings.filterwarnings("ignore")
+
+# ================== CẤU HÌNH ==================
 BASE_DIR = Path(__file__).resolve().parent
-
 DATA_DIR = BASE_DIR / "data"
 MODELS_DIR = BASE_DIR / "model_solar_sarima"
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Tên tỉnh mục tiêu
 TARGET_PROVINCE = "An_Giang"
 TARGET_COL = "shortwave_radiation"
 
-# Cấu hình SARIMA có MÙA VỤ (Seasonal)
-VALIDATION_DAYS = 30
-
-# Order (p,d,q) cho phần phi mùa vụ (Trend)
-ORDER = (1, 1, 1)
-
-# Seasonal Order (P,D,Q,s) cho phần mùa vụ
-# s: Chu kỳ lặp lại.
-# - Nếu dữ liệu ngày (D): s=7 (Tuần), s=30 (Tháng), s=365 (Năm - Rất nặng!)
-# - Nếu bạn thấy chạy quá lâu, hãy giảm s xuống hoặc về (0,0,0,0)
-SEASONAL_ORDER = (1, 1, 1, 7)
+# Cấu hình ARIMA (đã tinh chỉnh cho Hourly)
+# p,d,q: Tự hồi quy, sai phân, trung bình trượt
+ORDER = (2, 0, 2)
+# P,D,Q,s: Mùa vụ. s=24 (chu kỳ 24h).
+# Lưu ý: Vì đã dùng Fourier gánh bớt phần chu kỳ, ta để Seasonal nhẹ hoặc tắt (0,0,0,0) để train nhanh hơn.
+# Ở đây mình để (1,0,1,24) để bắt các mẫu còn sót lại.
+SEASONAL_ORDER = (1, 0, 1, 24)
 
 
-# ================== HÀM XỬ LÝ ==================
-def load_and_aggregate_daily(csv_path: Path) -> Optional[pd.DataFrame]:
-    try:
-        df = pd.read_csv(csv_path)
-        if "time" not in df.columns: return None
-        df["time"] = pd.to_datetime(df["time"])
-        df = df.set_index("time").sort_index()
+def add_fourier_terms(df, time_col_name='time'):
+    """
+    Tạo biến ngoại sinh (Exogenous) dựa trên chu kỳ thời gian
+    """
+    df_exog = df.copy()
+    if time_col_name in df_exog.columns:
+        times = df_exog[time_col_name]
+    else:
+        times = df_exog.index
 
-        if TARGET_COL not in df.columns: return None
+    # 1. Chu kỳ Ngày (24h) - Quan trọng nhất cho bức xạ
+    # Giúp model hiểu: 12h trưa nắng to, 0h đêm không có nắng
+    df_exog['hour_sin'] = np.sin(2 * np.pi * times.hour / 24)
+    df_exog['hour_cos'] = np.cos(2 * np.pi * times.hour / 24)
 
-        # Resample Daily (Tính tổng bức xạ trong ngày)
-        df_daily = df[[TARGET_COL]].resample('D').sum().ffill().bfill()
-        return df_daily
-    except Exception as e:
-        print(f"Lỗi file {csv_path.name}: {e}")
-        return None
+    # 2. Chu kỳ Năm (365.25 ngày)
+    # Giúp model hiểu: Mùa hè nắng nhiều hơn mùa đông
+    day_of_year = times.dayofyear
+    df_exog['year_sin'] = np.sin(2 * np.pi * day_of_year / 365.25)
+    df_exog['year_cos'] = np.cos(2 * np.pi * day_of_year / 365.25)
+
+    return df_exog[['hour_sin', 'hour_cos', 'year_sin', 'year_cos']]
 
 
-def train_sarima_angiang():
-    print(f"=== TRAINING SARIMA MÙA VỤ (TỈNH: {TARGET_PROVINCE}) ===")
-    print(f"Cấu hình: Order={ORDER}, Seasonal={SEASONAL_ORDER}")
+def load_and_prep_hourly_data(csv_path: Path):
+    df = pd.read_csv(csv_path)
+    df["time"] = pd.to_datetime(df["time"])
+    df = df.set_index("time").sort_index()
 
-    # Tìm file csv của An Giang
+    # Resample về theo GIỜ (1h) thay vì theo ngày
+    # ffill/bfill để lấp dữ liệu thiếu nhỏ, cẩn thận đừng lấp quá xa
+    df_hourly = df[[TARGET_COL]].resample('h').mean().interpolate(method='linear')
+
+    # Xử lý số âm (bức xạ không thể âm)
+    df_hourly[df_hourly < 0] = 0
+
+    # Tạo biến ngoại sinh
+    exog = add_fourier_terms(df_hourly, time_col_name=None)  # Index là time
+
+    return df_hourly, exog
+
+
+def train_sarimax_hourly():
+    print(f"=== TRAINING SARIMAX HOURLY (TỈNH: {TARGET_PROVINCE}) ===")
     csv_path = DATA_DIR / f"{TARGET_PROVINCE}.csv"
 
     if not csv_path.exists():
-        print(f"❌ Không tìm thấy file dữ liệu: {csv_path}")
+        print(f"❌ Thiếu file data: {csv_path}")
         return
 
     # 1. Load Data
-    df = load_and_aggregate_daily(csv_path)
-    if df is None or len(df) < 100:
-        print("Dữ liệu lỗi hoặc quá ít.")
-        return
+    df, exog = load_and_prep_hourly_data(csv_path)
 
-    # 2. Chia Train/Val
-    endog = df[TARGET_COL].astype(float)
-    train_endog = endog.iloc[:-VALIDATION_DAYS]
-    val_endog = endog.iloc[-VALIDATION_DAYS:]
+    # Lấy 1000 giờ cuối để train cho nhanh (hoặc lấy hết nếu máy mạnh)
+    # Solar data theo giờ rất nặng (1 năm = 8760 dòng).
+    # Demo lấy 3 tháng gần nhất (~2000 dòng).
+    TRAIN_SIZE = 24 * 90
 
-    # 3. Train
-    print(f"Đang train model (có thể lâu hơn bình thường)...")
+    y_train = df[TARGET_COL].iloc[-TRAIN_SIZE:]
+    X_train = exog.iloc[-TRAIN_SIZE:]
+
+    print(f"Dữ liệu train: {len(y_train)} dòng (đã resample 1h).")
+    print("Đang train model (có thể mất vài phút vì s=24)...")
+
     try:
-        # Thêm enforce_stationarity=False để giảm lỗi hội tụ khi dùng Seasonal
+        # Sử dụng SARIMAX với biến ngoại sinh (exog)
         model = SARIMAX(
-            endog=train_endog,
+            endog=y_train,
+            exog=X_train,
             order=ORDER,
             seasonal_order=SEASONAL_ORDER,
             enforce_stationarity=False,
             enforce_invertibility=False
         )
-        results = model.fit(disp=False)
+        results = model.fit(disp=False, method='powell')  # 'powell' thường bền hơn với dữ liệu phức tạp
 
-        # 4. Đánh giá sơ bộ
-        forecast = results.get_forecast(steps=VALIDATION_DAYS)
-        pred = forecast.predicted_mean
+        print(f"✅ Train xong. AIC: {results.aic:.1f}")
 
-        # Xử lý số âm nếu có
-        pred[pred < 0] = 0
-
-        mae = np.mean(np.abs(val_endog - pred))
-        print(f"✅ Train xong. AIC: {results.aic:.1f} | MAE Val: {mae:.2f}")
-
-        # 5. Lưu Model
-        save_name = f"{TARGET_PROVINCE}_radiation_sarimax.pkl"
+        # Lưu Model
+        save_name = f"{TARGET_PROVINCE}_radiation_hourly_sarimax.pkl"
         results.save(MODELS_DIR / save_name)
         print(f"💾 Đã lưu model tại: {MODELS_DIR / save_name}")
 
@@ -103,4 +112,4 @@ def train_sarima_angiang():
 
 
 if __name__ == "__main__":
-    train_sarima_angiang()
+    train_sarimax_hourly()
