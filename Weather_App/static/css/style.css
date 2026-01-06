@@ -1,5 +1,5 @@
 :root {
-    --primary-green: #098d4b;
+    --primary-green: linear-gradient(to bottom, #1b2735 0%, #090a0f 100%);
     --card-bg: #ffffff;
     --text-primary: #212529;
     --text-secondary: rgba(53, 51, 51, 0.94);
@@ -16,7 +16,8 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #ffffff;
+    /*background-color: #ffffff;*/
+      background: linear-gradient(to bottom, #1b2735 0%, #090a0f 100%);
     color: var(--text-primary);
     line-height: 1.5;
 }
@@ -26,18 +27,59 @@ body {
     height: 90px;
 }
 
+/*.weather-dashboard {*/
+/*    display: flex;*/
+/*    justify-content: center;*/
+/*    align-items: center;*/
+/*    min-height: 600px;*/
+/*    padding: 70px 20px;*/
+/*    background-image: url('../image/bg-home-lancapse.jpg');*/
+/*    background-size: cover;*/
+/*    background-position: center;*/
+/*}*/
 .weather-dashboard {
+    position: relative; /* Để canvas con bám theo */
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 600px;
     padding: 70px 20px;
-    background-image: url('../image/bg-home-lancapse.jpg');
-    background-size: cover;
-    background-position: center;
+    overflow: hidden;
+
+    /* QUAN TRỌNG: Thêm màu nền tối giống Apple Weather */
+    background: linear-gradient(to bottom, #1b2735 0%, #090a0f 100%);
 }
 
+#rain-canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* Nằm dưới cùng */
+}
+
+/* Canvas do Three.js tạo ra */
+#rain-canvas-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Overlay (nếu muốn giữ để làm tối thêm) */
+.overlay-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* background: rgba(0, 0, 0, 0.2);  Có thể giảm bớt hoặc xóa nếu nền gradient đã đẹp */
+    z-index: 2;
+    pointer-events: none; /* Để chuột bấm xuyên qua được */
+}
 .content-relative {
+    position: relative;
+    z-index: 3; /* Nổi lên trên cùng */
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
@@ -144,7 +186,7 @@ body {
 }
 
 .card:hover {
-   border: 1px solid var(--primary-green);
+   /*border: 1px solid var(--primary-green);*/
 }
 
 .forecast-card {
@@ -198,10 +240,11 @@ body {
 /* === NỘI DUNG PHỤ (NỔI BẬT & BẢN ĐỒ) === */
 
 .secondary-content{
-    background-image: url('../image/bg0-home-2.jpg');
+    /*background-image: url('../image/bg0-home-2.jpg');*/
     background-repeat: no-repeat;
     background-size: 100% 50%;
     background-position: center bottom;
+
 
 }
 .secondary-content .container{
