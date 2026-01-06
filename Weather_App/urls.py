@@ -22,7 +22,10 @@ urlpatterns = [
     #5. URL cho trang cảnh báo thời tiết
     path('warning/', views.warning_view, name='api_weather_warning'),
 
-    # 6. URL cho trang chủ (dashboard)
+    # 6. URL cho trang năng lượng mặt trời
+    path('solar/', views.solar_energy_view, name='solar_energy'),
+
+    # 7. URL cho trang chủ (dashboard)
     # (View này đã có trong views.py nhưng chưa được gán URL)
     path('', views.weather_dashboard, name='dashboard'),
 ]

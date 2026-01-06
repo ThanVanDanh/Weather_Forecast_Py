@@ -103,3 +103,7 @@ def province_view(request, slug):
 def warning_view(request):
 
     return render(request, 'warningweather.html')
+
+def solar_energy_view(request):
+    """Trang năng lượng mặt trời"""
+    return render(request, 'solar-energy.html')
