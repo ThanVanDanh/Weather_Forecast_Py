@@ -23,6 +23,18 @@ TARGET_COLUMN = 'shortwave_radiation'
 SEQ_LENGTH = 72
 PREDICT_HORIZON = 24
 
+# Cột ngoại sinh có thể dùng nếu tồn tại trong CSV
+EXOG_COLUMNS = [
+    'temperature_2m',
+    'relative_humidity_2m',
+    'cloud_cover',
+    'precipitation',
+    'wind_speed_10m'
+]
+
+# Tháng mùa mưa (Việt Nam phổ biến: 5-10)
+WET_MONTHS = {5, 6, 7, 8, 9, 10}
+
 # --- BUFF CHỈ SỐ Ở ĐÂY ---
 BATCH_SIZE = 32
 EPOCHS = 50
@@ -42,7 +54,17 @@ def process_datetime_features(df):
     df['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)
     df['month_sin'] = np.sin(2 * np.pi * df['month'] / 12)
     df['month_cos'] = np.cos(2 * np.pi * df['month'] / 12)
-    return df[[TARGET_COLUMN, 'hour_sin', 'hour_cos', 'month_sin', 'month_cos']]
+
+    # Gắn cờ mùa mưa để mô hình học tính mùa vụ (1: mùa mưa, 0: mùa khô)
+    df['wet_season'] = df['month'].isin(WET_MONTHS).astype(np.float32)
+
+    # Chỉ giữ những cột ngoại sinh có thật trong dữ liệu
+    available_exog = [col for col in EXOG_COLUMNS if col in df.columns]
+
+    feature_cols = [TARGET_COLUMN] + available_exog + [
+        'hour_sin', 'hour_cos', 'month_sin', 'month_cos', 'wet_season'
+    ]
+    return df[feature_cols]
 
 
 def create_dataset(X_scaled, y_scaled, seq_len, horizon):
