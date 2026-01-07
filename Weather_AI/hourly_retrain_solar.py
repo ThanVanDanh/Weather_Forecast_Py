@@ -133,10 +133,10 @@ def run_hourly_job(province_name):
     output_path = RESULT_DIR / f"forecast_{province_name}.csv"
     result_df.to_csv(output_path, index=False)
     print(f"--> ✅ {province_name}: Đã Retrain & Dự báo xong.")
-#
-#
-# if __name__ == "__main__":
-#     all_files = list(DATA_DIR.glob("*.csv"))
-#     print(f"🚀 Bắt đầu cập nhật giờ & dự báo cho {len(all_files)} tỉnh...")
-#     for f in all_files:
-#         run_hourly_job(f.stem)
+
+
+if __name__ == "__main__":
+    all_files = list(DATA_DIR.glob("*.csv"))
+    print(f"🚀 Bắt đầu cập nhật giờ & dự báo cho {len(all_files)} tỉnh...")
+    for f in all_files:
+        run_hourly_job(f.stem)

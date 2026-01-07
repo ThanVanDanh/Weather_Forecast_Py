@@ -151,43 +151,23 @@ def train_process(file_path):
         return f"❌ {province_name}: Lỗi {str(e)}"
 
 
-# ... (Giữ nguyên các phần import và các hàm create_advanced_features, build_heavy_model, train_process)
-
 def main():
-    """
-    Sửa đổi để chạy tuần tự cho một tỉnh cụ thể
-    """
-    # 1. Tùy chọn GPU: Nếu bạn muốn dùng GPU để huấn luyện nhanh hơn cho 1 tỉnh,
-    # hãy comment 2 dòng dưới đây. Nếu muốn dùng CPU thì giữ nguyên.
+    # Tắt GPU ảo để ép chạy CPU đa nhân (multiprocessing) hiệu quả hơn
     import tensorflow as tf
     tf.config.set_visible_devices([], 'GPU')
 
-    # 2. Chỉ định chính xác file An Giang
-    # Lưu ý: Tên file phải khớp chính xác với file trong thư mục data (ví dụ: An Giang.csv hoặc An_Giang.csv)
-    target_file = DATA_DIR / "An_Giang.csv"
+    all_files = glob.glob(str(DATA_DIR / "*.csv"))
+    print(f"🚀 Bắt đầu Train 'Heavy' Model cho {len(all_files)} tỉnh...")
+    print(f"⚙️ Sử dụng {MAX_WORKERS} nhân CPU song song.")
 
-    if not target_file.exists():
-        print(f"❌ Không tìm thấy file: {target_file}")
-        # In ra các file có sẵn để bạn kiểm tra tên
-        print("Các file hiện có trong thư mục data:", [f.name for f in DATA_DIR.glob("*.csv")])
-        return
+    start = time.time()
+    with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        results = executor.map(train_process, all_files)
+        for res in results:
+            print(res)
 
-    print(f"🚀 Bắt đầu huấn luyện mô hình TEST cho: {target_file.name}")
-    print(f"⚙️ Chế độ: Huấn luyện tuần tự (Single Task).")
-
-    start_time = time.time()
-
-    # 3. Gọi trực tiếp hàm train_process, không dùng ProcessPoolExecutor
-    # Việc chạy trực tiếp giúp bạn thấy log (Epoch 1/70...) hiện lên màn hình rõ ràng hơn
-    result = train_process(str(target_file))
-
-    print("\n" + "=" * 30)
-    print(result)
-    print("=" * 30)
-
-    duration = (time.time() - start_time) / 60
-    print(f"🏁 Hoàn tất. Thời gian thực hiện: {duration:.2f} phút.")
+    print(f"\n🏁 Hoàn tất huấn luyện sâu. Thời gian: {(time.time() - start) / 60:.1f} phút.")
 
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
