@@ -1,6 +1,180 @@
+// Hàm tiện ích để cập nhật DOM
+// province-template.js
+function updateCurrentWeatherDOM(data, cityName) {
+    console.log("Dữ liệu API trả về:", data);
+    console.log("Hourly Temp:", data?.hourly?.temperature_2m);
+    if (!data || !data.current_weather) {
+        console.error("Dữ liệu API thiếu current_weather.");
+        return;
+    }
+
+    const current = data.current_weather;
+    const hourly = data.hourly;
+    const daily = data.daily;
+
+    // Lấy giờ hiện tại để tra cứu trong mảng hourly (0-23)
+    const now = new Date();
+    const currentHourIndex = now.getHours();
+
+    // 1. Cập nhật Nhiệt độ chính
+    const tempElement = document.getElementById('current-temperature');
+    if (tempElement) tempElement.textContent = `${Math.round(current.temperature)}°`;
+
+    // 2. Cập nhật Trạng thái chữ & Icon
+    const isDay = current.is_day !== undefined ? current.is_day : 1;
+
+    const statusText = getWeatherStatusFromCode(current.weathercode, isDay);
+    const statusElement = document.getElementById('current-status-text');
+    if (statusElement) statusElement.textContent = statusText;
+
+    const iconName = getWeatherIcon(current.weathercode, isDay);
+    const iconContainer = document.getElementById('current-icon');
+    if (iconContainer) {
+        // Thay thế icon cũ bằng thẻ img
+        iconContainer.innerHTML = `<img src="/static/image/${iconName}" alt="${statusText}" style="width: 80px; height: 80px;">`;
+    }
+
+    // 3. Cập nhật Cảm giác như (Apparent Temperature)
+    if (hourly && hourly.apparent_temperature) {
+        const feelsLike = Math.round(hourly.apparent_temperature[currentHourIndex]);
+        const feelsLikeElement = document.getElementById('current-feels-like');
+        if (feelsLikeElement) feelsLikeElement.textContent = `${feelsLike}°`;
+    }
+
+    // 4. Cập nhật Min/Max trong ngày
+    if (daily && daily.temperature_2m_min && daily.temperature_2m_max) {
+        const tempMin = Math.round(daily.temperature_2m_min[0]);
+        const tempMax = Math.round(daily.temperature_2m_max[0]);
+        const minMaxElement = document.getElementById('detail-temp-minmax');
+        if (minMaxElement) minMaxElement.textContent = `${tempMin}°/${tempMax}°`;
+    }
+
+    // 5. Cập nhật Độ ẩm (Lấy theo giờ hiện tại)
+    if (hourly && hourly.relativehumidity_2m) {
+        const humidity = hourly.relativehumidity_2m[currentHourIndex];
+        const humidityElement = document.getElementById('detail-humidity');
+        if (humidityElement) humidityElement.textContent = `${humidity}%`;
+    }
+
+    // 6. Cập nhật Áp suất
+    if (hourly && hourly.pressure_msl) {
+        const pressure = Math.round(hourly.pressure_msl[currentHourIndex]);
+        const pressureElement = document.getElementById('detail-pressure');
+        if (pressureElement) pressureElement.textContent = `${pressure} hPa`;
+    }
+
+    // 7. Cập nhật Tầm nhìn (đổi m sang km)
+    if (hourly && hourly.visibility) {
+        const visibilityKm = (hourly.visibility[currentHourIndex] / 1000).toFixed(1);
+        const visElement = document.getElementById('detail-visibility');
+        if (visElement) visElement.textContent = `${visibilityKm} km`;
+    }
+
+    // 8. Cập nhật Gió
+    const windElement = document.getElementById('detail-wind-speed');
+    if (windElement) windElement.textContent = `${current.windspeed} km/h`;
+
+    // 9. Cập nhật UV Max
+    if (daily && daily.uv_index_max) {
+        const uvMax = daily.uv_index_max[0];
+        const uvElement = document.getElementById('detail-uv-max');
+        if (uvElement) uvElement.textContent = uvMax;
+    }
+    // Nhiệt độ theo khoảng thời gian (Ngày/Đêm)
+    if (hourly && hourly.temperature_2m) {
+        const hourlyTemps = hourly.temperature_2m;
+
+        // Ngày: 7h sáng đến 7h tối (12 tiếng)
+        const NGAY_HOURS = [6,7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+        // Đêm: 7h tối đến 7h sáng (12 tiếng, bao gồm qua nửa đêm)
+        const DEM_HOURS = [18,19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5];
+
+        const tempNgayElement = document.getElementById('temp-ngay');
+        if (tempNgayElement) tempNgayElement.textContent = getMinMaxTempForPeriod(hourlyTemps, NGAY_HOURS);
+
+        const tempDemElement = document.getElementById('temp-dem');
+        if (tempDemElement) tempDemElement.textContent = getMinMaxTempForPeriod(hourlyTemps, DEM_HOURS);
+    }
+    //Cập nhật Bình minh / Hoàng hôn ===
+    if (daily && daily.sunrise && daily.sunset) {
+        // API trả về dạng: "2023-11-01T06:05" -> Cần format thành "06:05 AM"
+        const sunriseTime = formatTime(daily.sunrise[0]);
+        const sunsetTime = formatTime(daily.sunset[0]);
+
+        const sunriseElement = document.getElementById('sunrise-time');
+        if (sunriseElement) sunriseElement.textContent = sunriseTime;
+
+        const sunsetElement = document.getElementById('sunset-time');
+        if (sunsetElement) sunsetElement.textContent = sunsetTime;
+    }
+}
+// Hàm tải dữ liệu chi tiết cho trang tỉnh/thành phố
+async function loadProvinceDetails(locationId, cityName) {
+    if (!locationId) {
+        // Lỗi nếu không có ID (thường xảy ra nếu backend không tìm thấy Location)
+        document.getElementById('current-status-text').textContent = 'Lỗi: Không tìm thấy ID vị trí';
+        return;
+    }
+
+    // API đã định nghĩa trong Weather_App/urls.py
+    const apiUrl = `/api/weather/current/?location_id=${locationId}`;
+
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            throw new Error(`Lỗi HTTP: ${response.status}`);
+        }
+        const data = await response.json();
+
+        // Cập nhật thông tin thời tiết hiện tại lên DOM
+        updateCurrentWeatherDOM(data, cityName);
+
+        // TODO: Cập nhật logic vẽ biểu đồ bằng dữ liệu thật (data.hourly, data.daily)
+        // drawHourlyChart(data.hourly);
+        // drawDailyChart(data.daily);
+
+    } catch (error) {
+        console.error('Lỗi khi tải dữ liệu thời tiết:', error);
+        document.getElementById('current-status-text').textContent = 'Lỗi tải dữ liệu';
+    }
+}
+
+//Hàm tiện ích để tính Min/Max nhiệt độ
+    /**
+     * Tính toán nhiệt độ Min/Max trong một khoảng giờ (ví dụ: Sáng, Tối)
+     * @param {Array<number>} hourlyTemps Mảng nhiệt độ theo giờ (24 giá trị)
+     * @param {number[]} hoursToInclude Các chỉ số giờ cần tính (ví dụ: [5, 6, 7, 8, 9, 10])
+     * @returns {string} Chuỗi định dạng "Min°/Max°"
+     */
+    function getMinMaxTempForPeriod(hourlyTemps, hoursToInclude) {
+        if (!hourlyTemps || hourlyTemps.length < 24) return "--°/--°";
+
+        const temperatures = hoursToInclude.map(h => hourlyTemps[h]).filter(temp => temp !== null && temp !== undefined);
+
+        if (temperatures.length === 0) return "--°/--°";
+
+        const minTemp = Math.round(Math.min(...temperatures));
+        const maxTemp = Math.round(Math.max(...temperatures));
+
+        return `${minTemp}°/${maxTemp}°`;
+    }
+
+// === HÀM TIỆN ÍCH chuyển đổi thoi gian ===
+/**
+ * Hàm chuyển đổi thời gian ISO (2023-11-01T06:05) sang giờ phút (06:05 AM)
+ */
+function formatTime(isoString) {
+    if (!isoString) return '--:--';
+    const date = new Date(isoString);
+    // Format theo kiểu 12 giờ (AM/PM)
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
 // Chờ cho toàn bộ HTML tải xong mới chạy
 document.addEventListener('DOMContentLoaded', () => {
     // Dữ liệu giả lập (thay cho dữ liệu thật từ API)
+    if (typeof LOCATION_ID !== 'undefined' && LOCATION_ID) {
+        loadProvinceDetails(LOCATION_ID, CITY_NAME);
+    }
     const fakeApiData = [
         { time: "01:00 PM", temp: "18°/18°", humidity: 94, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
         { time: "02:00 PM", temp: "18°/18°", humidity: 94, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },

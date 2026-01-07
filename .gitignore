@@ -4,6 +4,11 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+
+# Dataset
+Weather_AI/data/
+
 
 # Virtual Environments
 .venv/
@@ -18,6 +23,7 @@ ENV/
 *.sqlite3
 db.sqlite3
 
+*.csv
 
 # Logs
 *.log
@@ -25,11 +31,6 @@ db.sqlite3
 # dotenv (thường chứa SECRET_KEY)
 .env
 
-# ============================================
-# IDEs & Editors
-# ============================================
-# PyCharm
-.idea/
 
 # VS Code
 .vscode/
@@ -50,3 +51,10 @@ Thumbs.db
 *.bak
 *.tmp
 *.swp
+
+
+# PyCharm IDE configs
+.idea/
+*.iml
+*.ipr
+*.iws

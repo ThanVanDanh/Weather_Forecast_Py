@@ -1,0 +1,20 @@
+.breadcrumb {
+    background: var(--primary-green);
+    padding: 15px 100px;
+    max-width: 1400px;
+    margin: 0;
+}
+.breadcrumb a {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 500;
+}
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+.breadcrumb-item.active{
+	color: #ffffff;
+}
+.breadcrumb-item + .breadcrumb-item::before {
+    color: #ffffff;
+}

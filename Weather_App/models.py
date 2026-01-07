@@ -1,20 +1,13 @@
 from django.db import models
-
-# Create your models here.
-# weather/models.py
-from django.db import models
 from django.utils import timezone
 
 
-# ======================================================================
-# BẢNG 1: LOCATION (Bảng "chuẩn" về Vị trí)
-# ======================================================================
 class Location(models.Model):
-    city_name = models.CharField(max_length=100, verbose_name="Tên thành phố")
-    country_code = models.CharField(max_length=5, verbose_name="Mã quốc gia", default="VN")
+    city_name = models.CharField(max_length=100)
+    country_code = models.CharField(max_length=5)
     latitude = models.FloatField(verbose_name="Vĩ độ")
     longitude = models.FloatField(verbose_name="Kinh độ")
-    timezone = models.CharField(max_length=50, null=True, blank=True, verbose_name="Múi giờ")
+    timezone = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
         unique_together = ('latitude', 'longitude')
@@ -25,9 +18,6 @@ class Location(models.Model):
         return f"{self.city_name} ({self.country_code})" if f"{self.country_code}" else f"{self.city_name}"
 
 
-# ======================================================================
-# BẢNG 2: CURRENT_WEATHER_CACHE (Cache cho thời tiết hiện tại)
-# ======================================================================
 class CurrentWeatherCache(models.Model):
     location = models.OneToOneField(Location, on_delete=models.CASCADE, primary_key=True, related_name='current_weather_cache')
     data = models.JSONField(verbose_name="Dữ liệu JSON từ API")
@@ -41,9 +31,6 @@ class CurrentWeatherCache(models.Model):
         return (timezone.now() - self.last_updated).total_seconds() > (minutes * 60)
 
 
-# ======================================================================
-# BẢNG 3: HISTORICAL_DATA (Dữ liệu Lịch sử - "Sách giáo khoa" cho AI)
-# ======================================================================
 class HistoricalData(models.Model):
     location = models.ForeignKey(
         Location,
@@ -63,9 +50,6 @@ class HistoricalData(models.Model):
         verbose_name_plural = "3. Dữ liệu lịch sử (AI Train)"
 
 
-# ======================================================================
-# BẢNG 4: AI_FORECAST (Nâng cấp)
-# ======================================================================
 class AIForecast(models.Model):
     location = models.ForeignKey(
         Location,
@@ -75,7 +59,6 @@ class AIForecast(models.Model):
     forecast_date = models.DateField(verbose_name="Ngày dự báo")
     generated_at = models.DateTimeField(auto_now_add=True)
 
-    # === Dữ liệu AI dự đoán (Đã bổ sung) ===
     predicted_temp_max = models.FloatField(verbose_name="Dự báo nhiệt độ max")
     predicted_temp_min = models.FloatField(verbose_name="Dự báo nhiệt độ min")
     predicted_precipitation_probability = models.FloatField(
@@ -92,9 +75,6 @@ class AIForecast(models.Model):
         ordering = ['forecast_date']
 
 
-# ======================================================================
-# BẢNG 5: WEATHER_ALERT (Cảnh báo thời tiết)
-# ======================================================================
 class WeatherAlert(models.Model):
     location = models.ForeignKey(
         Location,
