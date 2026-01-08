@@ -1,0 +1,67 @@
+{
+  "province": "Lam_Dong",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    1,
+    1,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    1,
+    0,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 12.8419,
+    "rmse": 15.7864,
+    "mape": 17.4432,
+    "r2": -0.9878,
+    "accuracy": 82.5568
+  },
+  "training_info": {
+    "province": "Lam_Dong",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Lam_Dong.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "0:36:31.661782"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 83.69802111820115,
+      "std": 14.962750328797062,
+      "min": 43.5,
+      "max": 100.0,
+      "median": 88.0,
+      "skewness": -1.0155963117183555,
+      "kurtosis": 0.20500569547189817
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 78.36613149847095,
+        "std": 16.587692666464527
+      },
+      "wet_season": {
+        "mean": 88.96229619565217,
+        "std": 10.839649130746933
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 8.533517069418487,
+    "n_configurations_tested": 50
+  },
+  "created_at": "2026-01-07T18:37:11.478026",
+  "model_file_size_mb": 0.02
+}

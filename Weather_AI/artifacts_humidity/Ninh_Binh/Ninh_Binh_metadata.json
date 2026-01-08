@@ -1,0 +1,67 @@
+{
+  "province": "Ninh_Binh",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    2,
+    0,
+    2
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    1,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 7.4992,
+    "rmse": 9.143,
+    "mape": 11.1855,
+    "r2": 0.6536,
+    "accuracy": 88.8145
+  },
+  "training_info": {
+    "province": "Ninh_Binh",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Ninh_Binh.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "0:49:31.776695"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 80.28287374658159,
+      "std": 13.720822484176415,
+      "min": 39.5,
+      "max": 100.0,
+      "median": 83.0,
+      "skewness": -0.7150966929631426,
+      "kurtosis": -0.17498943537381217
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 78.92408256880734,
+        "std": 14.88481429552245
+      },
+      "wet_season": {
+        "mean": 81.6244338768116,
+        "std": 12.319812097514726
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "True"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 16.057725995718343,
+    "n_configurations_tested": 15
+  },
+  "created_at": "2026-01-07T16:07:39.032129",
+  "model_file_size_mb": 0.01
+}

@@ -1,0 +1,67 @@
+{
+  "province": "Thai_Nguyen",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    2,
+    1,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    1,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 8.9865,
+    "rmse": 11.1961,
+    "mape": 14.5821,
+    "r2": 0.4648,
+    "accuracy": 85.4179
+  },
+  "training_info": {
+    "province": "Thai_Nguyen",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Thai_Nguyen.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "0:58:38.246182"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 80.0790033424491,
+      "std": 14.31950578836459,
+      "min": 39.5,
+      "max": 100.0,
+      "median": 83.0,
+      "skewness": -0.7957066756123795,
+      "kurtosis": -0.05754505474152527
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 76.07542048929663,
+        "std": 15.267501223168702
+      },
+      "wet_season": {
+        "mean": 84.0318161231884,
+        "std": 12.079676039713727
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 10.08304961045802,
+    "n_configurations_tested": 11
+  },
+  "created_at": "2026-01-07T15:30:43.108437",
+  "model_file_size_mb": 0.01
+}

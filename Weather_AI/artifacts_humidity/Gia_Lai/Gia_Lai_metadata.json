@@ -1,0 +1,67 @@
+{
+  "province": "Gia_Lai",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    0,
+    0,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    0,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 7.1135,
+    "rmse": 9.1309,
+    "mape": 8.7442,
+    "r2": -0.1928,
+    "accuracy": 91.2558
+  },
+  "training_info": {
+    "province": "Gia_Lai",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Gia_Lai.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "0:22:57.307578"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 81.09856426618049,
+      "std": 12.65759653702755,
+      "min": 44.5,
+      "max": 100.0,
+      "median": 83.0,
+      "skewness": -0.7113803999277682,
+      "kurtosis": -0.1026006879301784
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 83.89908256880734,
+        "std": 10.654406797329631
+      },
+      "wet_season": {
+        "mean": 78.3335597826087,
+        "std": 13.818216930759052
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 7.358961879970074,
+    "n_configurations_tested": 50
+  },
+  "created_at": "2026-01-07T09:39:54.698627",
+  "model_file_size_mb": 0.01
+}

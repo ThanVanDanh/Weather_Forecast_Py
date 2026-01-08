@@ -1,0 +1,67 @@
+{
+  "province": "Dong_Nai",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    0,
+    0,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    0,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 16.8349,
+    "rmse": 19.0229,
+    "mape": 19.9465,
+    "r2": -1.362,
+    "accuracy": 80.0535
+  },
+  "training_info": {
+    "province": "Dong_Nai",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Dong_Nai.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "0:46:15.924829"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 80.14573837739289,
+      "std": 15.054131573105265,
+      "min": 38.0,
+      "max": 100.0,
+      "median": 84.0,
+      "skewness": -0.8626023114110122,
+      "kurtosis": -0.11299438582831867
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 74.21475535168196,
+        "std": 16.440937886332417
+      },
+      "wet_season": {
+        "mean": 86.00150966183575,
+        "std": 10.700214963834615
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 9.359170675165343,
+    "n_configurations_tested": 14
+  },
+  "created_at": "2026-01-07T16:07:10.081358",
+  "model_file_size_mb": 0.01
+}
