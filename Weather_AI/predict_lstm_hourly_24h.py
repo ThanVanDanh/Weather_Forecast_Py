@@ -59,11 +59,11 @@ def forecast_24h(province: str, steps: int = 24) -> pd.DataFrame:
 
     return pd.DataFrame({
         "time": times,
-        "temperature_forecast": preds
+        "temp_forecast": preds
     })
 
 
 if __name__ == "__main__":
-    df = forecast_24h("An_Giang", steps=24)
+    df = forecast_24h("Ca_Mau", steps=24)
     print(df)
-    df.to_csv("result_demo/result_lstm_hourly_An_Giang.csv", index=False)
+    df.to_csv("result_demo/result_lstm_hourly_Ca_Mau.csv", index=False)

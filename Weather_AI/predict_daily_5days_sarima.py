@@ -71,6 +71,6 @@ def forecast_daily_minmax_5days(province: str) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    df = forecast_daily_minmax_5days("An_Giang")
-    df.to_csv("result_demo/result_daily_An_Giang.csv", index=False)
+    df = forecast_daily_minmax_5days("Ca_Mau")
+    df.to_csv("result_demo/result_daily_Ca_Mau.csv", index=False)
     print(df)
