@@ -6,18 +6,13 @@ import pandas as pd
 from tqdm import tqdm
 from datetime import timedelta
 
-# ==========================
-# CẤU HÌNH
-# ==========================
-DATA_DIR = "data"  # Thư mục chứa các file csv cũ (đang dừng ở 2025-01-01)
+DATA_DIR = "data"
 API_ARCHIVE = "https://archive-api.open-meteo.com/v1/archive"
 TIMEZONE = "Asia/Bangkok"
 
-# Target nối dữ liệu đến ngày này (trước ngày bắt đầu dự báo 1 chút)
 TARGET_END_DATE = "2026-01-01"
 
 PROVINCE_COORDINATES = {
-    # Copy lại tọa độ từ file trước để đảm bảo chính xác
     "Tuyen_Quang": (21.82356, 105.21424),
     "Lao_Cai": (21.72000, 104.91000),
     "Thai_Nguyen": (21.59000, 105.85000),
@@ -73,7 +68,6 @@ def fetch_gap_data(lat, lon, start_date, end_date):
         "hourly": HOURLY,
         "timezone": TIMEZONE,
     }
-    # Retry logic
     for attempt in range(5):
         try:
             r = requests.get(API_ARCHIVE, params=params, timeout=60)
@@ -89,16 +83,15 @@ def fetch_gap_data(lat, lon, start_date, end_date):
                 df[field] = hourly.get(field)
 
             df["time"] = pd.to_datetime(df["time"])
-            # Format time cho khớp với file cũ
             return df
         except Exception as e:
-            print(f"  ⚠️ Lỗi: {e}. Thử lại...")
+            print(f"  Loi: {e}. Thu lai...")
             time.sleep(3)
     return None
 
 
 if __name__ == "__main__":
-    print(f"🚀 Bắt đầu vá dữ liệu (Data Gap Filling) trong folder '{DATA_DIR}'...")
+    print(f"Bat dau va du lieu (Data Gap Filling) trong folder '{DATA_DIR}'...")
 
     files = [f for f in os.listdir(DATA_DIR) if f.endswith(".csv")]
 
@@ -107,54 +100,44 @@ if __name__ == "__main__":
         file_path = os.path.join(DATA_DIR, filename)
 
         if province_name not in PROVINCE_COORDINATES:
-            print(f"⏩ Bỏ qua {filename} (Không có tọa độ)")
+            print(f"Bo qua {filename} (Khong co toa do)")
             continue
 
         lat, lon = PROVINCE_COORDINATES[province_name]
 
-        # 1. Đọc file cũ để tìm ngày cuối cùng
         try:
             df_old = pd.read_csv(file_path)
-            time_col = df_old.columns[0]  # Giả định cột đầu là time
+            time_col = df_old.columns[0]
 
-            # Chuyển đổi sang datetime
             df_old[time_col] = pd.to_datetime(df_old[time_col])
             last_date_in_file = df_old[time_col].max()
 
-            # Nếu dữ liệu đã đủ mới (đến sát 2026) thì bỏ qua
             if last_date_in_file >= pd.to_datetime("2025-12-30"):
                 continue
 
-            print(f"\n🔄 {province_name}: Dữ liệu dừng ở {last_date_in_file}. Đang tải tiếp...")
+            print(f"\n{province_name}: Du lieu dung o {last_date_in_file}. Dang tai tiep...")
 
-            # 2. Tính toán ngày bắt đầu tải (Ngày cuối + 1 ngày)
             start_date_fetch = (last_date_in_file + timedelta(days=1)).strftime("%Y-%m-%d")
 
-            # Nếu ngày bắt đầu vượt quá ngày Target thì thôi
             if pd.to_datetime(start_date_fetch) > pd.to_datetime(TARGET_END_DATE):
                 continue
 
-            # 3. Tải dữ liệu còn thiếu
             df_new = fetch_gap_data(lat, lon, start_date_fetch, TARGET_END_DATE)
 
             if df_new is not None and not df_new.empty:
-                # Đổi tên cột time của df_new cho khớp với df_old (nếu cần)
                 df_new.rename(columns={"time": time_col}, inplace=True)
 
-                # 4. Nối và Lưu
                 df_combined = pd.concat([df_old, df_new], ignore_index=True)
-                # Drop duplicates đề phòng trùng
                 df_combined.drop_duplicates(subset=[time_col], keep='last', inplace=True)
 
                 df_combined.to_csv(file_path, index=False)
-                print(f"  ✅ Đã nối thêm {len(df_new)} dòng. Mới nhất: {df_combined[time_col].max()}")
+                print(f"  Da noi them {len(df_new)} dong. Moi nhat: {df_combined[time_col].max()}")
             else:
-                print("  ❌ Không tải được dữ liệu mới.")
+                print("  Khong tai duoc du lieu moi.")
 
-            # Nghỉ nhẹ tránh spam API
             time.sleep(random.uniform(1, 2))
 
         except Exception as e:
-            print(f"❌ Lỗi xử lý file {filename}: {e}")
+            print(f"Loi xu ly file {filename}: {e}")
 
-    print("\n🎉 HOÀN TẤT CẬP NHẬT DỮ LIỆU LỊCH SỬ!")
+    print("\nHOAN TAT CAP NHAT DU LIEU LICH SU!")

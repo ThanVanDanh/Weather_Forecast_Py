@@ -5,14 +5,11 @@ import joblib
 from pathlib import Path
 from tensorflow.keras.models import load_model
 
-# ============================
-# CẤU HÌNH
-# ============================
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"  # Dữ liệu quá khứ
-FUTURE_DIR = BASE_DIR / "data_future"  # Dữ liệu dự báo thời tiết
+DATA_DIR = BASE_DIR / "data"
+FUTURE_DIR = BASE_DIR / "data_future"
 MODEL_DIR = BASE_DIR / "models_solar_multi_provinces"
-RESULT_DIR = BASE_DIR / "results_dual_input"
+RESULT_DIR = BASE_DIR / "results_train_shortwave_radiation_lstm"
 
 RESULT_DIR.mkdir(exist_ok=True)
 
@@ -20,7 +17,6 @@ SEQ_LENGTH = 72
 FORECAST_HORIZON = 24
 WET_MONTHS = {5, 6, 7, 8, 9, 10}
 
-# Khớp với file train
 EXOG_COLUMNS = [
     'temperature_2m', 'relative_humidity_2m',
     'cloud_cover', 'cloudcover',
@@ -28,7 +24,6 @@ EXOG_COLUMNS = [
 
 ]
 
-# TỌA ĐỘ CÁC TỈNH
 PROVINCE_COORDINATES = {
     "Tuyen_Quang": (21.82356, 105.21424),
     "Lao_Cai": (21.72000, 104.91000),
@@ -66,10 +61,6 @@ PROVINCE_COORDINATES = {
     "Cao_Bang": (22.66556, 106.26067),
 }
 
-
-# ============================
-# CÁC HÀM XỬ LÝ (Copy từ train.py sang để đồng bộ)
-# ============================
 
 def calculate_solar_elevation(times, lat, lon):
     lat_rad = np.radians(lat)
@@ -115,30 +106,28 @@ def predict_dual(province_name):
     scaler_y_path = MODEL_DIR / f"scaler_Y_{province_name}.pkl"
 
     if not past_csv.exists() or not future_csv.exists() or not model_path.exists():
-        print(f"⚠️ Thiếu file cho {province_name}")
+        print(f"️ Thiếu file cho {province_name}")
         return
 
-    print(f"🔮 Dự báo {province_name}...")
+    print(f"Dự báo {province_name}...")
 
     try:
-        # 1. Load Resources
         model = load_model(model_path)
         scaler_X = joblib.load(scaler_x_path)
         scaler_Y = joblib.load(scaler_y_path)
 
-        # 2. Xử lý QUÁ KHỨ
         df_past_raw = pd.read_csv(past_csv)
         df_past, exog_cols = process_features_for_prediction(df_past_raw, province_name)
 
         if len(df_past) < SEQ_LENGTH:
-            print(f"❌ {province_name}: Dữ liệu quá khứ không đủ {SEQ_LENGTH} dòng.")
+            print(f" {province_name}: Dữ liệu quá khứ không đủ {SEQ_LENGTH} dòng.")
             return
 
         last_past_time = df_past.iloc[-1, 0]
         start_pred_time = last_past_time + pd.Timedelta(hours=1)
         end_pred_time = last_past_time + pd.Timedelta(hours=FORECAST_HORIZON)
 
-        print(f"   📅 Data end: {last_past_time} -> Predict: {start_pred_time} đến {end_pred_time}")
+        print(f" Data end: {last_past_time} -> Predict: {start_pred_time} đến {end_pred_time}")
 
         feature_cols = ['shortwave_radiation'] + exog_cols + [
             'hour_sin', 'hour_cos', 'month_sin', 'month_cos', 'wet_season',
@@ -158,7 +147,7 @@ def predict_dual(province_name):
         df_future_target = df_future_raw.loc[mask].copy()
 
         if len(df_future_target) < FORECAST_HORIZON:
-            print(f"❌ Thiếu dữ liệu tương lai. Tìm thấy {len(df_future_target)} dòng.")
+            print(f" Thiếu dữ liệu tương lai. Tìm thấy {len(df_future_target)} dòng.")
             return
 
         df_future_target = df_future_target.head(FORECAST_HORIZON)
@@ -171,7 +160,7 @@ def predict_dual(province_name):
             'solar_elevation'
         ]].values.astype('float32')
 
-        # --- SCALER TRICK ---
+
         dummy_target = np.zeros((FORECAST_HORIZON, 1))
         future_full_raw = np.hstack([dummy_target, future_vals])
         future_full_scaled = scaler_X.transform(future_full_raw)
@@ -179,25 +168,17 @@ def predict_dual(province_name):
         input_future_vals = future_full_scaled[:, 1:]
         input_future = np.expand_dims(input_future_vals, axis=0)
 
-        # 4. Predict
         pred_scaled = model.predict([input_past, input_future], verbose=0)
         pred_values = scaler_Y.inverse_transform(pred_scaled.reshape(-1, 1)).flatten()
         pred_values = np.maximum(pred_values, 0)
 
-        # ========================================================
-        # [QUAN TRỌNG] MÀNG LỌC VẬT LÝ (PHYSICS-INFORMED FILTER)
-        # ========================================================
-        # Lấy giá trị góc mặt trời vừa tính được cho tương lai
+
         future_elevations = df_future_processed['solar_elevation'].values
 
-        # Quy tắc: Góc mặt trời <= 0 thì KHÔNG THỂ có bức xạ
         night_mask = future_elevations <= 0
 
-        # Gán tất cả giờ đêm = 0
         pred_values[night_mask] = 0.0
-        # ========================================================
 
-        # 5. Save
         result_df = pd.DataFrame({
             'Time': future_timeline,
             'Radiation_Forecast': pred_values,
@@ -206,15 +187,13 @@ def predict_dual(province_name):
 
         output_path = RESULT_DIR / f"forecast_{province_name}.csv"
         result_df.to_csv(output_path, index=False)
-        print(f"--> ✅ Xong: {output_path.name}")
+        print(f"  Xong: {output_path.name}")
 
     except Exception as e:
-        print(f"❌ Lỗi {province_name}: {e}")
+        print(f" Lỗi {province_name}: {e}")
 
 
 if __name__ == "__main__":
     files = list(DATA_DIR.glob("*.csv"))
-    print(f"🚀 Tìm thấy {len(files)} tỉnh. Bắt đầu dự báo nối tiếp...")
-
     for f in files:
         predict_dual(f.stem)

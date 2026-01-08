@@ -11,9 +11,6 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, LSTM, Dense, Dropout, Flatten, Concatenate
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
-# ============================
-# CẤU HÌNH
-# ============================
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 MODEL_DIR = BASE_DIR / "models_solar_multi_provinces"
@@ -21,7 +18,7 @@ MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
 TARGET_COLUMN = 'shortwave_radiation'
 SEQ_LENGTH = 72  # Lấy dữ liệu 3 ngày trong quá khứ
-PREDICT_HORIZON = 24  # Dự báo 1 ngày (24h)
+PREDICT_HORIZON = 24  # Dự đoán 1 ngày trong tương lai
 
 EXOG_COLUMNS = [
     'temperature_2m',
@@ -76,12 +73,8 @@ PROVINCE_COORDINATES = {
 }
 
 
-# ============================
-# CÁC HÀM XỬ LÝ
-# ============================
-
 def calculate_solar_elevation(times, lat, lon):
-    """Tính góc cao mặt trời theo thời gian và tọa độ."""
+    # tính góc chiếu
     lat_rad = np.radians(lat)
     doy = times.dt.dayofyear
     declination = np.radians(23.45 * np.sin(np.radians(360 / 365 * (doy - 81))))
@@ -96,7 +89,6 @@ def calculate_solar_elevation(times, lat, lon):
 
 
 def process_datetime_features(df, province_name):
-    """Tạo feature engineering: Thời gian + Góc mặt trời + Mùa mưa."""
     df = df.copy()
     time_col = df.columns[0]
     df[time_col] = pd.to_datetime(df[time_col])
@@ -123,13 +115,10 @@ def process_datetime_features(df, province_name):
     ]
     return df[feature_cols]
 
-
 def create_dual_dataset(X_scaled, y_scaled, seq_len, horizon):
-    """Tách dữ liệu thành 2 nhánh input: Quá khứ và Tương lai."""
     X_past, X_future, ys = [], [], []
     total_len = len(X_scaled)
 
-    # Loop qua từng mẫu dữ liệu
     for i in range(total_len - seq_len - horizon + 1):
         # Input 1: Quá khứ (Target + Exog)
         X_past.append(X_scaled[i: i + seq_len])
@@ -141,7 +130,6 @@ def create_dual_dataset(X_scaled, y_scaled, seq_len, horizon):
 
     return [np.array(X_past), np.array(X_future)], np.array(ys)
 
-
 def train_one_province(file_path):
     province_name = os.path.splitext(os.path.basename(file_path))[0]
     model_file = MODEL_DIR / f"{province_name}.keras"
@@ -149,7 +137,6 @@ def train_one_province(file_path):
     scaler_y_file = MODEL_DIR / f"scaler_Y_{province_name}.pkl"
 
     try:
-        # 1. Đọc và xử lý dữ liệu
         raw_df = pd.read_csv(file_path)
         if TARGET_COLUMN not in raw_df.columns:
             return f"⚠️ {province_name}: Thiếu cột {TARGET_COLUMN}."
@@ -157,12 +144,10 @@ def train_one_province(file_path):
         df = process_datetime_features(raw_df, province_name).ffill().bfill()
         data_values = df.values.astype('float32')
 
-        # Split Train/Test (90/10)
         train_size = int(len(data_values) * 0.9)
         train_data = data_values[:train_size]
         test_data = data_values[train_size:]
 
-        # 2. Scaling (Chuẩn hóa)
         scaler_X = MinMaxScaler(feature_range=(0, 1))
         scaler_Y = MinMaxScaler(feature_range=(0, 1))
 
@@ -181,9 +166,8 @@ def train_one_province(file_path):
         X_train, y_train = create_dual_dataset(X_train_scaled, y_train_scaled, SEQ_LENGTH, PREDICT_HORIZON)
         X_test, y_test = create_dual_dataset(X_test_scaled, y_test_scaled, SEQ_LENGTH, PREDICT_HORIZON)
 
-        if len(y_train) == 0: return f"⚠️ {province_name}: Không đủ dữ liệu để train."
+        if len(y_train) == 0: return f"{province_name}: Không đủ dữ liệu để train."
 
-        # Xác định kích thước input
         n_features = X_train_scaled.shape[1]  # Tổng số đặc trưng
         n_future_features = n_features - 1  # Đặc trưng tương lai (trừ target)
 
@@ -221,14 +205,13 @@ def train_one_province(file_path):
             verbose=1
         )
 
-        return f"✅ {province_name}: Hoàn tất! (Features: {n_features})"
+        return f" {province_name}: Hoàn tất! (Features: {n_features})"
 
     except Exception as e:
-        return f"❌ {province_name}: Lỗi {str(e)}"
+        return f" {province_name}: Lỗi {str(e)}"
 
 
 def main():
-    # Tắt GPU để tránh lỗi bộ nhớ nếu chạy trên máy cá nhân không có GPU rời mạnh
     try:
         tf.config.set_visible_devices([], 'GPU')
     except:
@@ -236,35 +219,29 @@ def main():
 
     all_files = glob.glob(os.path.join(DATA_DIR, "*.csv"))
     if not all_files:
-        print("❌ Không tìm thấy file CSV nào trong thư mục data!")
+        print(" Không tìm thấy file CSV")
         return
-
-    # Cấu hình file chạy thử
-    TARGET_FILE_NAME = "Son_La.csv"
+    TARGET_FILE_NAME = "Ha_Noi.csv"
     target_path = None
-
     if TARGET_FILE_NAME:
         for f in all_files:
             if TARGET_FILE_NAME in f:
                 target_path = f
                 break
 
-    # Fallback nếu không tìm thấy file chỉ định
     if target_path is None:
         target_path = all_files[0]
         print(
-            f"⚠️ Không tìm thấy '{TARGET_FILE_NAME}', chuyển sang chạy file đầu tiên: {os.path.basename(target_path)}")
+            f"️ Không tìm thấy '{TARGET_FILE_NAME}', chuyển sang chạy file đầu tiên: {os.path.basename(target_path)}")
 
-    print(f"🧪 ĐANG CHẠY TEST TRÊN FILE: {os.path.basename(target_path)}")
-    print(f"ℹ️  Tính năng: Solar Elevation + Visibility (nếu có)")
+    print(f" Đang train file: {os.path.basename(target_path)}")
     print("-" * 50)
 
     start_time = time.time()
     result = train_one_province(target_path)
-
     print("-" * 50)
     print(result)
-    print(f"⏱️ Thời gian chạy: {(time.time() - start_time) / 60:.2f} phút.")
+    print(f" Thời gian chạy: {(time.time() - start_time) / 60:.2f} phút.")
 
 
 if __name__ == "__main__":
