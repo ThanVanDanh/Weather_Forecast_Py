@@ -16,6 +16,7 @@ DATA_DIR = BASE_DIR / "data"
 MODEL_DIR = BASE_DIR / "models_solar_multi_provinces"
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
+
 TARGET_COLUMN = 'shortwave_radiation'
 SEQ_LENGTH = 72  # Lấy dữ liệu 3 ngày trong quá khứ
 PREDICT_HORIZON = 24  # Dự đoán 1 ngày trong tương lai
