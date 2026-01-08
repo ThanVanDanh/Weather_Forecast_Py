@@ -1,4 +1,3 @@
-# train_sarima_daily.py
 from pathlib import Path
 import pandas as pd
 import numpy as np

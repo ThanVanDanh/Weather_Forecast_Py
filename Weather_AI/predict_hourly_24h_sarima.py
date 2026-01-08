@@ -1,4 +1,3 @@
-# predict_hourly_24h.py
 from pathlib import Path
 import pandas as pd
 import joblib
@@ -12,9 +11,6 @@ TARGET = "temperature_2m"
 
 
 def load_recent_hourly(province: str, hours: int = 24 * 3) -> pd.Series:
-    """
-    Lấy vài ngày gần nhất để làm history cho filter.
-    """
     csv_path = DATA_DIR / f"{province}.csv"
     if not csv_path.exists():
         raise FileNotFoundError(f"No data for {province}")
