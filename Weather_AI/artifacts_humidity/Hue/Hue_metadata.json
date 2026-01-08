@@ -1,0 +1,67 @@
+{
+  "province": "Hue",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    1,
+    0,
+    0
+  ],
+  "seasonal_order": [
+    1,
+    1,
+    1,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 5.9823,
+    "rmse": 7.7974,
+    "mape": 7.0834,
+    "r2": 0.3512,
+    "accuracy": 92.9166
+  },
+  "training_info": {
+    "province": "Hue",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Hue.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "0:28:31.743518"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 83.07928821027043,
+      "std": 12.519455343666705,
+      "min": 50.5,
+      "max": 100.0,
+      "median": 86.0,
+      "skewness": -0.8600458332440799,
+      "kurtosis": -0.03017758958493122
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 86.47251529051988,
+        "std": 9.937309686484717
+      },
+      "wet_season": {
+        "mean": 79.72909118357488,
+        "std": 13.834967803824084
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 8.036397506731051,
+    "n_configurations_tested": 50
+  },
+  "created_at": "2026-01-07T11:27:10.799067",
+  "model_file_size_mb": 0.02
+}

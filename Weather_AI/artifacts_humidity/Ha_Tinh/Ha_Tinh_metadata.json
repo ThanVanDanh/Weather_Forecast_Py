@@ -1,0 +1,67 @@
+{
+  "province": "Ha_Tinh",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    0,
+    0,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    0,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 14.4672,
+    "rmse": 16.6432,
+    "mape": 16.992,
+    "r2": -1.6223,
+    "accuracy": 83.008
+  },
+  "training_info": {
+    "province": "Ha_Tinh",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Ha_Tinh.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "0:21:47.973881"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 80.99346703129748,
+      "std": 12.085062206797184,
+      "min": 46.0,
+      "max": 100.0,
+      "median": 83.0,
+      "skewness": -0.7398851119160778,
+      "kurtosis": -0.1815230681563711
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 84.43463302752293,
+        "std": 10.630056304836973
+      },
+      "wet_season": {
+        "mean": 77.59593900966183,
+        "std": 12.468152413377442
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 9.760337755891706,
+    "n_configurations_tested": 50
+  },
+  "created_at": "2026-01-07T10:29:46.914641",
+  "model_file_size_mb": 0.01
+}

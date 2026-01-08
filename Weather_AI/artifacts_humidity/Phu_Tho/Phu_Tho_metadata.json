@@ -1,0 +1,67 @@
+{
+  "province": "Phu_Tho",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    0,
+    0,
+    0
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    0,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 9.0355,
+    "rmse": 11.1217,
+    "mape": 13.6097,
+    "r2": 0.4069,
+    "accuracy": 86.3903
+  },
+  "training_info": {
+    "province": "Phu_Tho",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Phu_Tho.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "0:52:13.397893"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 79.57942114858706,
+      "std": 13.226808130205265,
+      "min": 41.0,
+      "max": 100.0,
+      "median": 82.0,
+      "skewness": -0.7434973852280562,
+      "kurtosis": -0.11327024690755394
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 76.91567278287462,
+        "std": 13.913460062327959
+      },
+      "wet_season": {
+        "mean": 82.20939009661836,
+        "std": 11.94314540295396
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 8.530464635387643,
+    "n_configurations_tested": 20
+  },
+  "created_at": "2026-01-07T16:17:31.938202",
+  "model_file_size_mb": 0.01
+}
