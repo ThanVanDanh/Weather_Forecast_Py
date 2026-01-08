@@ -64,6 +64,6 @@ def forecast_hourly_24h(province: str) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    df = forecast_hourly_24h("An_Giang")
-    df.to_csv("result_demo/result_hourly_An_Giang.csv", index=False)
+    df = forecast_hourly_24h("Ca_Mau")
+    df.to_csv("result_demo/result_hourly_Ca_Mau.csv", index=False)
     print(df.head())

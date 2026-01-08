@@ -60,6 +60,6 @@ def forecast_daily_maxmin(province: str) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    df = forecast_daily_maxmin("An_Giang")
+    df = forecast_daily_maxmin("Ca_Mau")
     print(df)
-    df.to_csv("result_demo/result_lstm_daily_maxmin_An_Giang.csv", index=False)
+    df.to_csv("result_demo/result_lstm_daily_maxmin_Ca_Mau.csv", index=False)

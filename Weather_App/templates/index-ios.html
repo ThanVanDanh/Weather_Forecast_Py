@@ -1,0 +1,475 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Giao diện Thời tiết - iOS Style</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+      integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <!-- Custom Styles - Load first -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/header.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}" />
+
+    <!-- iOS Override Styles - Must be LAST to override everything -->
+    <style>
+      /* ========= iOS WEATHER GRADIENT - DARKER BLUE ========= */
+      body {
+        background: #4a90e2 !important;
+      }
+
+      main {
+        background: transparent !important;
+      }
+
+      .ios-gradient-bg {
+        background: linear-gradient(
+          180deg,
+          #3a7bc8 0%,
+          #4a8dd5 15%,
+          #5b9fed 30%,
+          #6babef 45%,
+          #7bb7f1 60%,
+          #8bc3f3 75%,
+          #9bcff5 90%,
+          #abdcf7 100%
+        ) !important;
+        position: relative !important;
+        min-height: 600px !important;
+        animation: gradientShift 25s ease-in-out infinite !important;
+        background-size: 200% 200% !important;
+        padding-top: 50px !important;
+        padding-bottom: 60px !important;
+      }
+
+      @keyframes gradientShift {
+        0%,
+        100% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+      }
+
+      /* ========= GLASSMORPHISM CARDS ========= */
+      .weather-dashboard {
+        background: transparent !important;
+        background-color: transparent !important;
+      }
+
+      .current-weather-card,
+      .forecast-card {
+        background: rgba(255, 255, 255, 0.35) !important;
+        backdrop-filter: blur(30px) saturate(200%) !important;
+        -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2),
+          inset 0 1px 0 0 rgba(255, 255, 255, 0.5) !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border-radius: 24px !important;
+      }
+
+      .current-weather-card:hover,
+      .forecast-card:hover {
+        background: rgba(255, 255, 255, 0.45) !important;
+        transform: translateY(-8px) scale(1.03) !important;
+        box-shadow: 0 16px 48px 0 rgba(31, 38, 135, 0.35),
+          inset 0 1px 0 0 rgba(255, 255, 255, 0.7) !important;
+      }
+
+      /* ========= TEXT STYLING ========= */
+      .current-weather-card h2,
+      .current-temp span,
+      .current-desc p,
+      .detail-title,
+      .detail-temp p,
+      .forecast-card h3,
+      .forecast-card .status p,
+      .forecast-card .temp p {
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        color: #2c3e50 !important;
+      }
+
+      /* ========= ANIMATED WEATHER ICONS ========= */
+      .current-img {
+        width: 120px !important;
+        height: 120px !important;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15)) !important;
+        animation: floatIcon 6s ease-in-out infinite;
+      }
+
+      .main-img {
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15)) !important;
+        animation: floatIcon 6s ease-in-out infinite;
+      }
+
+      @keyframes floatIcon {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        25% {
+          transform: translateY(-10px) rotate(2deg);
+        }
+        50% {
+          transform: translateY(-5px) rotate(-2deg);
+        }
+        75% {
+          transform: translateY(-12px) rotate(1deg);
+        }
+      }
+
+      /* Sun rays animation */
+      @keyframes sunRays {
+        0%,
+        100% {
+          transform: rotate(0deg) scale(1);
+          opacity: 0.8;
+        }
+        50% {
+          transform: rotate(45deg) scale(1.1);
+          opacity: 1;
+        }
+      }
+
+      /* Rain drop animation */
+      @keyframes rainDrop {
+        0% {
+          transform: translateY(-10px);
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(30px);
+          opacity: 0;
+        }
+      }
+
+      /* Cloud float */
+      @keyframes cloudFloat {
+        0%,
+        100% {
+          transform: translateX(-5px);
+        }
+        50% {
+          transform: translateX(5px);
+        }
+      }
+
+      /* ========= DETAIL ICONS ========= */
+      .detail-img {
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        transition: transform 0.3s ease;
+      }
+
+      .detail-item:hover .detail-img {
+        transform: scale(1.15) rotate(5deg);
+      }
+
+      /* ========= SECONDARY SECTION ========= */
+      .secondary-content {
+        background: linear-gradient(
+          180deg,
+          #abdcf7 0%,
+          #f0f8ff 50%,
+          #ffffff 100%
+        ) !important;
+      }
+
+      .featured-cities .card {
+        background: rgba(255, 255, 255, 0.9) !important;
+        backdrop-filter: blur(15px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+        transition: all 0.3s ease !important;
+      }
+
+      .featured-cities .card:hover {
+        transform: translateY(-5px) !important;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15) !important;
+      }
+
+      /* ========= PULSE ANIMATION FOR ACTIVE ELEMENTS ========= */
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.8;
+        }
+      }
+
+      .img-eyes {
+        animation: pulse 3s ease-in-out infinite;
+      }
+    </style>
+
+    <script src="{% static 'js/script.js' %}"></script>
+  </head>
+  <body>
+    {% include 'header.html' %}
+
+    <main>
+      <!-- iOS Gradient Background Section -->
+      <section class="weather-dashboard ios-gradient-bg">
+        <div class="content-relative">
+          <!-- Current Weather Card with Glassmorphism -->
+          <div class="card current-weather-card">
+            <h2 id="current-city-name">Đang tải...</h2>
+            <div class="current-main">
+              <div class="current-temp">
+                <img
+                  src="{% static 'image/mayden.png' %}"
+                  alt=""
+                  class="current-img"
+                  id="current-icon"
+                  style="filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1))"
+                />
+                <span id="current-temp">--°</span>
+              </div>
+              <div class="current-desc">
+                <p id="current-description">--</p>
+                <span id="current-feels-like">Cảm giác như --°</span>
+              </div>
+            </div>
+            <div class="weather-details">
+              <div class="detail-item">
+                <img
+                  src="{% static 'image/icon-style-1-temp.svg' %}"
+                  alt=""
+                  class="detail-img"
+                />
+                <div class="detail-title">Thấp/Cao</div>
+                <div class="detail-temp">
+                  <p id="current-temp-minmax">--°/--°</p>
+                </div>
+              </div>
+              <div class="detail-item">
+                <img
+                  src="{% static 'image/icon-style-1-drop.svg' %}"
+                  alt=""
+                  class="detail-img"
+                />
+                <div class="detail-title">Độ ẩm</div>
+                <div class="detail-temp">
+                  <p id="current-humidity">--%</p>
+                </div>
+              </div>
+              <div class="detail-item">
+                <img
+                  src="{% static 'image/icon-style-1-pressure.svg' %}"
+                  alt=""
+                  class="detail-img"
+                />
+                <div class="detail-title">Áp suất</div>
+                <div class="detail-temp">
+                  <p id="current-pressure">-- hPa</p>
+                </div>
+              </div>
+              <div class="detail-item">
+                <img
+                  src="{% static 'image/icon-style-1-eyes.svg' %}"
+                  alt=""
+                  class="detail-img"
+                />
+                <div class="detail-title">Tầm nhìn</div>
+                <div class="detail-temp">
+                  <p id="current-visibility">-- km</p>
+                </div>
+              </div>
+              <div class="detail-item">
+                <img
+                  src="{% static 'image/icon-style-1-windy.svg' %}"
+                  alt=""
+                  class="detail-img"
+                />
+                <div class="detail-title">Gió</div>
+                <div class="detail-temp">
+                  <p id="current-wind">-- kh/h</p>
+                </div>
+              </div>
+              <div class="detail-item">
+                <img
+                  src="{% static 'image/icon-style-1-uv.svg' %}"
+                  alt=""
+                  class="detail-img"
+                />
+                <div class="detail-title">UV</div>
+                <div class="detail-temp">
+                  <p id="current-uvi">--</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Forecast Cards with Glassmorphism -->
+          <div class="forecast-cards">
+            <a href="#" class="card forecast-card">
+              <h3>
+                <span id="thu_weather">Thứ 2</span>
+                <span id="ngay_thang">16/11</span>
+              </h3>
+              <img
+                class="main-img"
+                src="{% static 'image/weather.png' %}"
+                alt=""
+                style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))"
+              />
+              <p class="img-eyes">
+                <img
+                  class="detail-img"
+                  src="{% static 'image/icon-style-1-drop.svg' %}"
+                  alt=""
+                /><span>89 %</span>
+              </p>
+              <div class="status"><p id="status_card">Mưa vừa</p></div>
+              <div class="temp"><p id="temp_minmax_card">--°/--°</p></div>
+            </a>
+
+            <a href="#" class="card forecast-card">
+              <h3>
+                <span id="thu_weather">Thứ 2</span>
+                <span id="ngay_thang">16/11</span>
+              </h3>
+              <img
+                class="main-img"
+                src="{% static 'image/weather.png' %}"
+                alt=""
+                style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))"
+              />
+              <p class="img-eyes">
+                <img
+                  class="detail-img"
+                  src="{% static 'image/icon-style-1-drop.svg' %}"
+                  alt=""
+                /><span>89 %</span>
+              </p>
+              <div class="status"><p id="status_card">Mưa vừa</p></div>
+              <div class="temp"><p id="temp_minmax_card">--°/--°</p></div>
+            </a>
+
+            <a href="#" class="card forecast-card">
+              <h3>
+                <span id="thu_weather">Thứ 2</span>
+                <span id="ngay_thang">16/11</span>
+              </h3>
+              <img
+                class="main-img"
+                src="{% static 'image/weather.png' %}"
+                alt=""
+                style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))"
+              />
+              <p class="img-eyes">
+                <img
+                  class="detail-img"
+                  src="{% static 'image/icon-style-1-drop.svg' %}"
+                  alt=""
+                /><span>89 %</span>
+              </p>
+              <div class="status"><p id="status_card">Mưa vừa</p></div>
+              <div class="temp"><p id="temp_minmax_card">--°/--°</p></div>
+            </a>
+
+            <a href="#" class="card forecast-card">
+              <h3>
+                <span id="thu_weather">Thứ 2</span>
+                <span id="ngay_thang">16/11</span>
+              </h3>
+              <img
+                class="main-img"
+                src="{% static 'image/weather.png' %}"
+                alt=""
+                style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))"
+              />
+              <p class="img-eyes">
+                <img
+                  class="detail-img"
+                  src="{% static 'image/icon-style-1-drop.svg' %}"
+                  alt=""
+                /><span>89 %</span>
+              </p>
+              <div class="status"><p id="status_card">Mưa vừa</p></div>
+              <div class="temp"><p id="temp_minmax_card">--°/--°</p></div>
+            </a>
+
+            <a href="#" class="card forecast-card">
+              <h3>
+                <span id="thu_weather">Thứ 2</span>
+                <span id="ngay_thang">16/11</span>
+              </h3>
+              <img
+                class="main-img"
+                src="{% static 'image/weather.png' %}"
+                alt=""
+                style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))"
+              />
+              <p class="img-eyes">
+                <img
+                  class="detail-img"
+                  src="{% static 'image/icon-style-1-drop.svg' %}"
+                  alt=""
+                /><span>89 %</span>
+              </p>
+              <div class="status"><p id="status_card">Mưa vừa</p></div>
+              <div class="temp"><p id="temp_minmax_card">--°/--°</p></div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Secondary Content Section -->
+      <section class="secondary-content">
+        <div class="container">
+          <div class="featured-cities">
+            <h2>Thời tiết nổi bật</h2>
+            <div id="featured-cities-container">
+              <p>Đang tải danh sách thành phố...</p>
+            </div>
+          </div>
+          <div class="windy-map">
+            <h2>Bản đồ thời tiết Windy</h2>
+            <div class="map-container">
+              <iframe
+                width="450"
+                height="450"
+                src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricTemperature=°C&metricRain=mm&metricWind=km/h&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=16.0544&lon=108.2021&detailLat=16.0544&detailLon=108.2021"
+                frameborder="0"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    {% include 'footer.html' %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- iOS Animated Icons -->
+    <script src="{% static 'js/ios-animated-icons.js' %}"></script>
+  </body>
+</html>
