@@ -1,0 +1,67 @@
+{
+  "province": "Ha_Noi",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    0,
+    0,
+    0
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    0,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 10.1903,
+    "rmse": 12.4623,
+    "mape": 15.2588,
+    "r2": 0.3335,
+    "accuracy": 84.7412
+  },
+  "training_info": {
+    "province": "Ha_Noi",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Ha_Noi.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "0:41:52.132209"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 79.12663324217563,
+      "std": 14.300982199630342,
+      "min": 38.5,
+      "max": 100.0,
+      "median": 82.0,
+      "skewness": -0.6894750473454393,
+      "kurtosis": -0.2525745213461277
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 76.65370795107033,
+        "std": 15.314630325046748
+      },
+      "wet_season": {
+        "mean": 81.56819897342996,
+        "std": 12.763012052544402
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 11.207215033171027,
+    "n_configurations_tested": 19
+  },
+  "created_at": "2026-01-07T16:28:33.800554",
+  "model_file_size_mb": 0.01
+}

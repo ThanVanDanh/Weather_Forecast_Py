@@ -1,0 +1,67 @@
+{
+  "province": "Lao_Cai",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    1,
+    1,
+    1
+  ],
+  "seasonal_order": [
+    0,
+    1,
+    0,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 6.82,
+    "rmse": 9.076,
+    "mape": 9.9323,
+    "r2": 0.5851,
+    "accuracy": 90.0677
+  },
+  "training_info": {
+    "province": "Lao_Cai",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Lao_Cai.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "1:05:40.635679"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 82.25227894257064,
+      "std": 12.418247667010437,
+      "min": 45.5,
+      "max": 100.0,
+      "median": 85.0,
+      "skewness": -0.7734953505434619,
+      "kurtosis": -0.0545768528476569
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 80.0006880733945,
+        "std": 12.72009082475655
+      },
+      "wet_season": {
+        "mean": 84.4753170289855,
+        "std": 11.695507227495856
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 7.136309591637388,
+    "n_configurations_tested": 16
+  },
+  "created_at": "2026-01-07T16:10:24.718579",
+  "model_file_size_mb": 0.01
+}

@@ -1,0 +1,67 @@
+{
+  "province": "Da_Nang",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    1,
+    0,
+    0
+  ],
+  "seasonal_order": [
+    0,
+    1,
+    1,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 6.2764,
+    "rmse": 7.4174,
+    "mape": 7.5212,
+    "r2": 0.3235,
+    "accuracy": 92.4788
+  },
+  "training_info": {
+    "province": "Da_Nang",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Da_Nang.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "0:23:27.585881"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 82.25408310543908,
+      "std": 11.02873962068775,
+      "min": 53.5,
+      "max": 100.0,
+      "median": 85.0,
+      "skewness": -0.9079061033533602,
+      "kurtosis": 0.23743194555930902
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 85.54399847094801,
+        "std": 8.36630293279886
+      },
+      "wet_season": {
+        "mean": 79.00588768115942,
+        "std": 12.303934640451875
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 7.25123670955496,
+    "n_configurations_tested": 48
+  },
+  "created_at": "2026-01-07T02:07:28.065408",
+  "model_file_size_mb": 0.02
+}

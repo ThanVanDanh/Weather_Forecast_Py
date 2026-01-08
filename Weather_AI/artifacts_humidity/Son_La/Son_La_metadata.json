@@ -1,0 +1,67 @@
+{
+  "province": "Son_La",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    1,
+    1,
+    2
+  ],
+  "seasonal_order": [
+    1,
+    1,
+    0,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 7.5949,
+    "rmse": 9.1329,
+    "mape": 11.6772,
+    "r2": 0.5817,
+    "accuracy": 88.3228
+  },
+  "training_info": {
+    "province": "Son_La",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Son_La.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "0:32:44.503544"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 74.61201002734731,
+      "std": 17.414155943597045,
+      "min": 26.5,
+      "max": 100.0,
+      "median": 78.0,
+      "skewness": -0.7270183105492211,
+      "kurtosis": -0.17561347073296307
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 68.59399847094801,
+        "std": 18.090524675218617
+      },
+      "wet_season": {
+        "mean": 80.55370621980677,
+        "std": 14.439518721732796
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 6.400957212339001,
+    "n_configurations_tested": 46
+  },
+  "created_at": "2026-01-07T17:40:43.177665",
+  "model_file_size_mb": 0.02
+}

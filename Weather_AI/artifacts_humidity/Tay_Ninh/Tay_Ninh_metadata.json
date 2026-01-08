@@ -1,0 +1,67 @@
+{
+  "province": "Tay_Ninh",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    0,
+    0,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    0,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 16.3306,
+    "rmse": 18.4121,
+    "mape": 18.8415,
+    "r2": -1.612,
+    "accuracy": 81.1585
+  },
+  "training_info": {
+    "province": "Tay_Ninh",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Tay_Ninh.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "0:56:44.413682"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 82.09018915223336,
+      "std": 14.935612934969566,
+      "min": 37.5,
+      "max": 100.0,
+      "median": 86.0,
+      "skewness": -0.7898437993826286,
+      "kurtosis": -0.33378784635361836
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 76.88906727828746,
+        "std": 15.999310751986602
+      },
+      "wet_season": {
+        "mean": 87.2253547705314,
+        "std": 11.726837497681618
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 8.189426679893753,
+    "n_configurations_tested": 12
+  },
+  "created_at": "2026-01-07T15:28:43.938718",
+  "model_file_size_mb": 0.01
+}
