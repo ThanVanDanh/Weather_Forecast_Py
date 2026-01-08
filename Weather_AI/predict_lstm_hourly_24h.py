@@ -1,4 +1,3 @@
-# predict_lstm_hourly_24h.py
 from pathlib import Path
 import numpy as np
 import pandas as pd

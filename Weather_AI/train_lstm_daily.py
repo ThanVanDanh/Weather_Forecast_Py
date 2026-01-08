@@ -1,4 +1,3 @@
-# train_lstm_daily_maxmin.py
 from pathlib import Path
 import numpy as np
 import pandas as pd
