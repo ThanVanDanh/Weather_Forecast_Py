@@ -10,6 +10,7 @@ MODEL_DIR = BASE_DIR / "models_hourly_sarima"
 TARGET = "temperature_2m"
 
 
+
 def load_recent_hourly(province: str, hours: int = 24 * 3) -> pd.Series:
     csv_path = DATA_DIR / f"{province}.csv"
     if not csv_path.exists():
