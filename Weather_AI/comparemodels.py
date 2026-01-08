@@ -1,11 +1,9 @@
-# compare_with_actual.py - So sánh dự báo với dữ liệu thực
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-# Cấu hình
 PROVINCE = "Ca_Mau"  # Thay tên tỉnh ở đây
 RESULT_DIR = Path("result_demo")
 DATA_TEST_DIR = Path("data_test")
@@ -14,9 +12,6 @@ print(f"\n{'=' * 70}")
 print(f"SO SÁNH DỰ BÁO VỚI DỮ LIỆU THỰC - {PROVINCE}")
 print(f"{'=' * 70}\n")
 
-# ============================================================================
-# 1. ĐỌC DỮ LIỆU
-# ============================================================================
 
 # Dữ liệu thực
 actual = pd.read_csv(DATA_TEST_DIR / f"{PROVINCE}.csv")
@@ -42,9 +37,6 @@ sarima_hourly['time'] = pd.to_datetime(sarima_hourly['time'])
 lstm_hourly = pd.read_csv(RESULT_DIR / f"result_lstm_hourly_{PROVINCE}.csv")
 lstm_hourly['time'] = pd.to_datetime(lstm_hourly['time'])
 
-# ============================================================================
-# 2. SO SÁNH DAILY (MIN/MAX)
-# ============================================================================
 
 print("📊 SO SÁNH DAILY (5 NGÀY)")
 print("-" * 70)
@@ -96,9 +88,6 @@ if len(daily_compare) > 0:
 else:
     print("⚠️  Không có ngày trùng khớp giữa dự báo và dữ liệu thực")
 
-# ============================================================================
-# 3. SO SÁNH HOURLY
-# ============================================================================
 
 print(f"\n{'=' * 70}")
 print("⏰ SO SÁNH HOURLY (24 GIỜ)")
@@ -134,10 +123,6 @@ if len(hourly_compare) > 0:
         print("...")
 else:
     print("⚠️  Không có giờ trùng khớp giữa dự báo và dữ liệu thực")
-
-# ============================================================================
-# 4. VẼ BIỂU ĐỒ
-# ============================================================================
 
 fig = plt.figure(figsize=(16, 10))
 

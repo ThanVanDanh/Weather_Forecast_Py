@@ -1,4 +1,3 @@
-# predict_daily_minmax_5days.py
 from pathlib import Path
 import pandas as pd
 import joblib
@@ -12,9 +11,6 @@ TARGET = "temperature_2m"
 
 
 def load_recent_daily(province: str, days: int = 30) -> pd.DataFrame:
-    """
-    Lấy lịch sử vài chục ngày gần nhất, gom từ hourly → daily.
-    """
     csv_path = DATA_DIR / f"{province}.csv"
     if not csv_path.exists():
         raise FileNotFoundError(f"No data for {province}")
