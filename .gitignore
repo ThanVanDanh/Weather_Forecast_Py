@@ -8,6 +8,7 @@ __pycache__/
 
 # Dataset
 Weather_AI/data/
+data/
 
 
 # Virtual Environments
