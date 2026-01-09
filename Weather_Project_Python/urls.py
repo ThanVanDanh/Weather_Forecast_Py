@@ -22,10 +22,7 @@ urlpatterns = [
 
     # 1. Đường dẫn trang chủ (trang dashboard)
     path('', weather_views.weather_dashboard, name='home'),
-    
-    # 2. Giao diện iOS Weather style
-    path('ios/', weather_views.weather_dashboard_ios, name='home_ios'),
 
-    # 3. Đường dẫn cho tất cả API
+    # 2. Đường dẫn cho tất cả API
     path('api/weather/', include('Weather_App.urls', namespace='weather_api')),
 ]
