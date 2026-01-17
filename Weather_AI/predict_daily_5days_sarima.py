@@ -1,3 +1,6 @@
+import os
+import sys
+import django
 from pathlib import Path
 import pandas as pd
 import joblib
@@ -6,6 +9,13 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 MODEL_DIR = BASE_DIR / "models_daily_sarima"
+
+DJANGO_PROJECT_DIR = BASE_DIR.parent
+sys.path.insert(0, str(DJANGO_PROJECT_DIR))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Weather_Project_Python.settings')
+django.setup()
+
+from Weather_App.models import Location, DailyForecast
 
 TARGET = "temperature_2m"
 
@@ -45,28 +55,40 @@ def forecast_one_target(province: str, target: str, history: pd.Series, steps: i
     )
 
     results = model.filter(payload["params"])
-
     fc = results.get_forecast(steps=steps)
     return fc.predicted_mean
 
 
-def forecast_daily_minmax_5days(province: str) -> pd.DataFrame:
-    daily = load_recent_daily(province)
+def predict_daily_temperature(province_name: str, steps: int = 5):
+    """Dự báo nhiệt độ min/max theo ngày và lưu vào DB"""
+    daily = load_recent_daily(province_name)
 
-    min_pred = forecast_one_target(province, "min", daily["temp_min"])
-    max_pred = forecast_one_target(province, "max", daily["temp_max"])
+    min_pred = forecast_one_target(province_name, "min", daily["temp_min"], steps)
+    max_pred = forecast_one_target(province_name, "max", daily["temp_max"], steps)
 
     start = daily.index[-1] + pd.Timedelta(days=1)
-    idx = pd.date_range(start=start, periods=5, freq="D")
+    idx = pd.date_range(start=start, periods=steps, freq="D")
 
-    return pd.DataFrame({
-        "date": idx.date,
-        "temp_min_forecast": min_pred.values,
-        "temp_max_forecast": max_pred.values
-    })
+    location = Location.objects.filter(city_name__icontains=province_name.replace('_', ' ')).first()
+    if not location:
+        raise ValueError(f"Location not found: {province_name}")
+
+    for date, temp_min, temp_max in zip(idx, min_pred.values, max_pred.values):
+        DailyForecast.objects.update_or_create(
+            location=location,
+            forecast_date=date.date(),
+            defaults={'temp_min': float(temp_min), 'temp_max': float(temp_max)}
+        )
+    
+    return f"✅ {province_name}: Saved {steps} daily forecasts"
 
 
 if __name__ == "__main__":
-    df = forecast_daily_minmax_5days("Ca_Mau")
-    df.to_csv("result_demo/result_daily_Ca_Mau.csv", index=False)
-    print(df)
+    import sys
+    if len(sys.argv) > 1:
+        province = sys.argv[1]
+        print(predict_daily_temperature(province))
+    else:
+        print("Usage: python predict_daily_5days_sarima.py <province_name>")
+        print("Example: python predict_daily_5days_sarima.py Ha_Noi")
+

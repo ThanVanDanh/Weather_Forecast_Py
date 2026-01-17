@@ -50,37 +50,47 @@ class HistoricalData(models.Model):
         verbose_name_plural = "3. Dữ liệu lịch sử (AI Train)"
 
 
-class AIForecast(models.Model):
-    location = models.ForeignKey(
-        Location,
-        on_delete=models.CASCADE,
-        related_name='ai_forecasts'
-    )
-    forecast_date = models.DateField(verbose_name="Ngày dự báo")
-    generated_at = models.DateTimeField(auto_now_add=True)
+class HourlyForecast(models.Model):
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='hourly_forecasts')
+    forecast_time = models.DateTimeField(verbose_name="Giờ dự báo")
+    
+    temperature = models.FloatField(verbose_name="Nhiệt độ (°C)")
+    humidity = models.FloatField(null=True, blank=True, verbose_name="Độ ẩm (%)")
+    shortwave_radiation = models.FloatField(null=True, blank=True, verbose_name="Bức xạ (W/m²)")
+    
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lúc")
 
-    predicted_temp_max = models.FloatField(verbose_name="Dự báo nhiệt độ max")
-    predicted_temp_min = models.FloatField(verbose_name="Dự báo nhiệt độ min")
-    predicted_precipitation_probability = models.FloatField(
-        null=True, blank=True, verbose_name="Dự báo xác suất mưa (%)"
-    )
-    predicted_weather_code = models.IntegerField(
-        null=True, blank=True, verbose_name="Dự báo mã thời tiết (WMO)"
-    )
+    class Meta:
+        unique_together = ('location', 'forecast_time')
+        ordering = ['forecast_time']
+        verbose_name = "Dự báo theo Giờ (24h)"
+        verbose_name_plural = "4. Dự báo theo Giờ (24h)"
+
+    def __str__(self):
+        return f"{self.location.city_name} - {self.forecast_time.strftime('%H:%M')}"
+
+
+class DailyForecast(models.Model):
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='daily_forecasts')
+    forecast_date = models.DateField(verbose_name="Ngày dự báo")
+    
+    temp_max = models.FloatField(verbose_name="Nhiệt độ cao nhất (°C)")
+    temp_min = models.FloatField(verbose_name="Nhiệt độ thấp nhất (°C)")
+    
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lúc")
 
     class Meta:
         unique_together = ('location', 'forecast_date')
-        verbose_name = "Kết quả dự báo (AI)"
-        verbose_name_plural = "4. Kết quả dự báo (AI)"
         ordering = ['forecast_date']
+        verbose_name = "Dự báo theo Ngày (5 ngày)"
+        verbose_name_plural = "5. Dự báo theo Ngày (5 ngày)"
+
+    def __str__(self):
+        return f"{self.location.city_name} - {self.forecast_date.strftime('%d/%m/%Y')}"
 
 
 class WeatherAlert(models.Model):
-    location = models.ForeignKey(
-        Location,
-        on_delete=models.CASCADE,
-        related_name='alerts'
-    )
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='alerts')
     api_alert_id = models.CharField(max_length=100, unique=True)
     event_name = models.CharField(max_length=200)
     description = models.TextField()
@@ -89,4 +99,4 @@ class WeatherAlert(models.Model):
 
     class Meta:
         verbose_name = "Cảnh báo thời tiết"
-        verbose_name_plural = "5. Cảnh báo thời tiết"
+        verbose_name_plural = "6. Cảnh báo thời tiết"
