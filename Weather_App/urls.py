@@ -16,6 +16,11 @@ urlpatterns = [
     # 3. API lấy các TP nổi bật
     # GET /api/weather/featured/
     path('featured/', views.get_featured_weather, name='api_featured_weather'),
+    
+    # 3.5. API lấy dự báo AI (24h + 5 ngày) - ON-DEMAND
+    # GET /api/weather/forecast/?location_id=X
+    path('forecast/', views.get_ai_forecast, name='api_ai_forecast'),
+    
     # 4. URL cho trang chi tiết tỉnh
     # Sẽ khớp với các URL như /tinh/ha-noi/, /tinh/tuyen-quang/
     path('tinh/<slug:slug>/', views.province_view, name='province_detail'),
