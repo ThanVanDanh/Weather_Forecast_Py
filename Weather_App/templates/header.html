@@ -8,9 +8,15 @@
                 <button><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
         </div>
-        <div class="header-right">
-            <span>Giờ địa phương: 14:54:40 2/11/2025</span>
-        </div>
+<div class="header-right">
+  <span id="local-time">Giờ địa phương: --:--:-- --/--/----</span>
+   <script src="{% static 'js/local-time.js' %}"></script>
+
+</div>
+
+
+
+
     </header>
     <nav class="main-nav">
         <ul class="nav-links">
@@ -111,5 +117,4 @@
 
     </nav>
 </div>
-{% load static %}
-<script src="{% static 'js/location.js' %}"></script>
+
