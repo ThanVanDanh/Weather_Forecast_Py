@@ -103,3 +103,6 @@ def province_view(request, slug):
 def warning_view(request):
 
     return render(request, 'warningweather.html')
+from math import radians, sin, cos, asin, sqrt
+
+
