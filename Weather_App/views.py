@@ -5,7 +5,7 @@ from rest_framework import status
 from django.utils import timezone
 from django.db.models import Q
 
-from .models import Location, CurrentWeatherCache, AIForecast, WeatherAlert
+from .models import Location, CurrentWeatherCache, HourlyForecast, DailyForecast, WeatherAlert
 from .serializers import (
     LocationSerializer, FeaturedCitySerializer
 )
