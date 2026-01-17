@@ -103,3 +103,48 @@ def province_view(request, slug):
 def warning_view(request):
 
     return render(request, 'warningweather.html')
+from math import radians, sin, cos, asin, sqrt
+
+def haversine_km(lat1, lon1, lat2, lon2):
+    R = 6371.0
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+    return 2 * R * asin(sqrt(a))
+@api_view(['POST'])
+def locate_user(request):
+    try:
+        lat = float(request.data.get("lat"))
+        lon = float(request.data.get("lon"))
+    except (TypeError, ValueError):
+        return Response({"ok": False, "error": "lat/lon không hợp lệ"}, status=status.HTTP_400_BAD_REQUEST)
+
+    locations = Location.objects.filter(country_code="VN").only("id", "city_name", "latitude", "longitude")
+
+    nearest = None
+    best_d = 10**9
+    for loc in locations:
+        d = haversine_km(lat, lon, loc.latitude, loc.longitude)
+        if d < best_d:
+            best_d = d
+            nearest = loc
+
+    if not nearest:
+        return Response({"ok": False, "error": "Không có dữ liệu Location"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Ngưỡng an toàn để tránh đoán bừa (tuỳ chỉnh)
+    if best_d > 150:
+        return Response({"ok": False, "error": "Không xác định được tỉnh (quá xa điểm trung tâm)"}, status=status.HTTP_404_NOT_FOUND)
+
+    slug = nearest.city_name.lower().replace(" ", "-")
+
+    # (tuỳ chọn) lưu session để lần sau khỏi gọi lại
+    request.session["current_location_id"] = nearest.id
+
+    return Response({
+        "ok": True,
+        "location_id": nearest.id,
+        "city": nearest.city_name,
+        "slug": slug,
+        "distance_km": round(best_d, 2),
+    })
