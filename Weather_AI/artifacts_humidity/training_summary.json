@@ -1,0 +1,30 @@
+{
+  "total_provinces": 1,
+  "successful": 1,
+  "failed": 0,
+  "failed_list": [],
+  "total_duration": "0:36:36.135006",
+  "created_at": "2026-01-07T18:37:15.943767",
+  "results": [
+    {
+      "province": "Lam_Dong",
+      "order": [
+        1,
+        1,
+        1
+      ],
+      "seasonal_order": [
+        1,
+        1,
+        0,
+        24
+      ],
+      "mape": 17.443205137528086,
+      "accuracy": 82.55679486247192,
+      "mae": 12.84193947855584,
+      "rmse": 15.786354880781182,
+      "r2": -0.9877583097195839,
+      "duration": "0:36:31.661782"
+    }
+  ]
+}

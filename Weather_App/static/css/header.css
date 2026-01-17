@@ -6,7 +6,7 @@
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 .site-header {
-    background-color: var(--primary-green);
+    background: linear-gradient(to bottom, #1b2735 0%, #090a0f 100%);
     color: white;
     padding: 10px 5%;
     display: flex;

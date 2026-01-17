@@ -28,4 +28,5 @@ urlpatterns = [
     # 7. URL cho trang chủ (dashboard)
     # (View này đã có trong views.py nhưng chưa được gán URL)
     path('', views.weather_dashboard, name='dashboard'),
+
 ]

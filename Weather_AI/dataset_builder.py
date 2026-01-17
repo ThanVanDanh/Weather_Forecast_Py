@@ -112,7 +112,7 @@ def fetch_full_dataset(lat, lon):
         "latitude": lat,
         "longitude": lon,
         "start_date": "2022-01-01",
-        "end_date": "2025-01-01",
+        "end_date": "2026-01-01",
         "hourly": HOURLY,
         "timezone": TIMEZONE,
     }
@@ -147,7 +147,7 @@ if __name__ == "__main__":
             # df_daily = df.resample('D').sum()
             # Đổi tên file cho gọn, không có dấu cách
             filename = f"{province}.csv"
-            df.to_csv(os.path.join("data", filename), index_label="time")
+            df.to_csv(os.path.join("data_test", filename), index_label="time")
             # df_daily.to_csv(os.path.join("data_test", filename), index_label="time")
             print(f"✔ {province}: {len(df)} dòng")
         except Exception as e:

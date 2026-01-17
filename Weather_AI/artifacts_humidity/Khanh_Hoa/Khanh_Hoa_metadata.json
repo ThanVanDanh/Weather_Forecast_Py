@@ -1,0 +1,67 @@
+{
+  "province": "Khanh_Hoa",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    1,
+    0,
+    2
+  ],
+  "seasonal_order": [
+    0,
+    1,
+    0,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 9.3095,
+    "rmse": 11.4402,
+    "mape": 11.7426,
+    "r2": -0.6183,
+    "accuracy": 88.2574
+  },
+  "training_info": {
+    "province": "Khanh_Hoa",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Khanh_Hoa.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "1:00:10.004967"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 83.60297022181707,
+      "std": 12.657412165148562,
+      "min": 44.0,
+      "max": 100.0,
+      "median": 87.0,
+      "skewness": -0.7242982003187328,
+      "kurtosis": -0.4541813503247627
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 83.23769113149847,
+        "std": 12.470900506858314
+      },
+      "wet_season": {
+        "mean": 83.96361714975845,
+        "std": 12.829171435724028
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 7.010650020061414,
+    "n_configurations_tested": 10
+  },
+  "created_at": "2026-01-07T15:17:56.025245",
+  "model_file_size_mb": 0.01
+}

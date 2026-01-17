@@ -1,0 +1,67 @@
+{
+  "province": "Cao_Bang",
+  "target_column": "relative_humidity_2m",
+  "model_type": "SARIMA",
+  "order": [
+    1,
+    0,
+    2
+  ],
+  "seasonal_order": [
+    0,
+    1,
+    0,
+    24
+  ],
+  "seasonal_period": 24,
+  "forecast_horizon": 24,
+  "performance_metrics": {
+    "mae": 6.4715,
+    "rmse": 9.1282,
+    "mape": 11.1688,
+    "r2": 0.6613,
+    "accuracy": 88.8312
+  },
+  "training_info": {
+    "province": "Cao_Bang",
+    "data_file": "D:\\DuBaoThoiTiet\\Weather_Forecast_Py\\Weather_AI\\data\\Cao_Bang.csv",
+    "training_samples": 25992,
+    "validation_samples": 168,
+    "test_samples": 168,
+    "training_period": "2022-01-01 00:00:00 to 2024-12-18 23:00:00",
+    "validation_period": "2024-12-19 00:00:00 to 2024-12-25 23:00:00",
+    "test_period": "2024-12-26 00:00:00 to 2025-01-01 23:00:00",
+    "training_duration": "0:25:25.747094"
+  },
+  "eda_summary": {
+    "statistics": {
+      "mean": 80.15272713460953,
+      "std": 14.904017221359796,
+      "min": 35.5,
+      "max": 100.0,
+      "median": 83.0,
+      "skewness": -0.6946250542399605,
+      "kurtosis": -0.3655065345498927
+    },
+    "seasonal_stats": {
+      "dry_season": {
+        "mean": 77.38558868501529,
+        "std": 14.974418212925396
+      },
+      "wet_season": {
+        "mean": 82.88477506038647,
+        "std": 14.319375955394134
+      }
+    },
+    "stationarity": {
+      "adf_stationary": "True",
+      "kpss_stationary": "False"
+    }
+  },
+  "grid_search_summary": {
+    "best_mape": 6.352025277051163,
+    "n_configurations_tested": 50
+  },
+  "created_at": "2026-01-07T01:43:56.045082",
+  "model_file_size_mb": 0.01
+}

@@ -1,0 +1,22 @@
+                                     SARIMAX Results                                      
+==========================================================================================
+Dep. Variable:               relative_humidity_2m   No. Observations:                26160
+Model:             SARIMAX(0, 1, 0)x(0, 1, 0, 24)   Log Likelihood              -74158.282
+Date:                            Wed, 07 Jan 2026   AIC                         148318.563
+Time:                                    14:37:50   BIC                         148326.735
+Sample:                                01-01-2022   HQIC                        148321.202
+                                     - 12-25-2024                                         
+Covariance Type:                              opg                                         
+==============================================================================
+                 coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+sigma2        16.8127      0.075    223.205      0.000      16.665      16.960
+===================================================================================
+Ljung-Box (L1) (Q):                  39.19   Jarque-Bera (JB):             34591.08
+Prob(Q):                              0.00   Prob(JB):                         0.00
+Heteroskedasticity (H):               0.90   Skew:                             0.02
+Prob(H) (two-sided):                  0.00   Kurtosis:                         8.63
+===================================================================================
+
+Warnings:
+[1] Covariance matrix calculated using the outer product of gradients (complex-step).

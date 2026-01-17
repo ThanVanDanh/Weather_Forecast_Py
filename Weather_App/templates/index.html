@@ -16,6 +16,8 @@
 {% include 'header.html' %}
 <main>
 <section class="weather-dashboard">
+    <div id="rain-canvas-container"></div>
+    <div class="overlay-bg"></div>
     <div class="content-relative">
         <div class="card current-weather-card">
             <h2 id="current-city-name">Đang tải...</h2>
@@ -146,5 +148,113 @@
         </section>
     </main>
 {% include 'footer.html' %}
+<script type="module">
+    import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+
+    // Chờ trang web tải xong hoàn toàn mới chạy code
+    window.addEventListener('load', function() {
+
+        const container = document.getElementById('rain-canvas-container');
+        if (!container) {
+            console.error("Không tìm thấy thẻ chứa hiệu ứng mưa!");
+            return;
+        }
+
+        let width = container.clientWidth;
+        let height = container.clientHeight;
+
+        // Nếu kích thước bị 0, lấy kích thước cửa sổ để thay thế
+        if (width === 0) width = window.innerWidth;
+        if (height === 0) height = 600; // Chiều cao tối thiểu
+
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x1b2735, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(60, width / height, 1, 1000);
+        camera.position.z = 1;
+        camera.rotation.x = 1.16;
+        camera.position.y = -120;
+
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(width, height);
+
+        // Xóa nội dung cũ nếu có (tránh bị trùng lặp khi reload)
+        container.innerHTML = '';
+        container.appendChild(renderer.domElement);
+
+        // --- TẠO TEXTURE MƯA ---
+        function createRainTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 128);
+            gradient.addColorStop(0, 'rgba(255,255,255,0)');
+            gradient.addColorStop(0.5, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0.1)');
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 32, 128);
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        // --- TẠO HẠT MƯA ---
+        const rainCount = 10000;
+        const rainGeo = new THREE.BufferGeometry();
+        const positions = [];
+
+        for (let i = 0; i < rainCount; i++) {
+            positions.push(
+                Math.random() * 400 - 200,
+                Math.random() * 500 - 250,
+                Math.random() * 400 - 200
+            );
+        }
+
+        rainGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+        const rainMaterial = new THREE.PointsMaterial({
+            color: 0xaaaaaa,
+            size: 0.5,
+            map: createRainTexture(),
+            transparent: true,
+            opacity: 0.8,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending
+        });
+
+        const rain = new THREE.Points(rainGeo, rainMaterial);
+        scene.add(rain);
+
+        // --- ANIMATION LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+            const positions = rainGeo.attributes.position.array;
+
+            for (let i = 1; i < rainCount * 3; i += 3) {
+                positions[i] -= (0.8 + Math.random() * 0.3);
+                if (positions[i] < -200) {
+                    positions[i] = 200;
+                    positions[i-1] = Math.random() * 400 - 200;
+                }
+            }
+            rainGeo.attributes.position.needsUpdate = true;
+            rain.rotation.y += 0.002;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // --- XỬ LÝ KHI THAY ĐỔI KÍCH THƯỚC ---
+        window.addEventListener('resize', () => {
+            width = container.clientWidth;
+            height = container.clientHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        });
+    });
+</script>
 </body>
 </html>
