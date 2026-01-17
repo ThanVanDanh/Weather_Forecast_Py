@@ -77,56 +77,9 @@
             </div>
         </div>
 
-        <div class="forecast-cards">
-            <a href="#" class="card forecast-card">
-                <h3><span id="thu_weather">Thứ 2</span> <span id="ngay_thang">16/11</span></h3>
-                <img class="main-img" src="{% static 'image/weather.png' %}" alt="">
-                <p class="img-eyes">
-                    <img class="detail-img" src="{% static 'image/icon-style-1-drop.svg' %}" alt=""><span>89 %</span>
-                </p>
-                <div class="status"><p id="status_card">Mưa vừa</p></div>
-                <div class="temp"><p id="temp_minmax_card">--°/--°</p></div>
-            </a>
-
-            <a href="#" class="card forecast-card">
-                <h3><span id="thu_weather">Thứ 2</span> <span id="ngay_thang">16/11</span></h3>
-                <img class="main-img" src="{% static 'image/weather.png' %}" alt="">
-                <p class="img-eyes">
-                    <img class="detail-img" src="{% static 'image/icon-style-1-drop.svg' %}" alt=""><span>89 %</span>
-                </p>
-                <div class="status"><p id="status_card">Mưa vừa</p></div>
-                <div class="temp"><p id="temp_minmax_card">--°/--°</p></div>
-            </a>
-
-            <a href="#" class="card forecast-card">
-                <h3><span id="thu_weather">Thứ 2</span> <span id="ngay_thang">16/11</span></h3>
-                <img class="main-img" src="{% static 'image/weather.png' %}" alt="">
-                <p class="img-eyes">
-                    <img class="detail-img" src="{% static 'image/icon-style-1-drop.svg' %}" alt=""><span>89 %</span>
-                </p>
-                <div class="status"><p id="status_card">Mưa vừa</p></div>
-                <div class="temp"><p id="temp_minmax_card">--°/--°</p></div>
-            </a>
-
-            <a href="#" class="card forecast-card">
-                <h3><span id="thu_weather">Thứ 2</span> <span id="ngay_thang">16/11</span></h3>
-                <img class="main-img" src="{% static 'image/weather.png' %}" alt="">
-                <p class="img-eyes">
-                    <img class="detail-img" src="{% static 'image/icon-style-1-drop.svg' %}" alt=""><span>89 %</span>
-                </p>
-                <div class="status"><p id="status_card">Mưa vừa</p></div>
-                <div class="temp"><p id="temp_minmax_card">--°/--°</p></div>
-            </a>
-
-            <a href="#" class="card forecast-card">
-                <h3><span id="thu_weather">Thứ 2</span> <span id="ngay_thang">16/11</span></h3>
-                <img class="main-img" src="{% static 'image/weather.png' %}" alt="">
-                <p class="img-eyes">
-                    <img class="detail-img" src="{% static 'image/icon-style-1-drop.svg' %}" alt=""><span>89 %</span>
-                </p>
-                <div class="status"><p id="status_card">Mưa vừa</p></div>
-                <div class="temp"><p id="temp_minmax_card">--°/--°</p></div>
-            </a>
+        <div class="forecast-cards" id="forecast-container">
+            <!-- Dự báo 5 ngày sẽ được tạo bằng JavaScript -->
+            <p style="text-align: center; color: #999;">Loading forecast...</p>
         </div>
     </div>
 </section>

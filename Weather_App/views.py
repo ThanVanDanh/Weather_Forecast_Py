@@ -7,9 +7,9 @@ from django.db.models import Q
 
 from .models import Location, CurrentWeatherCache, HourlyForecast, DailyForecast, WeatherAlert
 from .serializers import (
-    LocationSerializer, FeaturedCitySerializer
+    LocationSerializer, FeaturedCitySerializer, HourlyForecastSerializer, DailyForecastSerializer
 )
-from .services import MeteoAPIService
+from .services import MeteoAPIService, ForecastService
 
 def weather_dashboard(request):
     # Django sẽ tìm 'weather/dashboard.html' bên trong thư mục 'templates'
@@ -100,9 +100,66 @@ def province_view(request, slug):
         'longitude': location.longitude,
     }
     return render(request, 'province-template.html', context)
-def warning_view(request):
 
+
+def warning_view(request):
     return render(request, 'warningweather.html')
+
+
+# API DỰ BÁO AI (24H + 5 NGÀY) - ON-DEMAND
+@api_view(['GET'])
+def get_ai_forecast(request):
+    """
+    API lấy dự báo AI cho tỉnh/thành
+    GET /api/weather/forecast/?location_id=X
+    
+    Logic:
+    - Kiểm tra updated_at của forecast cuối cùng
+    - Nếu hourly > 1h hoặc daily > 24h → XÓA toàn bộ → predict lại
+    - Trả về dữ liệu forecast
+    """
+    location_id = request.query_params.get('location_id')
+    if not location_id:
+        return Response(
+            {"error": "Thiếu tham số 'location_id'"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        location = get_object_or_404(Location, id=location_id)
+        
+        print(f"[DEBUG] Location: {location.city_name} (ID: {location.id})")
+        
+        # Lấy hoặc predict hourly (24h)
+        hourly_forecasts = ForecastService.get_or_predict_hourly(location)
+        hourly_data = HourlyForecastSerializer(hourly_forecasts, many=True).data
+        
+        print(f"[DEBUG] Hourly forecasts: {len(hourly_data)} records")
+        
+        # Lấy hoặc predict daily (5 ngày)
+        daily_forecasts = ForecastService.get_or_predict_daily(location)
+        daily_data = DailyForecastSerializer(daily_forecasts, many=True).data
+        
+        print(f"[DEBUG] Daily forecasts: {len(daily_data)} records")
+        
+        return Response({
+            'location': {
+                'id': location.id,
+                'city_name': location.city_name,
+                'latitude': location.latitude,
+                'longitude': location.longitude
+            },
+            'hourly_forecast': hourly_data,
+            'daily_forecast': daily_data
+        })
+    except Exception as e:
+        print(f"[ERROR] get_ai_forecast: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 from math import radians, sin, cos, asin, sqrt
 
 
