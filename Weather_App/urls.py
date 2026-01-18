@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-
+from .views import locate_user
 
 app_name = 'Weather_App'
 
@@ -31,5 +31,6 @@ urlpatterns = [
     # 6. URL cho trang chủ (dashboard)
     # (View này đã có trong views.py nhưng chưa được gán URL)
     path('', views.weather_dashboard, name='dashboard'),
+    path("locate/", locate_user, name="locate_user"),
 
 ]
