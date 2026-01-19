@@ -1,6 +1,12 @@
 // weather/static/weather/js/script.js
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Chỉ chạy logic index.html nếu có forecast-container
+    if (!document.getElementById('forecast-container')) {
+        console.log('[DEBUG] Not on index.html, skipping script.js initialization');
+        return;
+    }
+    
     const DEFAULT_LOCATION_ID = 30; // TP.HCM
     const DEFAULT_CITY_NAME = "Ho Chi Minh City";
 
@@ -79,6 +85,11 @@ async function loadWeatherForLocation(locationId, cityName) {
  * Cập nhật khối thời tiết hiện tại
  */
 function updateCurrentWeatherDOM(data) {
+    // Chỉ chạy trên index.html
+    if (!document.getElementById('current-temp')) {
+        return;
+    }
+    
     const current = data.current_weather;
     const hourly = data.hourly;
     const daily = data.daily;
@@ -136,18 +147,32 @@ function updateDailyForecastDOM(dailyForecast) {
         const dayOfWeek = date.toLocaleDateString('vi-VN', { weekday: 'long' });
         const dayMonth = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
 
-        console.log(`[DEBUG] Card ${index}: ${dayOfWeek} ${dayMonth} - ${day.temp_max}°/${day.temp_min}°`);
+        // Dự đoán icon dựa trên nhiệt độ (vì không có weathercode)
+        let weatherCode = 1; // Mặc định: nắng nhẹ
+        const avgTemp = (day.temp_max + day.temp_min) / 2;
+        if (day.temp_max > 35) {
+            weatherCode = 0; // Nắng gắt
+        } else if (day.temp_max > 30) {
+            weatherCode = 1; // Nắng nhẹ/mây rải rác
+        } else if (day.temp_max < 20) {
+            weatherCode = 3; // Nhiều mây/mát
+        }
+        
+        const icon = getWeatherIcon(weatherCode, 1); // Ban ngày = 1
+        const statusText = getWeatherStatusFromCode(weatherCode, 1);
+
+        console.log(`[DEBUG] Card ${index}: ${dayOfWeek} ${dayMonth} - ${day.temp_max}°/${day.temp_min}° - ${statusText}`);
 
         const card = document.createElement('a');
         card.href = '#';
         card.className = 'card forecast-card';
         card.innerHTML = `
             <h3><span>${dayOfWeek}</span> <span>${dayMonth}</span></h3>
-            <img class="main-img" src="/static/image/mayden.png" alt="">
+            <img class="main-img" src="/static/image/${icon}" alt="${statusText}">
             <p class="img-eyes">
                 <img class="detail-img" src="/static/image/icon-style-1-drop.svg" alt=""><span>-- %</span>
             </p>
-            <div class="status"><p>Dự báo AI</p></div>
+            <div class="status"><p>${statusText}</p></div>
             <div class="temp"><p>${Math.round(day.temp_max)}°/ ${Math.round(day.temp_min)}°</p></div>
         `;
         container.appendChild(card);
@@ -172,8 +197,6 @@ function updateAIForecastDOM(forecastData) {
         const date = new Date(day.forecast_date);
         let dayDisplay = index === 0 ? "Hôm nay" : date.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' });
 
-        // SỬA LỖI: Đặt tên biến là 'icon' để khớp với template string bên dưới
-        // (Dự báo tương lai thường mặc định là ban ngày = 1)
         const icon = getWeatherIcon(day.predicted_weather_code, 1);
         const statusText = getWeatherStatusFromCode(day.predicted_weather_code, 1);
 

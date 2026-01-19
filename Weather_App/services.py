@@ -71,11 +71,31 @@ class ForecastService:
         """Lấy hoặc tạo dự báo 24h cho location"""
         from .models import HourlyForecast
         
-        # Kiểm tra forecast mới nhất
-        latest = HourlyForecast.objects.filter(location=location).aggregate(Max('updated_at'))['updated_at__max']
+        # Tính giờ tiếp theo (bắt đầu dự báo)
+        now = timezone.now()
+        next_hour = now.replace(minute=0, second=0, microsecond=0) + timezone.timedelta(hours=1)
         
-        # Nếu chưa có hoặc quá 1 giờ → predict lại
-        if latest is None or (timezone.now() - latest).total_seconds() > 3600:
+        # Kiểm tra forecast đầu tiên
+        first_forecast = HourlyForecast.objects.filter(location=location).order_by('forecast_time').first()
+        
+        should_predict = False
+        
+        if first_forecast is None:
+            # Chưa có forecast
+            should_predict = True
+        else:
+            # Kiểm tra xem forecast_time đầu tiên có phải là giờ tiếp theo không
+            if first_forecast.forecast_time != next_hour:
+                should_predict = True
+                print(f"[DEBUG] First forecast time {first_forecast.forecast_time} != next hour {next_hour}")
+            else:
+                # Kiểm tra updated_at có quá cũ không (>1h)
+                hours_since_update = (now - first_forecast.updated_at).total_seconds() / 3600
+                if hours_since_update > 1:
+                    should_predict = True
+                    print(f"[DEBUG] Updated {hours_since_update:.1f}h ago, re-predicting")
+        
+        if should_predict:
             # Xóa dữ liệu cũ
             HourlyForecast.objects.filter(location=location).delete()
             

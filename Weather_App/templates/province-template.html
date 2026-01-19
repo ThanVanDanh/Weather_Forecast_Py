@@ -102,7 +102,7 @@
 				<section class="weather-forecast-detail">
 					<section class="weather-main-column">
 						<div class="card hourly-forecast-card">
-							<h3>Thời tiết Hà Giang theo giờ</h3>
+							<h3>Thời tiết {{ city_name }} theo giờ</h3>
 							<div class="hourly-scroll-container" id="hourly-forecast-container">
 	{#							<div class="hourly-item">#}
 	{#							   <p class="hourly-time">01:00 PM</p>#}
@@ -114,48 +114,10 @@
 							</div>
 						</div>
 						<div class="card daily-forecast-card">
-							<h3>Dự báo thời tiết Hà Giang những ngày tới</h3>
+							<h3>Dự báo thời tiết {{ city_name }} những ngày tới</h3>
 							<div class="daily-forecast-list">
-								<div class="forecast-item">
-									<strong>Hôm nay</strong>
-									<span>17° / 18°</span>
-									<img src="{% static 'image/weather.png' %}" alt="Mưa nhẹ">
-									<span>Mưa nhẹ</span>
-									<span><i class="fa-solid fa-droplet"></i> 94%</span>
-									<span><i class="fa-solid fa-wind"></i> 1.24 km/h</span>
-								</div>
-								<div class="forecast-item">
-									<strong>T3 04/11</strong>
-									<span>17° / 20°</span>
-									<img src="{% static 'image/weather.png' %}" alt="Mưa nhẹ">
-									<span>Mưa nhẹ</span>
-									<span><i class="fa-solid fa-droplet"></i> 89%</span>
-									<span><i class="fa-solid fa-wind"></i> 1.3 km/h</span>
-								</div>
-								<div class="forecast-item">
-									<strong>T4 05/11</strong>
-									<span>17° / 26°</span>
-									<img src="{% static 'image/weather.png' %}" alt="Mây cụm">
-									<span>Mây cụm</span>
-									<span><i class="fa-solid fa-droplet"></i> 61%</span>
-									<span><i class="fa-solid fa-wind"></i> 1.95 km/h</span>
-								</div>
-								 <div class="forecast-item">
-									<strong>T5 06/11</strong>
-									<span>18° / 27°</span>
-									<img src="{% static 'image/weather.png' %}" alt="Mây cụm">
-									<span>Mây cụm</span>
-									<span><i class="fa-solid fa-droplet"></i> 55%</span>
-									<span><i class="fa-solid fa-wind"></i> 1.5 km/h</span>
-								</div>
-								<div class="forecast-item">
-									<strong>T6 07/11</strong>
-									<span>19° / 28°</span>
-									<img src="{% static 'image/weather.png' %}" alt="Mưa nhẹ">
-									<span>Mưa nhẹ</span>
-									<span><i class="fa-solid fa-droplet"></i> 70%</span>
-									<span><i class="fa-solid fa-wind"></i> 1.1 km/h</span>
-								</div>
+								<!-- Dữ liệu dự báo 5 ngày sẽ được tạo bằng JavaScript -->
+								<p style="text-align: center; color: #999;">Loading forecast...</p>
 							</div>
 					</div>
 						<div class="card chart-card">
