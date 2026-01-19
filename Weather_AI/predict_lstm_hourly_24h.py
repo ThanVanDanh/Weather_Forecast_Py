@@ -98,8 +98,11 @@ def predict_hourly_temperature(province_name: str, steps: int = 24, force: bool 
         window = np.vstack([window[1:], [[yhat]]])
 
     preds = scaler.inverse_transform(np.array(preds).reshape(-1, 1)).ravel()
-    # last_time đã có timezone Asia/Ho_Chi_Minh từ load_recent_series
-    times = pd.date_range(start=last_time + pd.Timedelta(hours=1), periods=steps, freq="h")
+    
+    # Bắt đầu dự báo từ giờ tiếp theo (hiện tại + 1h)
+    now = tz.localtime()  # Lấy thời gian VN hiện tại
+    next_hour = now.replace(minute=0, second=0, microsecond=0) + pd.Timedelta(hours=1)
+    times = pd.date_range(start=next_hour, periods=steps, freq="h")
     
     for time, temp in zip(times, preds):
         HourlyForecast.objects.update_or_create(
