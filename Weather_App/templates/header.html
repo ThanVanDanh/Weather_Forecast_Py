@@ -8,11 +8,11 @@
                 <button><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
         </div>
-<div class="header-right">
-  <span id="local-time">Giờ địa phương: --:--:-- --/--/----</span>
-   <script src="{% static 'js/local-time.js' %}"></script>
+        <div class="header-right">
+            <span id="local-time">Giờ địa phương: --:--:-- --/--/----</span>
+            <script src="{% static 'js/local-time.js' %}"></script>
 
-</div>
+        </div>
 
 
 
@@ -23,13 +23,13 @@
             {% url 'Weather_App:dashboard' as dashboard_url %}
             <li>
                 <a href="{{ dashboard_url }}" class="{% if request.path == dashboard_url %}active{% endif %}">
-                <i class="fa-solid fa-house"></i> Trang chủ</a>
+                    <i class="fa-solid fa-house"></i> Trang chủ</a>
             </li>
 
-{#            <li><a href="#"><i class="fa-solid fa-location-dot"></i> Tỉnh/Thành phố</a></li>#}
-			<li>
+            {# <li><a href="#"><i class="fa-solid fa-location-dot"></i> Tỉnh/Thành phố</a></li>#}
+            <li>
                 <a class="city-nav-link {% if '/tinh/' in request.path %}active{% endif %}">
-                <i class="fa-solid fa-location-dot"></i> Tỉnh/Thành phố</a>
+                    <i class="fa-solid fa-location-dot"></i> Tỉnh/Thành phố</a>
                 <div class="city-container">
                     <div class="province-list">
                         <h2>Trung du và miền núi phía Bắc</h2>
@@ -101,23 +101,22 @@
             {% url 'weather_api:api_weather_warning' as warning_url %}
 
             <li> <a href="{{ warning_url }}" class="{% if request.path == warning_url %}active{% endif %}">
-                <i class="fa-solid fa-circle-exclamation"></i> Cảnh báo thời tiết </a>
+                    <i class="fa-solid fa-circle-exclamation"></i> Cảnh báo thời tiết </a>
             </li>
             <li><a href="#"><i class="fa-solid fa-cloud-rain"></i> Lượng mưa</a></li>
-            <li><a href="#"><i class="fa-solid fa-wind"></i>  </a></li>
+            <li><a href="#"><i class="fa-solid fa-wind"></i> </a></li>
             <li><a href="#"><i class="fa-solid fa-earth-americas"></i> Khám phá </a></li>
 
         </ul>
-  <div class="nav-location">
-    <span>Bạn đang ở đây: <strong id="current-city">Chưa xác định</strong></span>
-     <a href="#" class="location-link" id="btn-locate">
-        <i class="fa-solid fa-location-dot"></i> Định Vị
-    </a>
-</div>
+        <div class="nav-location">
+            <span>Bạn đang ở đây:<strong id="current-city">{{ request.session.current_city|default:"Chưa xác định" }}</strong>
+            </span>
+            <a href="#" class="location-link" id="btn-locate">
+                <i class="fa-solid fa-location-dot"></i> Định Vị
+            </a>
+        </div>
 
     </nav>
 </div>
 {% load static %}
 <script src="{% static 'js/location.js' %}"></script>
-
-
