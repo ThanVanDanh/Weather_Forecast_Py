@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('[DEBUG] Not on index.html, skipping script.js initialization');
         return;
     }
-    
+
     const DEFAULT_LOCATION_ID = 30; // TP.HCM
     const DEFAULT_CITY_NAME = "Ho Chi Minh City";
 
@@ -55,7 +55,7 @@ async function loadWeatherForLocation(locationId, cityName) {
 
         const currentData = await currentResponse.json();
         console.log('[DEBUG] Current data:', currentData);
-        
+
         // Cập nhật DOM
         updateCurrentWeatherDOM(currentData);
 
@@ -63,7 +63,7 @@ async function loadWeatherForLocation(locationId, cityName) {
         if (forecastResponse.ok) {
             const forecastData = await forecastResponse.json();
             console.log('[DEBUG] Forecast data:', forecastData);
-            
+
             if (forecastData && forecastData.daily_forecast) {
                 updateDailyForecastDOM(forecastData.daily_forecast);
             } else {
@@ -89,7 +89,7 @@ function updateCurrentWeatherDOM(data) {
     if (!document.getElementById('current-temp')) {
         return;
     }
-    
+
     const current = data.current_weather;
     const hourly = data.hourly;
     const daily = data.daily;
@@ -123,14 +123,14 @@ function updateCurrentWeatherDOM(data) {
  */
 function updateDailyForecastDOM(dailyForecast) {
     console.log('[DEBUG] updateDailyForecastDOM called with:', dailyForecast);
-    
+
     const container = document.getElementById('forecast-container');
-    
+
     if (!container) {
         console.error('[ERROR] forecast-container not found!');
         return;
     }
-    
+
     console.log('[DEBUG] Container found:', container);
     container.innerHTML = '';
 
@@ -140,7 +140,7 @@ function updateDailyForecastDOM(dailyForecast) {
     }
 
     console.log(`[DEBUG] Rendering ${dailyForecast.length} forecast cards`);
-    
+
     // Hiển thị tối đa 5 ngày
     dailyForecast.slice(0, 5).forEach((day, index) => {
         const date = new Date(day.forecast_date);
@@ -157,7 +157,7 @@ function updateDailyForecastDOM(dailyForecast) {
         } else if (day.temp_max < 20) {
             weatherCode = 3; // Nhiều mây/mát
         }
-        
+
         const icon = getWeatherIcon(weatherCode, 1); // Ban ngày = 1
         const statusText = getWeatherStatusFromCode(weatherCode, 1);
 
@@ -177,7 +177,7 @@ function updateDailyForecastDOM(dailyForecast) {
         `;
         container.appendChild(card);
     });
-    
+
     console.log('[DEBUG] Forecast cards rendered successfully');
 }
 
@@ -226,7 +226,7 @@ async function loadFeaturedCities() {
 
         const cities = await response.json();
         const container = document.getElementById('featured-cities-container');
-        if(container) container.innerHTML = '';
+        if (container) container.innerHTML = '';
 
         for (let i = 0; i < cities.length; i += 3) {
             const wrapper = document.createElement('div');
@@ -263,7 +263,7 @@ async function loadFeaturedCities() {
                 });
                 wrapper.appendChild(card);
             });
-            if(container) container.appendChild(wrapper);
+            if (container) container.appendChild(wrapper);
         }
     } catch (error) {
         console.error("Lỗi tải thành phố nổi bật:", error);
