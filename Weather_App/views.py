@@ -16,6 +16,10 @@ def weather_dashboard(request):
     # Django sẽ tìm 'weather/dashboard.html' bên trong thư mục 'templates'
     return render(request, 'index.html')
 
+def customer_care(request):
+    """Trang chăm sóc khách hàng"""
+    return render(request, 'customer_care.html')
+
 @api_view(['GET'])
 def get_location_search(request):
     city_query = request.query_params.get('city')
@@ -103,8 +107,6 @@ def province_view(request, slug):
     return render(request, 'province-template.html', context)
 
 
-def warning_view(request):
-    return render(request, 'warningweather.html')
 
 
 @api_view(['POST'])

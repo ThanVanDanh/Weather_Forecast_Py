@@ -26,11 +26,14 @@ urlpatterns = [
     path('tinh/<slug:slug>/', views.province_view, name='province_detail'),
 
     #5. URL cho trang cảnh báo thời tiết
-    path('warning/', views.warning_view, name='api_weather_warning'),
+    # path('warning/', views.warning_view, name='api_weather_warning'),
 
     # 6. URL cho trang chủ (dashboard)
     # (View này đã có trong views.py nhưng chưa được gán URL)
     path('', views.weather_dashboard, name='dashboard'),
     path("locate/", locate_user, name="locate_user"),
+    
+    # 7. URL cho trang chăm sóc khách hàng
+    path('customer-care/', views.customer_care, name='customer_care'),
 
 ]

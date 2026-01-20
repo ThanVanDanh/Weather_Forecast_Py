@@ -25,4 +25,7 @@ urlpatterns = [
 
     # 2. Đường dẫn cho tất cả API
     path('api/weather/', include('Weather_App.urls', namespace='weather_api')),
+    
+    # 3. Đường dẫn trang chăm sóc khách hàng
+    path('customer-care/', weather_views.customer_care, name='customer_care'),
 ]
