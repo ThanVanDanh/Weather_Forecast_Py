@@ -77,24 +77,5 @@ urlpatterns = [
 
     # 7. URL cho trang chăm sóc khách hàng
     path('customer-care/', views.customer_care, name='customer_care'),
-    path('login/', views.CustomLoginView.as_view(), name='login_page'),
-
-    path('register/', views.CustomRegisterView.as_view(), name='register_page'),
-    path('logout/', views.CustomLogoutView.as_view(), name='logout_page'),
-
-# --- AUTH: ĐỔI MẬT KHẨU (Change Password - Khi đã đăng nhập) ---
-    path('password-change/', views.CustomPasswordChangeView.as_view(), name='password_change'),
-# --- AUTH: QUÊN MẬT KHẨU (Reset Password - Khi chưa đăng nhập) ---
-    # 1. Nhập email
-    path('password-reset/', views.CustomPasswordResetView.as_view(), name='password_reset'),
-    # 2. Thông báo đã gửi email thành công
-    path('password-reset/done/', views.CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
-    # 3. Link reset (người dùng bấm từ email)
-    path('password-reset-confirm/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-    # 4. Thông báo đổi thành công
-    path('password-reset-complete/', views.CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
-
-    path('profile/', views.profile_view, name='profile'),
-
 
 ]

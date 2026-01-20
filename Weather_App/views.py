@@ -33,6 +33,7 @@ def weather_dashboard(request):
     # Django sẽ tìm 'weather/dashboard.html' bên trong thư mục 'templates'
     return render(request, 'index.html')
 
+@login_required(login_url='Weather_App:login_page')
 def customer_care(request):
     """Trang chăm sóc khách hàng"""
     return render(request, 'customer_care.html')
