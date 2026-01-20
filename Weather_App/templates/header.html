@@ -8,9 +8,15 @@
                 <button><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
         </div>
-        <div class="header-right">
-            <span>Giờ địa phương: 14:54:40 2/11/2025</span>
-        </div>
+<div class="header-right">
+  <span id="local-time">Giờ địa phương: --:--:-- --/--/----</span>
+   <script src="{% static 'js/local-time.js' %}"></script>
+
+</div>
+
+
+
+
     </header>
     <nav class="main-nav">
         <ul class="nav-links">
@@ -102,9 +108,16 @@
             <li><a href="#"><i class="fa-solid fa-earth-americas"></i> Khám phá </a></li>
 
         </ul>
-        <div class="nav-location">
-            <span>Bạn đang ở đây: <strong>Hà Nội</strong></span>
-            <a href="#" class="location-link"><i class="fa-solid fa-location-dot"></i> Định Vị</a>
-        </div>
+  <div class="nav-location">
+    <span>Bạn đang ở đây: <strong id="current-city">Chưa xác định</strong></span>
+     <a href="#" class="location-link" id="btn-locate">
+        <i class="fa-solid fa-location-dot"></i> Định Vị
+    </a>
+</div>
+
     </nav>
 </div>
+{% load static %}
+<script src="{% static 'js/location.js' %}"></script>
+
+

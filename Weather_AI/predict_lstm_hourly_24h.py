@@ -2,6 +2,9 @@ import os
 import sys
 import django
 from pathlib import Path
+from datetime import datetime
+from django.utils import timezone as tz
+import pytz
 import numpy as np
 import pandas as pd
 import joblib
@@ -17,9 +20,26 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Weather_Project_Python.settings
 django.setup()
 
 from Weather_App.models import Location, HourlyForecast
+from check_and_update_data import check_and_update_province
 
 TARGET = "temperature_2m"
 LOOKBACK = 48
+
+# Mapping tên file/province → tên Location trong DB
+PROVINCE_TO_LOCATION = {
+    'TP_Ho_Chi_Minh': 'Ho Chi Minh City',
+    'Ha_Noi': 'Hanoi',
+    'Da_Nang': 'Da Nang',
+    'Can_Tho': 'Can Tho',
+    'Hai_Phong': 'Hai Phong',
+}
+
+
+def get_location_name(province_name):
+    """Convert tên province sang tên location trong DB"""
+    if province_name in PROVINCE_TO_LOCATION:
+        return PROVINCE_TO_LOCATION[province_name]
+    return province_name.replace('_', ' ')
 
 
 def load_recent_series(province: str) -> pd.Series:
@@ -29,14 +49,31 @@ def load_recent_series(province: str) -> pd.Series:
 
     df = pd.read_csv(csv)
     df["time"] = pd.to_datetime(df["time"])
+    # Convert UTC to Asia/Ho_Chi_Minh
+    vn_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+    df["time"] = df["time"].dt.tz_localize('UTC').dt.tz_convert(vn_tz)
     df = df.set_index("time").sort_index()
     df = df.asfreq("h").ffill().bfill()
 
     return df[TARGET].astype(float)
 
 
-def predict_hourly_temperature(province_name: str, steps: int = 24):
+def predict_hourly_temperature(province_name: str, steps: int = 24, force: bool = False):
     """Dự báo nhiệt độ theo giờ và lưu vào DB"""
+    location_name = get_location_name(province_name)
+    location = Location.objects.filter(city_name__icontains=location_name).first()
+    if not location:
+        raise ValueError(f"Location not found: {province_name} (searched: {location_name})")
+    
+    if not force:
+        latest = HourlyForecast.objects.filter(location=location).order_by('-updated_at').first()
+        if latest:
+            hours_since_update = (tz.now() - latest.updated_at).total_seconds() / 3600
+            if hours_since_update < 1:
+                return f"⏭️ {province_name}: Dự báo mới (<1h), bỏ qua"
+    
+    check_and_update_province(province_name)
+    
     model_path = MODEL_DIR / f"{province_name}_hourly.keras"
     scaler_path = MODEL_DIR / f"{province_name}_scaler.pkl"
 
@@ -61,12 +98,12 @@ def predict_hourly_temperature(province_name: str, steps: int = 24):
         window = np.vstack([window[1:], [[yhat]]])
 
     preds = scaler.inverse_transform(np.array(preds).reshape(-1, 1)).ravel()
-    times = pd.date_range(start=last_time + pd.Timedelta(hours=1), periods=steps, freq="h")
-
-    location = Location.objects.filter(city_name__icontains=province_name.replace('_', ' ')).first()
-    if not location:
-        raise ValueError(f"Location not found: {province_name}")
-
+    
+    # Bắt đầu dự báo từ giờ tiếp theo (hiện tại + 1h)
+    now = tz.localtime()  # Lấy thời gian VN hiện tại
+    next_hour = now.replace(minute=0, second=0, microsecond=0) + pd.Timedelta(hours=1)
+    times = pd.date_range(start=next_hour, periods=steps, freq="h")
+    
     for time, temp in zip(times, preds):
         HourlyForecast.objects.update_or_create(
             location=location,
@@ -74,7 +111,9 @@ def predict_hourly_temperature(province_name: str, steps: int = 24):
             defaults={'temperature': float(temp)}
         )
     
-    return f"✅ {province_name}: Saved {steps} hourly forecasts"
+    # Hiển thị thời gian VN (không phải UTC)
+    vn_time = tz.localtime(tz.now()).strftime('%Y-%m-%d %H:%M:%S')
+    return f"✅ {province_name}: Saved {steps} hourly forecasts (VN time: {vn_time})"
 
 
 if __name__ == "__main__":

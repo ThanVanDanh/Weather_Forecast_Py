@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import locate_user
 
 app_name = 'Weather_App'
 
@@ -15,6 +16,11 @@ urlpatterns = [
     # 3. API lấy các TP nổi bật
     # GET /api/weather/featured/
     path('featured/', views.get_featured_weather, name='api_featured_weather'),
+    
+    # 3.5. API lấy dự báo AI (24h + 5 ngày) - ON-DEMAND
+    # GET /api/weather/forecast/?location_id=X
+    path('forecast/', views.get_ai_forecast, name='api_ai_forecast'),
+    
     # 4. URL cho trang chi tiết tỉnh
     # Sẽ khớp với các URL như /tinh/ha-noi/, /tinh/tuyen-quang/
     path('tinh/<slug:slug>/', views.province_view, name='province_detail'),
@@ -28,5 +34,6 @@ urlpatterns = [
     # 7. URL cho trang chủ (dashboard)
     # (View này đã có trong views.py nhưng chưa được gán URL)
     path('', views.weather_dashboard, name='dashboard'),
+    path("locate/", locate_user, name="locate_user"),
 
 ]

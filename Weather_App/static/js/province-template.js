@@ -108,6 +108,155 @@ function updateCurrentWeatherDOM(data, cityName) {
         if (sunsetElement) sunsetElement.textContent = sunsetTime;
     }
 }
+
+// ============== WEATHER HELPER FUNCTIONS ==============
+function getWeatherIcon(code, isDay = 1) {
+    if (code === 0) return isDay === 1 ? "ngay.png" : "dem.png";
+    if (code === 1 || code === 2) return isDay === 1 ? "nangcomay.png" : "demcomay.png";
+    if (code === 3) return "nhieumay.png";
+    if (code >= 45 && code <= 48) return "suongmu.png";
+    if (code >= 51 && code <= 67) return "mua.png";
+    if (code >= 71 && code <= 77) return "tuyet.png";
+    if (code >= 80 && code <= 82) return "mua.png";
+    if (code >= 85 && code <= 86) return "tuyet.png";
+    if (code >= 95 && code <= 99) return "giongbao.png";
+    return "mayden.png";
+}
+
+function getWeatherStatusFromCode(code, isDay = 1) {
+    if (code === null || code === undefined) return "--";
+
+    switch (code) {
+        case 0: return isDay ? "Trời nắng" : "Trời quang đãng";
+        case 1: return isDay ? "Nắng nhẹ" : "Ít mây";
+        case 2: return isDay ? "Mây rải rác" : "Đêm có mây";
+        case 3: return "Nhiều mây";
+        case 45: case 48: return "Sương mù";
+        case 51: return "Mưa phùn nhẹ";
+        case 53: return "Mưa phùn vừa";
+        case 55: return "Mưa phùn dày";
+        case 56: case 57: return "Mưa phùn lạnh";
+        case 61: return "Mưa nhỏ";
+        case 63: return "Mưa vừa";
+        case 65: return "Mưa to";
+        case 66: case 67: return "Mưa lạnh";
+        case 71: return "Tuyết rơi nhẹ";
+        case 73: return "Tuyết rơi vừa";
+        case 75: return "Tuyết rơi dày";
+        case 77: return "Tuyết hạt";
+        case 80: return "Mưa rào nhẹ";
+        case 81: return "Mưa rào vừa";
+        case 82: return "Mưa rào to";
+        case 85: case 86: return "Mưa tuyết";
+        case 95: return "Có giông";
+        case 96: case 99: return "Giông mưa đá";
+        default: return "Có mây";
+    }
+}
+
+// ============== FORECAST RENDER FUNCTIONS ==============
+// Hàm render dự báo 24h
+function renderHourlyForecast(hourlyData) {
+    const container = document.getElementById('hourly-forecast-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (!hourlyData || hourlyData.length === 0) {
+        container.innerHTML = '<p>Không có dữ liệu dự báo 24h</p>';
+        return;
+    }
+    
+    // Lấy thời gian hiện tại
+    const now = new Date();
+    
+    // Lọc chỉ lấy các giờ trong tương lai (forecast_time > now)
+    const futureHours = hourlyData.filter(hour => {
+        const forecastTime = new Date(hour.forecast_time);
+        return forecastTime > now;
+    });
+    
+    console.log('[DEBUG] Total hourly data:', hourlyData.length, 'Future hours:', futureHours.length);
+    
+    if (futureHours.length === 0) {
+        container.innerHTML = '<p>Không có dữ liệu dự báo giờ tới</p>';
+        return;
+    }
+    
+    // Hiển thị tối đa 24h tiếp theo
+    futureHours.slice(0, 24).forEach(hour => {
+        const date = new Date(hour.forecast_time);
+        const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        
+        // Dự đoán weathercode từ nhiệt độ (vì không có weathercode)
+        let weatherCode = 1;
+        if (hour.temperature > 35) weatherCode = 0;
+        else if (hour.temperature > 30) weatherCode = 1;
+        else if (hour.temperature < 20) weatherCode = 3;
+        
+        const isDay = date.getHours() >= 6 && date.getHours() <= 18 ? 1 : 0;
+        const icon = getWeatherIcon(weatherCode, isDay);
+        const statusText = getWeatherStatusFromCode(weatherCode, isDay);
+        
+        const div = document.createElement('div');
+        div.className = 'hourly-item';
+        div.innerHTML = `
+            <p class="hourly-time">${timeStr}</p>
+            <img class="hourly-icon" src="/static/image/${icon}" alt="${statusText}">
+            <p class="hourly-temp">${Math.round(hour.temperature)}°</p>
+            <span class="hourly-humidity"><i class="fa-solid fa-droplet"></i> ${hour.humidity || '--'}%</span>
+            <p class="hourly-desc">${statusText}</p>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// Hàm render dự báo 5 ngày
+function renderDailyForecast(dailyData) {
+    const container = document.querySelector('.daily-forecast-list');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (!dailyData || dailyData.length === 0) {
+        container.innerHTML = '<p>Không có dữ liệu dự báo 5 ngày</p>';
+        return;
+    }
+    
+    dailyData.slice(0, 5).forEach((day, index) => {
+        const date = new Date(day.forecast_date);
+        const dayOfWeek = date.toLocaleDateString('vi-VN', { weekday: 'short' });
+        const dayMonth = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+        
+        // Backend dự báo từ ngày mai, nên index 0 = ngày mai
+        let label;
+        if (index === 0) {
+            label = `${dayOfWeek} ${dayMonth}`;
+        } else {
+            label = `${dayOfWeek} ${dayMonth}`;
+        }
+        
+        // Dự đoán weathercode từ nhiệt độ
+        let weatherCode = 1;
+        if (day.temp_max > 35) weatherCode = 0;
+        else if (day.temp_max > 30) weatherCode = 1;
+        else if (day.temp_max < 20) weatherCode = 3;
+        
+        const icon = getWeatherIcon(weatherCode, 1);
+        const statusText = getWeatherStatusFromCode(weatherCode, 1);
+        
+        const div = document.createElement('div');
+        div.className = 'forecast-item';
+        div.innerHTML = `
+            <strong>${label}</strong>
+            <span>${Math.round(day.temp_min)}° / ${Math.round(day.temp_max)}°</span>
+            <img src="/static/image/${icon}" alt="${statusText}">
+            <span>${statusText}</span>
+        `;
+        container.appendChild(div);
+    });
+}
+
 // Hàm tải dữ liệu chi tiết cho trang tỉnh/thành phố
 async function loadProvinceDetails(locationId, cityName) {
     if (!locationId) {
@@ -116,22 +265,52 @@ async function loadProvinceDetails(locationId, cityName) {
         return;
     }
 
-    // API đã định nghĩa trong Weather_App/urls.py
-    const apiUrl = `/api/weather/current/?location_id=${locationId}`;
-
     try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-            throw new Error(`Lỗi HTTP: ${response.status}`);
+        // Gọi song song 2 API
+        console.log('[DEBUG] Calling APIs for location:', locationId);
+        const [currentResponse, forecastResponse] = await Promise.all([
+            fetch(`/api/weather/current/?location_id=${locationId}`),
+            fetch(`/api/weather/forecast/?location_id=${locationId}`)
+        ]);
+        
+        console.log('[DEBUG] Current API status:', currentResponse.status);
+        console.log('[DEBUG] Forecast API status:', forecastResponse.status);
+        
+        if (!currentResponse.ok) {
+            throw new Error(`Lỗi HTTP current: ${currentResponse.status}`);
         }
-        const data = await response.json();
-
+        
+        const currentData = await currentResponse.json();
+        console.log('[DEBUG] Current data received');
+        
         // Cập nhật thông tin thời tiết hiện tại lên DOM
-        updateCurrentWeatherDOM(data, cityName);
-
-        // TODO: Cập nhật logic vẽ biểu đồ bằng dữ liệu thật (data.hourly, data.daily)
-        // drawHourlyChart(data.hourly);
-        // drawDailyChart(data.daily);
+        updateCurrentWeatherDOM(currentData, cityName);
+        
+        // Nếu forecast API thành công
+        if (forecastResponse.ok) {
+            const forecastData = await forecastResponse.json();
+            console.log('[DEBUG] Forecast data:', forecastData);
+            
+            // Render dự báo 24h
+            if (forecastData.hourly_forecast) {
+                console.log('[DEBUG] Rendering hourly forecast, count:', forecastData.hourly_forecast.length);
+                renderHourlyForecast(forecastData.hourly_forecast);
+            } else {
+                console.error('[ERROR] No hourly_forecast in response');
+            }
+            
+            // Render dự báo 5 ngày
+            if (forecastData.daily_forecast) {
+                console.log('[DEBUG] Rendering daily forecast, count:', forecastData.daily_forecast.length);
+                renderDailyForecast(forecastData.daily_forecast);
+            } else {
+                console.error('[ERROR] No daily_forecast in response');
+            }
+        } else {
+            console.error('[ERROR] Forecast API failed:', forecastResponse.status);
+            const errorText = await forecastResponse.text();
+            console.error('[ERROR] Forecast error response:', errorText);
+        }
 
     } catch (error) {
         console.error('Lỗi khi tải dữ liệu thời tiết:', error);
@@ -202,26 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { time: "24:00 PM", temp: "17°/18°", humidity: 95, desc: "Có mưa", icon: "/static/image/mayden.png" },
     ];
 
-    // 1. Lấy container từ HTML bằng ID
-    const container = document.getElementById("hourly-forecast-container");
-
-    // 2. Lặp qua mảng dữ liệu
-    fakeApiData.forEach(forecast => {
-
-        // 3. Tạo một chuỗi HTML cho mỗi item
-        const itemHTML = `
-            <div class="hourly-item">
-               <p class="hourly-time">${forecast.time}</p>
-               <img class="hourly-icon" src="${forecast.icon}" alt="${forecast.desc}">
-               <p class="hourly-temp">${forecast.temp}</p>
-               <span class="hourly-humidity"><i class="fa-solid fa-droplet"></i> ${forecast.humidity}%</span>
-               <p class="hourly-desc">${forecast.desc}</p>
-            </div>
-        `;
-
-        // 4. Chèn chuỗi HTML vừa tạo vào cuối container
-        container.insertAdjacentHTML("beforeend", itemHTML);
-    });
+    
     // //////////////////////////////////////////////////////////////////////////////
     // Đăng ký plugin datalabels cho tất cả biểu đồ
     Chart.register(ChartDataLabels);
