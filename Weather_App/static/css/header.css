@@ -158,3 +158,63 @@
     color: var(--primary-green);
     border-bottom: 2px solid var(--primary-green);
 }
+/* Cha dropdown */
+.menu-parent {
+  position: relative;
+}
+
+/* Link cha */
+.menu-parent > a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Icon mũi tên */
+.menu-parent .submenu-arrow {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+/* Submenu: ẩn mặc định + bỏ bullet */
+.menu-parent .submenu {
+  list-style: none;        /* ✅ bỏ dấu chấm */
+  margin: 0;               /* ✅ bỏ margin mặc định */
+  padding: 8px 0;          /* ✅ padding gọn */
+  display: none;           /* ✅ ẩn */
+
+  position: absolute;      /* ✅ không đẩy layout */
+  top: 100%;
+  left: 0;
+  min-width: 240px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  z-index: 9999;           /* ✅ nổi lên trên */
+}
+
+/* Item trong submenu */
+.menu-parent .submenu li a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Hover item */
+.menu-parent .submenu li a:hover {
+  background: rgba(0,0,0,.06);
+  border-radius: 8px;
+}
+
+/* Mở submenu khi hover (PC) */
+.menu-parent:hover .submenu {
+  display: block;
+}
+
+/* Nếu bạn muốn mở bằng click thì dùng .open (JS bên dưới) */
+.menu-parent.open .submenu {
+  display: block;
+}

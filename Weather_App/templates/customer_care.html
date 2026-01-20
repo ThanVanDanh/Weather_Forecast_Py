@@ -1,0 +1,380 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chăm Sóc Khách Hàng | Dự Báo Thời Tiết</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+    <link rel="stylesheet" href="{% static 'css/customer_care.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+        integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+    {% include 'header.html' %}
+    <main class="customer-care-page">
+        <!-- Hero Section -->
+        <section class="care-hero">
+            <div id="particles-container"></div>
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <div class="hero-icon-wrapper">
+                    <i class="fa-solid fa-headset"></i>
+                </div>
+                <h1>Chăm Sóc Khách Hàng</h1>
+                <p class="hero-subtitle">Chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7</p>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <section class="care-content">
+            <div class="care-container">
+
+                <!-- ROW 1: 3 cột nhỏ -->
+                <div class="row-small">
+
+                    <!-- Gợi ý trang phục -->
+                    <div class="content-section compact-section">
+                        <div class="section-wrapper">
+                            <div class="section-header">
+                                <div class="section-icon outfit-icon">
+                                    <i class="fa-solid fa-shirt"></i>
+                                </div>
+                                <h2>Gợi Ý Trang Phục</h2>
+                            </div>
+                            <div class="section-content">
+                                <p class="section-intro">Trang phục phù hợp với thời tiết hôm nay</p>
+
+                                <div class="outfit-suggestion">
+                                    <div class="weather-condition">
+                                        <i class="fa-solid fa-sun"></i>
+                                        <span>Nắng nóng - 32°C</span>
+                                    </div>
+                                    <div class="outfit-items">
+                                        <div class="outfit-item">
+                                            <i class="fa-solid fa-shirt"></i>
+                                            <span>Áo thun nhẹ</span>
+                                        </div>
+                                        <div class="outfit-item">
+                                            <i class="fa-solid fa-hat-cowboy"></i>
+                                            <span>Mũ/Nón</span>
+                                        </div>
+                                        <div class="outfit-item">
+                                            <i class="fa-solid fa-glasses"></i>
+                                            <span>Kính râm</span>
+                                        </div>
+                                        <div class="outfit-item">
+                                            <i class="fa-solid fa-bottle-water"></i>
+                                            <span>Mang nước</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dự báo năng lượng mặt trời -->
+                    <div class="content-section compact-section">
+                        <div class="section-wrapper">
+                            <div class="section-header">
+                                <div class="section-icon solar-icon">
+                                    <i class="fa-solid fa-solar-panel"></i>
+                                </div>
+                                <h2>Năng Lượng Mặt Trời</h2>
+                            </div>
+                            <div class="section-content">
+                                <p class="section-intro">Dự báo sản lượng điện mặt trời hôm nay</p>
+
+                                <div class="solar-info">
+                                    <div class="solar-stat main-stat">
+                                        <i class="fa-solid fa-bolt"></i>
+                                        <div class="stat-value">5.2</div>
+                                        <div class="stat-unit">kWh</div>
+                                        <span>Dự kiến hôm nay</span>
+                                    </div>
+                                    <div class="solar-details">
+                                        <div class="solar-detail">
+                                            <span class="label">Bức xạ</span>
+                                            <span class="value">4.8 kWh/m²</span>
+                                        </div>
+                                        <div class="solar-detail">
+                                            <span class="label">Số giờ nắng</span>
+                                            <span class="value">8 giờ</span>
+                                        </div>
+                                        <div class="solar-detail">
+                                            <span class="label">Hiệu suất</span>
+                                            <span class="value good">Tốt</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cảnh Báo Thời Tiết -->
+                    <div class="content-section compact-section">
+                        <div class="section-wrapper">
+                            <div class="section-header">
+                                <div class="section-icon warning-icon">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                                <h2>Cảnh Báo Thời Tiết</h2>
+                            </div>
+                            <div class="section-content">
+                                <p class="section-intro">Các hiện tượng thời tiết nguy hiểm</p>
+
+                                <div class="alert-types-compact">
+                                    <div class="alert-badge storm"><i class="fa-solid fa-hurricane"></i></div>
+                                    <div class="alert-badge flood"><i class="fa-solid fa-house-flood-water"></i></div>
+                                    <div class="alert-badge heat"><i class="fa-solid fa-temperature-arrow-up"></i></div>
+                                    <div class="alert-badge cold"><i class="fa-solid fa-snowflake"></i></div>
+                                </div>
+
+                                <div class="alert-message safe">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <p>Không có cảnh báo</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROW 2: 2 cột lớn -->
+                <div class="row-large">
+
+                    <!-- Dự Báo Mưa -->
+                    <div class="content-section">
+                        <div class="section-wrapper">
+                            <div class="section-header">
+                                <div class="section-icon rain-icon">
+                                    <i class="fa-solid fa-cloud-rain"></i>
+                                </div>
+                                <h2>Dự Báo Mưa Có Thể Xảy Ra</h2>
+                            </div>
+                            <div class="section-content">
+                                <p class="section-intro">Hệ thống dự báo mưa thông minh giúp bạn chuẩn bị trước.</p>
+
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <i class="fa-solid fa-clock"></i>
+                                        <div>
+                                            <strong>Cập nhật liên tục</strong>
+                                            <span>Mỗi 30 phút</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fa-solid fa-bell"></i>
+                                        <div>
+                                            <strong>Thông báo kịp thời</strong>
+                                            <span>Trước 1-3 giờ</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fa-solid fa-map-location-dot"></i>
+                                        <div>
+                                            <strong>Theo vị trí</strong>
+                                            <span>Chính xác theo tỉnh/TP</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="placeholder-content">
+                                    <i class="fa-solid fa-umbrella"></i>
+                                    <p>Nội dung dự báo mưa sẽ được hiển thị tại đây</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lịch Sử Tìm Kiếm -->
+                    <div class="content-section">
+                        <div class="section-wrapper">
+                            <div class="section-header">
+                                <div class="section-icon history-icon">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                </div>
+                                <h2>Lịch Sử Tìm Kiếm</h2>
+                            </div>
+                            <div class="section-content">
+                                <p class="section-intro">Các tỉnh/thành phố bạn đã tra cứu gần đây.</p>
+
+                                <div class="history-list">
+                                    <div class="history-item">
+                                        <div class="history-info">
+                                            <i class="fa-solid fa-location-dot"></i>
+                                            <div>
+                                                <strong>TP. Hồ Chí Minh</strong>
+                                                <span>10:30 - 20/01/2026</span>
+                                            </div>
+                                        </div>
+                                        <div class="history-weather">
+                                            <span class="temp">32°C</span>
+                                            <i class="fa-solid fa-sun"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="history-item">
+                                        <div class="history-info">
+                                            <i class="fa-solid fa-location-dot"></i>
+                                            <div>
+                                                <strong>Hà Nội</strong>
+                                                <span>09:15 - 20/01/2026</span>
+                                            </div>
+                                        </div>
+                                        <div class="history-weather">
+                                            <span class="temp">18°C</span>
+                                            <i class="fa-solid fa-cloud"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="history-item">
+                                        <div class="history-info">
+                                            <i class="fa-solid fa-location-dot"></i>
+                                            <div>
+                                                <strong>Đà Nẵng</strong>
+                                                <span>08:00 - 19/01/2026</span>
+                                            </div>
+                                        </div>
+                                        <div class="history-weather">
+                                            <span class="temp">25°C</span>
+                                            <i class="fa-solid fa-cloud-sun"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p class="history-note">
+                                    <i class="fa-solid fa-info-circle"></i>
+                                    Lưu trong 30 ngày gần nhất
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROW 3: Liên hệ -->
+                <div class="row-contact">
+                    <div class="content-section">
+                        <div class="section-wrapper">
+                            <div class="section-header">
+                                <div class="section-icon contact-icon">
+                                    <i class="fa-solid fa-phone"></i>
+                                </div>
+                                <h2>Liên Hệ Hỗ Trợ</h2>
+                            </div>
+                            <div class="section-content">
+                                <div class="contact-grid">
+                                    <div class="contact-item">
+                                        <div class="contact-icon-box">
+                                            <i class="fa-solid fa-envelope"></i>
+                                        </div>
+                                        <div class="contact-info">
+                                            <span class="contact-label">Email</span>
+                                            <span class="contact-value">support@weather.vn</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="contact-item">
+                                        <div class="contact-icon-box">
+                                            <i class="fa-solid fa-phone"></i>
+                                        </div>
+                                        <div class="contact-info">
+                                            <span class="contact-label">Hotline</span>
+                                            <span class="contact-value">1900 xxxx</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="contact-item">
+                                        <div class="contact-icon-box">
+                                            <i class="fa-solid fa-location-dot"></i>
+                                        </div>
+                                        <div class="contact-info">
+                                            <span class="contact-label">Địa chỉ</span>
+                                            <span class="contact-value">TP. Hồ Chí Minh, Việt Nam</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+    {% include 'footer.html' %}
+
+    <!-- Particles Effect Script -->
+    <script type="module">
+        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+
+        window.addEventListener('load', function () {
+            const container = document.getElementById('particles-container');
+            if (!container) return;
+
+            let width = container.clientWidth || window.innerWidth;
+            let height = container.clientHeight || 400;
+
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x1b2735, 0.001);
+
+            const camera = new THREE.PerspectiveCamera(60, width / height, 1, 1000);
+            camera.position.z = 1;
+            camera.rotation.x = 1.16;
+            camera.position.y = -100;
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setSize(width, height);
+            container.innerHTML = '';
+            container.appendChild(renderer.domElement);
+
+            const starCount = 3000;
+            const starGeo = new THREE.BufferGeometry();
+            const positions = [];
+
+            for (let i = 0; i < starCount; i++) {
+                positions.push(
+                    Math.random() * 600 - 300,
+                    Math.random() * 600 - 300,
+                    Math.random() * 600 - 300
+                );
+            }
+
+            starGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+            const starMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.7,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+
+            const stars = new THREE.Points(starGeo, starMaterial);
+            scene.add(stars);
+
+            function animate() {
+                requestAnimationFrame(animate);
+                stars.rotation.y += 0.0005;
+                stars.rotation.x += 0.0002;
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                width = container.clientWidth || window.innerWidth;
+                height = container.clientHeight || 400;
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+                renderer.setSize(width, height);
+            });
+        });
+    </script>
+</body>
+
+</html>

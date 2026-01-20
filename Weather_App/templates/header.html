@@ -98,18 +98,17 @@
                 </div>
             </li>
 
-            {% url 'weather_api:api_weather_warning' as warning_url %}
-
-            <li> <a href="{{ warning_url }}" class="{% if request.path == warning_url %}active{% endif %}">
-                    <i class="fa-solid fa-circle-exclamation"></i> Cảnh báo thời tiết </a>
+            <li>
+                {% url 'customer_care' as customer_care_url %}
+                <a href="{{ customer_care_url }}" class="{% if request.path == customer_care_url %}active{% endif %}">
+                    <i class="fa-solid fa-headset"></i>
+                    Chăm sóc khách hàng
+                </a>
             </li>
-            <li><a href="#"><i class="fa-solid fa-cloud-rain"></i> Lượng mưa</a></li>
-            <li><a href="#"><i class="fa-solid fa-wind"></i> </a></li>
-            <li><a href="#"><i class="fa-solid fa-earth-americas"></i> Khám phá </a></li>
 
         </ul>
         <div class="nav-location">
-            <span>Bạn đang ở đây:<strong id="current-city">{{ request.session.current_city|default:"Chưa xác định" }}</strong>
+            <span>Bạn đang ở đây:<strong id="current-city">{{ request.session.current_city|default:"Chưa xác định"}}</strong>
             </span>
             <a href="#" class="location-link" id="btn-locate">
                 <i class="fa-solid fa-location-dot"></i> Định Vị
