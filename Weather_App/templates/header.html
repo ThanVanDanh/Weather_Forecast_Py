@@ -9,14 +9,41 @@
             </div>
         </div>
         <div class="header-right">
-            <span id="local-time">Giờ địa phương: --:--:-- --/--/----</span>
-            <script src="{% static 'js/local-time.js' %}"></script>
+			<span id="local-time">Giờ địa phương: --:--:-- --/--/----</span>
+			<script src="{% static 'js/local-time.js' %}"></script>
 
-        </div>
-
-
-
-
+			<div class="auth-wrapper ms-3">
+				{% if user.is_authenticated %}
+					<div class="dropdown">
+						<button class="btn btn-user-dropdown dropdown-toggle rounded-pill px-4" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+							<span class="username">{{ user.username }}</span>
+						</button>
+						<ul class="dropdown-menu dropdown-menu-end animate slideIn">
+                            <li>
+								<a class="dropdown-item" href="{% url 'Weather_App:profile' %}">
+									<i class="fa-regular fa-user"></i> Hồ sơ cá nhân
+								</a>
+							</li>
+                            <li><a class="dropdown-item" href="{% url 'Weather_App:password_change' %}"><i class="fa-solid fa-key"></i> Đổi mật khẩu</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="{% url 'Weather_App:logout_page' %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger" style="background:none;border:none;padding:0;">
+                                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                                    </button>
+                                </form>
+                            </li>
+						</ul>
+					</div>
+				{% else %}
+					<a href="{% url 'Weather_App:login_page' %}" class="btn-auth-login">
+						<i class="fa-regular fa-user"></i>
+						<span>Đăng nhập / Đăng ký</span>
+					</a>
+				{% endif %}
+			</div>
+		</div>
     </header>
     <nav class="main-nav">
         <ul class="nav-links">
@@ -116,6 +143,16 @@
         </div>
 
     </nav>
+	{% if messages %}
+	<div class="container mt-3">
+		{% for message in messages %}
+		<div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+			{{ message }}
+			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+		</div>
+		{% endfor %}
+	</div>
+	{% endif %}
 </div>
 {% load static %}
 <script src="{% static 'js/location.js' %}"></script>

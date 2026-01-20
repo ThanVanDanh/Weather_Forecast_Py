@@ -1,0 +1,253 @@
+/* ========================================= */
+/* --- AUTH PAGE: LOGIN & REGISTER STYLE --- */
+/* ========================================= */
+
+/* Container chính bao trùm phần nội dung */
+.auth-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    position: relative;
+    overflow: hidden;
+    /* Background gradient xanh đậm hợp với theme thời tiết */
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    min-height: calc(100vh - 130px); /* Trừ đi chiều cao header/footer ước lượng */
+}
+
+/* --- Hiệu ứng mây trôi (Animation) --- */
+.cloud-bg-1, .cloud-bg-2 {
+    position: absolute;
+    opacity: 0.15;
+    z-index: 0;
+    pointer-events: none; /* Để không che mất nút bấm */
+}
+
+.cloud-bg-1 {
+    top: 10%;
+    left: -10%;
+    width: 300px;
+    animation: floatCloud 25s infinite linear;
+}
+
+.cloud-bg-2 {
+    bottom: 10%;
+    right: -10%;
+    width: 400px;
+    animation: floatCloud 30s infinite linear reverse;
+}
+
+@keyframes floatCloud {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(60px); }
+    100% { transform: translateX(0); }
+}
+
+/* --- Thẻ Card chính (Glassmorphism) --- */
+.auth-card {
+    background: rgba(255, 255, 255, 0.15); /* Màu trắng trong suốt */
+    backdrop-filter: blur(15px); /* Làm mờ nền sau lưng */
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    z-index: 1;
+    color: #fff;
+    position: relative;
+}
+
+/* Logo và Tiêu đề */
+.auth-logo {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.auth-logo img {
+    height: 70px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+.auth-logo h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* --- Tabs chuyển đổi (Đăng nhập / Đăng ký) --- */
+.nav-pills {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 30px;
+    padding: 5px;
+    display: inline-flex;
+    margin-bottom: 30px;
+    width: auto;
+}
+
+.nav-pills .nav-link {
+    color: rgba(255, 255, 255, 0.7);
+    border-radius: 30px;
+    padding: 10px 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.nav-pills .nav-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-pills .nav-link.active {
+    background-color: #fff;
+    color: #1e3c72; /* Màu chữ xanh đậm khi active */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Form Inputs --- */
+.input-group-text {
+    background: rgba(255, 255, 255, 0.85);
+    border: none;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    color: #1e3c72;
+    min-width: 45px;
+    justify-content: center;
+}
+
+.auth-card .form-control {
+    background: rgba(255, 255, 255, 0.85);
+    border: none;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    padding: 12px 15px;
+    height: 48px;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.auth-card .form-control:focus {
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+    outline: none;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+/* Checkbox & Forgot Password */
+.form-check-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+}
+
+.forgot-pass {
+    font-size: 0.9rem;
+    color: #ffd700; /* Màu vàng nổi bật trên nền xanh */
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.forgot-pass:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+/* --- Buttons --- */
+.btn-submit {
+    background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+    border: none;
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 10px;
+    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-transform: uppercase;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 210, 255, 0.6);
+    color: white;
+}
+
+.btn-submit:active {
+    transform: translateY(0);
+}
+
+/* --- Social Login --- */
+.social-login {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.social-login p {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+/* Đường kẻ ngang 2 bên chữ "Hoặc" */
+.social-login p::before,
+.social-login p::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 30%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.social-login p::before { left: 0; }
+.social-login p::after { right: 0; }
+
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.social-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    font-size: 1.2rem;
+    transition: all 0.3s;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.social-btn:hover {
+    transform: scale(1.15);
+    background: #fff;
+}
+
+.social-btn.google { color: #db4437; }
+.social-btn.facebook { color: #4267B2; }
+
+/* Responsive Mobile */
+@media (max-width: 576px) {
+    .auth-card {
+        padding: 30px 20px;
+    }
+    .auth-container {
+        padding: 20px 10px;
+    }
+    .cloud-bg-1, .cloud-bg-2 {
+        display: none; /* Ẩn mây trên mobile cho nhẹ */
+    }
+}

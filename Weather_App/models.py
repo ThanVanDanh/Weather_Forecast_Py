@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-
+from .models_profile import UserProfile
 
 class Location(models.Model):
     city_name = models.CharField(max_length=100)

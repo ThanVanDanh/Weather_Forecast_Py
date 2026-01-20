@@ -23,8 +23,8 @@ urlpatterns = [
     # 1. Đường dẫn trang chủ (trang dashboard)
     path('', weather_views.weather_dashboard, name='home'),
 
-    # 2. Đường dẫn cho trang năng lượng mặt trời
-    path('solar/', weather_views.solar_energy_view, name='solar_energy'),
+    # # 2. Đường dẫn cho trang năng lượng mặt trời
+    # path('solar/', weather_views.solar_energy_view, name='solar_energy'),
 
     # 3. Đường dẫn cho các trang khác (province, warning)
     path('', include('Weather_App.urls')),
