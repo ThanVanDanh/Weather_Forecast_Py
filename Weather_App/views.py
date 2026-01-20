@@ -132,26 +132,18 @@ def locate_user(request):
                 data = resp.json()
 
                 # BigDataCloud trả về: city, locality, principalSubdivision (tỉnh/TP)
+
+                province = data.get("principalSubdivision") or ""
                 city = data.get("city") or ""
-                locality = data.get("locality") or ""
-                province = data.get("principalSubdivision") or ""  # Tỉnh/Thành phố
 
-                # Logic hiển thị: locality (quận/huyện) + province nếu có
-                if locality and province:
-                    display_name = f"{locality}, {province}"
-                elif city:
-                    display_name = city
-                elif province:
-                    display_name = province
-                else:
-                    display_name = data.get("countryName", "Việt Nam")
+                display_name = province or city or data.get("countryName", "Việt Nam")
 
-                print(f"DEBUG: Reverse geocoding result: {display_name}")
+                request.session["current_city"] = display_name
+                request.session.modified = True
 
                 return Response({
                     "ok": True,
                     "city": display_name,
-                    "locality": locality,
                     "province": province,
                     "source": "GPS + BigDataCloud",
                     "coordinates": {"lat": lat, "lon": lon}

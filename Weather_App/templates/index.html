@@ -1,213 +1,220 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giao diện Thời tiết</title>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/header.css' %}">
     <link rel="stylesheet" href="{% static 'css/footer.css' %}">
     <script src="{% static 'js/script.js' %}"> </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+        integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
-<body>
-{% include 'header.html' %}
-<main>
-<section class="weather-dashboard">
-    <div id="rain-canvas-container"></div>
-    <div class="overlay-bg"></div>
-    <div class="content-relative">
-        <div class="card current-weather-card">
-            <h2 id="current-city-name">Đang tải...</h2>
-            <div class="current-main">
-                <div class="current-temp">
-                    <img src="{% static 'image/mayden.png' %}" alt="" class="current-img" id="current-icon">
-                    <span id="current-temp">--°</span>
-                </div>
-                <div class="current-desc">
-                    <p id="current-description">--</p>
-                    <span id="current-feels-like">Cảm giác như --°</span>
-                </div>
-            </div>
-            <div class="weather-details">
-                <div class="detail-item">
-                    <img src="{% static 'image/icon-style-1-temp.svg' %}" alt="" class="detail-img">
-                    <div class="detail-title">Thấp/Cao</div>
-                    <div class="detail-temp">
-                        <p id="current-temp-minmax">--°/--°</p>
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <img src="{% static 'image/icon-style-1-drop.svg' %}" alt="" class="detail-img">
-                    <div class="detail-title">Độ ẩm</div>
-                    <div class="detail-temp">
-                        <p id="current-humidity">--%</p>
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <img src="{% static 'image/icon-style-1-pressure.svg' %}" alt="" class="detail-img">
-                    <div class="detail-title">Áp suất</div>
-                    <div class="detail-temp">
-                        <p id="current-pressure">-- hPa</p>
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <img src="{% static 'image/icon-style-1-eyes.svg' %}" alt="" class="detail-img">
-                    <div class="detail-title">Tầm nhìn</div>
-                    <div class="detail-temp">
-                        <p id="current-visibility">-- km</p>
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <img src="{% static 'image/icon-style-1-windy.svg' %}" alt="" class="detail-img">
-                    <div class="detail-title">Gió</div>
-                    <div class="detail-temp">
-                        <p id="current-wind">-- kh/h</p>
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <img src="{% static 'image/icon-style-1-uv.svg' %}" alt="" class="detail-img">
-                    <div class="detail-title">UV</div>
-                    <div class="detail-temp">
-                        <p id="current-uvi">--</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="forecast-cards" id="forecast-container">
-            <!-- Dự báo 5 ngày sẽ được tạo bằng JavaScript -->
-            <p style="text-align: center; color: #999;">Loading forecast...</p>
-        </div>
-    </div>
-</section>
+<body>
+    {% include 'header.html' %}
+    <main>
+        <section class="weather-dashboard">
+            <div id="rain-canvas-container"></div>
+            <div class="overlay-bg"></div>
+            <div class="content-relative">
+                <div class="card current-weather-card">
+                    <h2 id="current-city-name">Đang tải...</h2>
+                    <div class="current-main">
+                        <div class="current-temp">
+                            <img src="{% static 'image/mayden.png' %}" alt="" class="current-img" id="current-icon">
+                            <span id="current-temp">--°</span>
+                        </div>
+                        <div class="current-desc">
+                            <p id="current-description">--</p>
+                            <span id="current-feels-like">Cảm giác như --°</span>
+                        </div>
+                    </div>
+                    <div class="weather-details">
+                        <div class="detail-item">
+                            <img src="{% static 'image/icon-style-1-temp.svg' %}" alt="" class="detail-img">
+                            <div class="detail-title">Thấp/Cao</div>
+                            <div class="detail-temp">
+                                <p id="current-temp-minmax">--°/--°</p>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <img src="{% static 'image/icon-style-1-drop.svg' %}" alt="" class="detail-img">
+                            <div class="detail-title">Độ ẩm</div>
+                            <div class="detail-temp">
+                                <p id="current-humidity">--%</p>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <img src="{% static 'image/icon-style-1-pressure.svg' %}" alt="" class="detail-img">
+                            <div class="detail-title">Áp suất</div>
+                            <div class="detail-temp">
+                                <p id="current-pressure">-- hPa</p>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <img src="{% static 'image/icon-style-1-eyes.svg' %}" alt="" class="detail-img">
+                            <div class="detail-title">Tầm nhìn</div>
+                            <div class="detail-temp">
+                                <p id="current-visibility">-- km</p>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <img src="{% static 'image/icon-style-1-windy.svg' %}" alt="" class="detail-img">
+                            <div class="detail-title">Gió</div>
+                            <div class="detail-temp">
+                                <p id="current-wind">-- kh/h</p>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <img src="{% static 'image/icon-style-1-uv.svg' %}" alt="" class="detail-img">
+                            <div class="detail-title">UV</div>
+                            <div class="detail-temp">
+                                <p id="current-uvi">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="forecast-cards" id="forecast-container">
+                    <!-- Dự báo 5 ngày sẽ được tạo bằng JavaScript -->
+                    <p style="text-align: center; color: #999;">Loading forecast...</p>
+                </div>
+            </div>
+        </section>
         <section class="secondary-content">
             <div class="container">
                 <div class="featured-cities">
-                <h2>Thời tiết nổi bật</h2>
-                <div id="featured-cities-container">
-                     <p>Đang tải danh sách thành phố...</p>
+                    <h2>Thời tiết nổi bật</h2>
+                    <div id="featured-cities-container">
+                        <p>Đang tải danh sách thành phố...</p>
+                    </div>
                 </div>
-            </div>
-            <div class="windy-map">
-                <h2>Bản đồ thời tiết Windy</h2>
-                <div class="map-container">
-                    <iframe width="450" height="450" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricTemperature=°C&metricRain=mm&metricWind=km/h&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=16.0544&lon=108.2021&detailLat=16.0544&detailLon=108.2021" frameborder="0"></iframe>
+                <div class="windy-map">
+                    <h2>Bản đồ thời tiết Windy</h2>
+                    <div class="map-container">
+                        <iframe width="450" height="450"
+                            src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricTemperature=°C&metricRain=mm&metricWind=km/h&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=16.0544&lon=108.2021&detailLat=16.0544&detailLon=108.2021"
+                            frameborder="0"></iframe>
+                    </div>
                 </div>
-            </div>
             </div>
         </section>
     </main>
-{% include 'footer.html' %}
-<script type="module">
-    import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+    {% include 'footer.html' %}
+    <script type="module">
+        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
 
-    // Chờ trang web tải xong hoàn toàn mới chạy code
-    window.addEventListener('load', function() {
+        // Chờ trang web tải xong hoàn toàn mới chạy code
+        window.addEventListener('load', function () {
 
-        const container = document.getElementById('rain-canvas-container');
-        if (!container) {
-            console.error("Không tìm thấy thẻ chứa hiệu ứng mưa!");
-            return;
-        }
-
-        let width = container.clientWidth;
-        let height = container.clientHeight;
-
-        // Nếu kích thước bị 0, lấy kích thước cửa sổ để thay thế
-        if (width === 0) width = window.innerWidth;
-        if (height === 0) height = 600; // Chiều cao tối thiểu
-
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x1b2735, 0.002);
-
-        const camera = new THREE.PerspectiveCamera(60, width / height, 1, 1000);
-        camera.position.z = 1;
-        camera.rotation.x = 1.16;
-        camera.position.y = -120;
-
-        const renderer = new THREE.WebGLRenderer({ alpha: true });
-        renderer.setSize(width, height);
-
-        // Xóa nội dung cũ nếu có (tránh bị trùng lặp khi reload)
-        container.innerHTML = '';
-        container.appendChild(renderer.domElement);
-
-        // --- TẠO TEXTURE MƯA ---
-        function createRainTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 32;
-            canvas.height = 128;
-            const ctx = canvas.getContext('2d');
-
-            const gradient = ctx.createLinearGradient(0, 0, 0, 128);
-            gradient.addColorStop(0, 'rgba(255,255,255,0)');
-            gradient.addColorStop(0.5, 'rgba(255,255,255,0.8)');
-            gradient.addColorStop(1, 'rgba(255,255,255,0.1)');
-
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 32, 128);
-
-            return new THREE.CanvasTexture(canvas);
-        }
-
-        // --- TẠO HẠT MƯA ---
-        const rainCount = 10000;
-        const rainGeo = new THREE.BufferGeometry();
-        const positions = [];
-
-        for (let i = 0; i < rainCount; i++) {
-            positions.push(
-                Math.random() * 400 - 200,
-                Math.random() * 500 - 250,
-                Math.random() * 400 - 200
-            );
-        }
-
-        rainGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-
-        const rainMaterial = new THREE.PointsMaterial({
-            color: 0xaaaaaa,
-            size: 0.5,
-            map: createRainTexture(),
-            transparent: true,
-            opacity: 0.8,
-            depthWrite: false,
-            blending: THREE.AdditiveBlending
-        });
-
-        const rain = new THREE.Points(rainGeo, rainMaterial);
-        scene.add(rain);
-
-        // --- ANIMATION LOOP ---
-        function animate() {
-            requestAnimationFrame(animate);
-            const positions = rainGeo.attributes.position.array;
-
-            for (let i = 1; i < rainCount * 3; i += 3) {
-                positions[i] -= (0.8 + Math.random() * 0.3);
-                if (positions[i] < -200) {
-                    positions[i] = 200;
-                    positions[i-1] = Math.random() * 400 - 200;
-                }
+            const container = document.getElementById('rain-canvas-container');
+            if (!container) {
+                console.error("Không tìm thấy thẻ chứa hiệu ứng mưa!");
+                return;
             }
-            rainGeo.attributes.position.needsUpdate = true;
-            rain.rotation.y += 0.002;
-            renderer.render(scene, camera);
-        }
-        animate();
 
-        // --- XỬ LÝ KHI THAY ĐỔI KÍCH THƯỚC ---
-        window.addEventListener('resize', () => {
-            width = container.clientWidth;
-            height = container.clientHeight;
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
+            let width = container.clientWidth;
+            let height = container.clientHeight;
+
+            // Nếu kích thước bị 0, lấy kích thước cửa sổ để thay thế
+            if (width === 0) width = window.innerWidth;
+            if (height === 0) height = 600; // Chiều cao tối thiểu
+
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x1b2735, 0.002);
+
+            const camera = new THREE.PerspectiveCamera(60, width / height, 1, 1000);
+            camera.position.z = 1;
+            camera.rotation.x = 1.16;
+            camera.position.y = -120;
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true });
             renderer.setSize(width, height);
+
+            // Xóa nội dung cũ nếu có (tránh bị trùng lặp khi reload)
+            container.innerHTML = '';
+            container.appendChild(renderer.domElement);
+
+            // --- TẠO TEXTURE MƯA ---
+            function createRainTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 32;
+                canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+
+                const gradient = ctx.createLinearGradient(0, 0, 0, 128);
+                gradient.addColorStop(0, 'rgba(255,255,255,0)');
+                gradient.addColorStop(0.5, 'rgba(255,255,255,0.8)');
+                gradient.addColorStop(1, 'rgba(255,255,255,0.1)');
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 32, 128);
+
+                return new THREE.CanvasTexture(canvas);
+            }
+
+            // --- TẠO HẠT MƯA ---
+            const rainCount = 10000;
+            const rainGeo = new THREE.BufferGeometry();
+            const positions = [];
+
+            for (let i = 0; i < rainCount; i++) {
+                positions.push(
+                    Math.random() * 400 - 200,
+                    Math.random() * 500 - 250,
+                    Math.random() * 400 - 200
+                );
+            }
+
+            rainGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+            const rainMaterial = new THREE.PointsMaterial({
+                color: 0xaaaaaa,
+                size: 0.5,
+                map: createRainTexture(),
+                transparent: true,
+                opacity: 0.8,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            });
+
+            const rain = new THREE.Points(rainGeo, rainMaterial);
+            scene.add(rain);
+
+            // --- ANIMATION LOOP ---
+            function animate() {
+                requestAnimationFrame(animate);
+                const positions = rainGeo.attributes.position.array;
+
+                for (let i = 1; i < rainCount * 3; i += 3) {
+                    positions[i] -= (0.8 + Math.random() * 0.3);
+                    if (positions[i] < -200) {
+                        positions[i] = 200;
+                        positions[i - 1] = Math.random() * 400 - 200;
+                    }
+                }
+                rainGeo.attributes.position.needsUpdate = true;
+                rain.rotation.y += 0.002;
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // --- XỬ LÝ KHI THAY ĐỔI KÍCH THƯỚC ---
+            window.addEventListener('resize', () => {
+                width = container.clientWidth;
+                height = container.clientHeight;
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+                renderer.setSize(width, height);
+            });
         });
-    });
-</script>
+    </script>
 </body>
+
 </html>
