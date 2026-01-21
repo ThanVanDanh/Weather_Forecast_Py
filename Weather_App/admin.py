@@ -1,10 +1,15 @@
 from django.contrib import admin
+from .models_profile import UserProfile
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'phone', 'address', 'latitude', 'longitude')
+    search_fields = ('user__username', 'phone', 'address')
 from .models import Location, CurrentWeatherCache, HistoricalData, HourlyForecast, DailyForecast, WeatherAlert
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ('city_name', 'country_code', 'latitude', 'longitude')
-    search_fields = ('city_name',)
+    list_display = ('city_name', 'city_name_vn', 'country_code', 'latitude', 'longitude')
+    search_fields = ('city_name', 'city_name_vn')
 
 @admin.register(CurrentWeatherCache)
 class CurrentWeatherCacheAdmin(admin.ModelAdmin):

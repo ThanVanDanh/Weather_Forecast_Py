@@ -17,13 +17,21 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from Weather_App import views as weather_views  # Import view render trang
+
 urlpatterns = [
+    path('admin/logout/', weather_views.admin_logout_to_login, name='admin-logout-redirect'),
     path('admin/', admin.site.urls),
 
     # 1. Đường dẫn trang chủ (trang dashboard)
     path('', weather_views.weather_dashboard, name='home'),
 
-    # 2. Đường dẫn cho tất cả API
+    # # 2. Đường dẫn cho trang năng lượng mặt trời
+    # path('solar/', weather_views.solar_energy_view, name='solar_energy'),
+
+    # 3. Đường dẫn cho các trang khác (province, warning)
+    path('', include('Weather_App.urls')),
+
+    # 4. Đường dẫn cho tất cả API
     path('api/weather/', include('Weather_App.urls', namespace='weather_api')),
     
     # 3. Đường dẫn trang chăm sóc khách hàng

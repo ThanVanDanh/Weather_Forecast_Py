@@ -218,3 +218,411 @@
 .menu-parent.open .submenu {
   display: block;
 }
+/* --- PHẦN HEADER RIGHT & AUTH --- */
+
+.header-right {
+    display: flex;
+    align-items: center;
+    /* Đảm bảo chữ màu trắng nổi trên nền tối */
+    color: #fff;
+    font-size: 14px;
+}
+
+.local-time {
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+/* Container chứa phần login */
+.auth-wrapper {
+    position: relative;
+}
+
+/* 1. Nút Đăng nhập / Đăng ký (Khi chưa login) */
+.btn-auth-login {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Hiệu ứng kính mờ */
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff !important; /* Bắt buộc màu trắng */
+    padding: 8px 20px;
+    border-radius: 50px; /* Bo tròn hình viên thuốc */
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-auth-login:hover {
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+/* 2. Nút User Dropdown (Khi đã login) */
+.btn-user-dropdown {
+    background: transparent;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 10px;
+    border-radius: 30px;
+    transition: background 0.2s;
+	border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.btn-user-dropdown:hover,
+.btn-user-dropdown:focus,
+.btn-user-dropdown.show {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+/* Avatar nhỏ */
+.header-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.username {
+    font-weight: 600;
+	font-size: 14px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 3. Dropdown Menu (Menu xổ xuống) */
+.header-right .dropdown-menu {
+    margin-top: 10px !important; /* Cách nút bấm một chút */
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    min-width: 200px;
+}
+
+.header-right .dropdown-item {
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+}
+
+.header-right .dropdown-item i {
+    width: 20px;
+    text-align: center;
+    color: #6c757d;
+}
+
+.header-right .dropdown-item:hover {
+    background-color: #f0f8ff; /* Màu xanh nhạt khi hover */
+    color: #0d6efd;
+}
+
+.header-right .dropdown-item:hover i {
+    color: #0d6efd;
+}
+
+/* Responsive cho Mobile: Ẩn chữ, chỉ hiện icon nếu màn hình nhỏ */
+@media (max-width: 768px) {
+    .btn-auth-login span {
+        display: none;
+    }
+    .btn-auth-login {
+        padding: 8px;
+        border-radius: 50%; /* Nút tròn khi chỉ có icon */
+        width: 40px;
+        height: 40px;
+        justify-content: center;
+    }
+    .username {
+        display: none;
+    }
+    .btn-user-dropdown::after {
+        display: none; /* Ẩn mũi tên tam giác của bootstrap */
+    }
+}
+/* --- PHẦN HEADER RIGHT & AUTH --- */
+
+.header-right {
+    display: flex;
+    align-items: center;
+    /* Đảm bảo chữ màu trắng nổi trên nền tối */
+    color: #fff;
+    font-size: 14px;
+}
+
+.local-time {
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+/* Container chứa phần login */
+.auth-wrapper {
+    position: relative;
+}
+
+/* 1. Nút Đăng nhập / Đăng ký (Khi chưa login) */
+.btn-auth-login {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Hiệu ứng kính mờ */
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff !important; /* Bắt buộc màu trắng */
+    padding: 8px 20px;
+    border-radius: 50px; /* Bo tròn hình viên thuốc */
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-auth-login:hover {
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+/* 2. Nút User Dropdown (Khi đã login) */
+.btn-user-dropdown {
+    background: transparent;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 10px;
+    border-radius: 30px;
+    transition: background 0.2s;
+	border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.btn-user-dropdown:hover,
+.btn-user-dropdown:focus,
+.btn-user-dropdown.show {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+/* Avatar nhỏ */
+.header-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.username {
+    font-weight: 600;
+	font-size: 14px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 3. Dropdown Menu (Menu xổ xuống) */
+.header-right .dropdown-menu {
+    margin-top: 10px !important; /* Cách nút bấm một chút */
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    min-width: 200px;
+}
+
+.header-right .dropdown-item {
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+}
+
+.header-right .dropdown-item i {
+    width: 20px;
+    text-align: center;
+    color: #6c757d;
+}
+
+.header-right .dropdown-item:hover {
+    background-color: #f0f8ff; /* Màu xanh nhạt khi hover */
+    color: #0d6efd;
+}
+
+.header-right .dropdown-item:hover i {
+    color: #0d6efd;
+}
+
+/* Responsive cho Mobile: Ẩn chữ, chỉ hiện icon nếu màn hình nhỏ */
+@media (max-width: 768px) {
+    .btn-auth-login span {
+        display: none;
+    }
+    .btn-auth-login {
+        padding: 8px;
+        border-radius: 50%; /* Nút tròn khi chỉ có icon */
+        width: 40px;
+        height: 40px;
+        justify-content: center;
+    }
+    .username {
+        display: none;
+    }
+    .btn-user-dropdown::after {
+        display: none; /* Ẩn mũi tên tam giác của bootstrap */
+    }
+}
+/* --- PHẦN HEADER RIGHT & AUTH --- */
+
+.header-right {
+    display: flex;
+    align-items: center;
+    /* Đảm bảo chữ màu trắng nổi trên nền tối */
+    color: #fff;
+    font-size: 14px;
+}
+
+.local-time {
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+/* Container chứa phần login */
+.auth-wrapper {
+    position: relative;
+}
+
+/* 1. Nút Đăng nhập / Đăng ký (Khi chưa login) */
+.btn-auth-login {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Hiệu ứng kính mờ */
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff !important; /* Bắt buộc màu trắng */
+    padding: 8px 20px;
+    border-radius: 50px; /* Bo tròn hình viên thuốc */
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-auth-login:hover {
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+/* 2. Nút User Dropdown (Khi đã login) */
+.btn-user-dropdown {
+    background: transparent;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 10px;
+    border-radius: 30px;
+    transition: background 0.2s;
+	border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.btn-user-dropdown:hover,
+.btn-user-dropdown:focus,
+.btn-user-dropdown.show {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+/* Avatar nhỏ */
+.header-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.username {
+    font-weight: 600;
+	font-size: 14px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 3. Dropdown Menu (Menu xổ xuống) */
+.header-right .dropdown-menu {
+    margin-top: 10px !important; /* Cách nút bấm một chút */
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    min-width: 200px;
+}
+
+.header-right .dropdown-item {
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+}
+
+.header-right .dropdown-item i {
+    width: 20px;
+    text-align: center;
+    color: #6c757d;
+}
+
+.header-right .dropdown-item:hover {
+    background-color: #f0f8ff; /* Màu xanh nhạt khi hover */
+    color: #0d6efd;
+}
+
+.header-right .dropdown-item:hover i {
+    color: #0d6efd;
+}
+
+/* Responsive cho Mobile: Ẩn chữ, chỉ hiện icon nếu màn hình nhỏ */
+@media (max-width: 768px) {
+    .btn-auth-login span {
+        display: none;
+    }
+    .btn-auth-login {
+        padding: 8px;
+        border-radius: 50%; /* Nút tròn khi chỉ có icon */
+        width: 40px;
+        height: 40px;
+        justify-content: center;
+    }
+    .username {
+        display: none;
+    }
+    .btn-user-dropdown::after {
+        display: none; /* Ẩn mũi tên tam giác của bootstrap */
+    }
+}

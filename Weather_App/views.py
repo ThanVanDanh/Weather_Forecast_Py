@@ -1,3 +1,18 @@
+from django.contrib.auth import logout
+
+# View cho admin logout chuyển về /login/
+def admin_logout_to_login(request):
+    logout(request)
+    return redirect('/login/')
+from django.contrib.auth.views import LoginView
+from django.shortcuts import redirect
+# Custom LoginView: nếu user là admin thì chuyển hướng sang /admin/
+class CustomLoginView(LoginView):
+    def form_valid(self, form):
+        user = form.get_user()
+        if user.is_superuser or user.is_staff:
+            return redirect('/admin/')
+        return super().form_valid(form)
 from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -5,6 +20,15 @@ from rest_framework import status
 from django.utils import timezone
 from django.db.models import Q
 import requests
+from django.urls import reverse_lazy
+from django.contrib import messages
+from django.contrib.auth.views import LoginView, LogoutView
+from django.views.generic.edit import CreateView
+from .forms import RegisterForm
+from .models_profile import UserProfile
+from django.contrib.auth.decorators import login_required
+from .forms import UserUpdateForm, ProfileUpdateForm
+from django.shortcuts import redirect
 
 from .models import Location, CurrentWeatherCache, HourlyForecast, DailyForecast, WeatherAlert
 from .serializers import (
@@ -12,10 +36,19 @@ from .serializers import (
 )
 from .services import MeteoAPIService, ForecastService
 
+from .services import MeteoAPIService
+from django.contrib.auth.views import (
+    PasswordChangeView,
+    PasswordResetView,
+    PasswordResetDoneView,
+    PasswordResetConfirmView,
+    PasswordResetCompleteView
+)
 def weather_dashboard(request):
     # Django sẽ tìm 'weather/dashboard.html' bên trong thư mục 'templates'
     return render(request, 'index.html')
 
+@login_required(login_url='Weather_App:login_page')
 def customer_care(request):
     """Trang chăm sóc khách hàng"""
     return render(request, 'customer_care.html')
@@ -98,9 +131,10 @@ def province_view(request, slug):
 
     except Location.DoesNotExist:
         return render(request, 'index.html', {'error': 'Không tìm thấy địa điểm'})
+    city_name_vn = location.city_name_vn if location.city_name_vn else location.city_name
     context = {
         'location_id': location.id,
-        'city_name': location.city_name,
+        'city_name': city_name_vn,
         'latitude': location.latitude,
         'longitude': location.longitude,
     }
@@ -143,6 +177,20 @@ def locate_user(request):
                 request.session["current_city"] = display_name
                 request.session.modified = True
 
+                if request.user.is_authenticated:
+                    try:
+                        # Lấy hoặc tạo profile nếu chưa có
+                        profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+                        # Cập nhật thông tin
+                        profile.latitude = lat
+                        profile.longitude = lon
+                        profile.address = display_name
+                        profile.save()
+                        print(f"DEBUG: Đã lưu vị trí cho user {request.user.username}")
+                    except Exception as e:
+                        print(f"ERROR: Không thể lưu vị trí vào profile: {e}")
+
                 return Response({
                     "ok": True,
                     "city": display_name,
@@ -180,7 +228,7 @@ def get_ai_forecast(request):
     """
     API lấy dự báo AI cho tỉnh/thành
     GET /api/weather/forecast/?location_id=X
-    
+
     Logic:
     - Kiểm tra updated_at của forecast cuối cùng
     - Nếu hourly > 1h hoặc daily > 24h → XÓA toàn bộ → predict lại
@@ -192,24 +240,24 @@ def get_ai_forecast(request):
             {"error": "Thiếu tham số 'location_id'"},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     try:
         location = get_object_or_404(Location, id=location_id)
-        
+
         print(f"[DEBUG] Location: {location.city_name} (ID: {location.id})")
-        
+
         # Lấy hoặc predict hourly (24h)
         hourly_forecasts = ForecastService.get_or_predict_hourly(location)
         hourly_data = HourlyForecastSerializer(hourly_forecasts, many=True).data
-        
+
         print(f"[DEBUG] Hourly forecasts: {len(hourly_data)} records")
-        
+
         # Lấy hoặc predict daily (5 ngày)
         daily_forecasts = ForecastService.get_or_predict_daily(location)
         daily_data = DailyForecastSerializer(daily_forecasts, many=True).data
-        
+
         print(f"[DEBUG] Daily forecasts: {len(daily_data)} records")
-        
+
         return Response({
             'location': {
                 'id': location.id,
@@ -230,4 +278,96 @@ def get_ai_forecast(request):
         )
 from math import radians, sin, cos, asin, sqrt
 
+# 1. VIEW ĐĂNG NHẬP
+class CustomLoginView(LoginView):
+    template_name = 'registration/login.html' # Trỏ vào file login riêng
+    redirect_authenticated_user = True
 
+    def get_success_url(self):
+        user = self.request.user
+        messages.success(self.request, f"Chào mừng {user.username} quay trở lại!")
+        if user.is_superuser or user.is_staff:
+            return '/admin/'
+        return reverse_lazy('Weather_App:dashboard')
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Tên đăng nhập hoặc mật khẩu không đúng.")
+        return super().form_invalid(form)
+
+# 2. VIEW ĐĂNG KÝ
+class CustomRegisterView(CreateView):
+    form_class = RegisterForm
+    template_name = 'registration/signup.html' # Trỏ vào file signup riêng
+    success_url = reverse_lazy('Weather_App:login_page')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Đăng ký thành công! Vui lòng đăng nhập.")
+        return response
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.")
+        return super().form_invalid(form)
+# 3. VIEW ĐĂNG XUẤT (Có sẵn, chỉ cần gọi trong urls.py hoặc thừa kế nếu muốn custom)
+class CustomLogoutView(LogoutView):
+    next_page = 'Weather_App:login_page'
+
+    def dispatch(self, request, *args, **kwargs):
+        messages.info(request, "Bạn đã đăng xuất thành công.")
+        return super().dispatch(request, *args, **kwargs)
+
+# 1. VIEW ĐỔI MẬT KHẨU (User đang login muốn đổi pass)
+class CustomPasswordChangeView(PasswordChangeView):
+    template_name = 'registration/password_change.html'
+    success_url = reverse_lazy('Weather_App:dashboard') # Đổi xong về trang chủ hoặc trang profile
+
+    def form_valid(self, form):
+        messages.success(self.request, "Mật khẩu đã được thay đổi thành công!")
+        return super().form_valid(form)
+
+# 2. CÁC VIEW QUÊN MẬT KHẨU (Quy trình 4 bước)
+
+# Bước 1: Nhập Email
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'registration/password_reset_form.html'
+    email_template_name = 'registration/password_reset_email.html'
+    success_url = reverse_lazy('Weather_App:password_reset_done')
+
+# Bước 2: Thông báo "Đã gửi email"
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'registration/password_reset_done.html'
+
+# Bước 3: Nhập mật khẩu mới (Sau khi bấm link trong mail)
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'registration/password_reset_confirm.html'
+    success_url = reverse_lazy('Weather_App:password_reset_complete')
+
+# Bước 4: Thông báo hoàn tất
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'registration/password_reset_complete.html'
+
+
+@login_required
+def profile_view(request):
+    # Đảm bảo user luôn có profile (tránh lỗi nếu tạo user từ admin mà chưa có profile)
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, instance=profile)
+
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            messages.success(request, 'Hồ sơ của bạn đã được cập nhật!')
+            return redirect('Weather_App:profile')  # Load lại trang để thấy thay đổi
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=profile)
+
+    context = {
+        'u_form': u_form,
+        'p_form': p_form,
+        'profile': profile  # Truyền profile để hiển thị lat/lon dạng text (read-only)
+    }
+    return render(request, 'registration/profile.html', context)

@@ -215,6 +215,53 @@
             });
         });
     </script>
+	<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Kiểm tra xem user có đang đăng nhập không (dựa vào biến user.is_authenticated của Django template)
+        // Lưu ý: Đoạn check này phải nằm trong file HTML thì mới hiểu cú pháp
+        const isAuthenticated = "{{ user.is_authenticated|yesno:'true,false' }}" === "true";
+
+        if (isAuthenticated) {
+            console.log("User đã đăng nhập. Đang tự động lấy vị trí...");
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+
+                        // Gọi API locate_user để lưu vào Database
+                        fetch('/locate/', {  // Đường dẫn map với urls.py path("locate/", ...)
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}' // Cần token bảo mật
+                            },
+                            body: JSON.stringify({
+                                latitude: lat,
+                                longitude: lon
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.ok) {
+                                console.log("Đã tự động lưu vị trí vào Profile:", data.city);
+                                // Cập nhật giao diện nếu cần (ví dụ đổi tên thành phố trên menu)
+                                const cityEl = document.getElementById('current-city');
+                                if (cityEl) cityEl.innerText = data.city;
+                            }
+                        })
+                        .catch(err => console.error("Lỗi khi auto-save vị trí:", err));
+                    },
+                    (error) => {
+                        console.warn("Người dùng hoặc trình duyệt chặn quyền vị trí.");
+                    }
+                );
+            }
+        }
+    });
+</script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
