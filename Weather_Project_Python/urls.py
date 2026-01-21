@@ -17,7 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from Weather_App import views as weather_views  # Import view render trang
+
 urlpatterns = [
+    path('admin/logout/', weather_views.admin_logout_to_login, name='admin-logout-redirect'),
     path('admin/', admin.site.urls),
 
     # 1. Đường dẫn trang chủ (trang dashboard)

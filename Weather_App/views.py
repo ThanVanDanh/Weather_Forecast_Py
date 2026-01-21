@@ -1,3 +1,18 @@
+from django.contrib.auth import logout
+
+# View cho admin logout chuyển về /login/
+def admin_logout_to_login(request):
+    logout(request)
+    return redirect('/login/')
+from django.contrib.auth.views import LoginView
+from django.shortcuts import redirect
+# Custom LoginView: nếu user là admin thì chuyển hướng sang /admin/
+class CustomLoginView(LoginView):
+    def form_valid(self, form):
+        user = form.get_user()
+        if user.is_superuser or user.is_staff:
+            return redirect('/admin/')
+        return super().form_valid(form)
 from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -116,9 +131,10 @@ def province_view(request, slug):
 
     except Location.DoesNotExist:
         return render(request, 'index.html', {'error': 'Không tìm thấy địa điểm'})
+    city_name_vn = location.city_name_vn if location.city_name_vn else location.city_name
     context = {
         'location_id': location.id,
-        'city_name': location.city_name,
+        'city_name': city_name_vn,
         'latitude': location.latitude,
         'longitude': location.longitude,
     }
@@ -268,7 +284,10 @@ class CustomLoginView(LoginView):
     redirect_authenticated_user = True
 
     def get_success_url(self):
-        messages.success(self.request, f"Chào mừng {self.request.user.username} quay trở lại!")
+        user = self.request.user
+        messages.success(self.request, f"Chào mừng {user.username} quay trở lại!")
+        if user.is_superuser or user.is_staff:
+            return '/admin/'
         return reverse_lazy('Weather_App:dashboard')
 
     def form_invalid(self, form):

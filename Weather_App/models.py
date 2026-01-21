@@ -4,6 +4,7 @@ from .models_profile import UserProfile
 
 class Location(models.Model):
     city_name = models.CharField(max_length=100)
+    city_name_vn = models.CharField(max_length=100, verbose_name="Tên tiếng Việt có dấu", blank=True, null=True)
     country_code = models.CharField(max_length=5)
     latitude = models.FloatField(verbose_name="Vĩ độ")
     longitude = models.FloatField(verbose_name="Kinh độ")
