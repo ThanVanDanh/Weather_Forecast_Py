@@ -22,7 +22,14 @@
             <h2>Tạo Tài Khoản</h2>
             <p class="text-white-50 fs-6">Tham gia cùng chúng tôi</p>
         </div>
-
+		{% if messages %}
+				{% for message in messages %}
+					<div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+						{{ message }}
+						<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+					</div>
+				{% endfor %}
+		{% endif %}
         <form action="{% url 'Weather_App:register_page' %}" method="POST">
             {% csrf_token %}
 			<div class="input-group mb-3">
@@ -70,11 +77,6 @@
                     </ul>
                 </div>
             {% endif %}
-
-            <div class="form-check mb-4">
-                <input class="form-check-input" type="checkbox" id="terms" required>
-                <label class="form-check-label" for="terms">Tôi đồng ý với điều khoản sử dụng</label>
-            </div>
 
             <button type="submit" class="btn-submit">ĐĂNG KÝ TÀI KHOẢN</button>
         </form>
