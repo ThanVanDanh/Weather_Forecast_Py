@@ -18,6 +18,10 @@ urlpatterns = [
     # GET /api/weather/featured/
     path('featured/', views.get_featured_weather, name='api_featured_weather'),
 
+    # 3.1 API lấy TẤT CẢ tỉnh/thành phố (34 tỉnh)
+    # GET /api/weather/locations/
+    path('locations/', views.get_all_locations, name='api_all_locations'),
+
     # 3.5. API lấy dự báo AI (24h + 5 ngày) - ON-DEMAND
     # GET /api/weather/forecast/?location_id=X
     path('forecast/', views.get_ai_forecast, name='api_ai_forecast'),
@@ -55,31 +59,15 @@ urlpatterns = [
 
     path('profile/', views.profile_view, name='profile'),
 
-    path('login/', views.CustomLoginView.as_view(), name='login_page'),
-
-    path('register/', views.CustomRegisterView.as_view(), name='register_page'),
-    path('logout/', views.CustomLogoutView.as_view(), name='logout_page'),
-
-# --- AUTH: ĐỔI MẬT KHẨU (Change Password - Khi đã đăng nhập) ---
-    path('password-change/', views.CustomPasswordChangeView.as_view(), name='password_change'),
-# --- AUTH: QUÊN MẬT KHẨU (Reset Password - Khi chưa đăng nhập) ---
-    # 1. Nhập email
-    path('password-reset/', views.CustomPasswordResetView.as_view(), name='password_reset'),
-    # 2. Thông báo đã gửi email thành công
-    path('password-reset/done/', views.CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
-    # 3. Link reset (người dùng bấm từ email)
-    path('password-reset-confirm/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-    # 4. Thông báo đổi thành công
-    path('password-reset-complete/', views.CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
-
-    path('profile/', views.profile_view, name='profile'),
-
-
     # 7. URL cho trang chăm sóc khách hàng
     path('customer-care/', views.customer_care, name='customer_care'),
 
     # API gợi ý trang phục
     # GET /api/weather/outfit/?location_id=1
     path('outfit/', views.get_outfit_advice, name='get_outfit_advice'),
+
+    # API dự báo bức xạ mặt trời
+    # GET /api/weather/solar/?location_id=1
+    path('solar/', views.get_solar_radiation, name='get_solar_radiation'),
 
 ]
