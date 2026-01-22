@@ -1,15 +1,13 @@
 import os
-import glob
-import time
+import sys
+import django
+from pathlib import Path
+from django.utils import timezone as tz
+import pytz
 import numpy as np
 import pandas as pd
 import joblib
-from pathlib import Path
-from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout, Input
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from concurrent.futures import ProcessPoolExecutor
+from tensorflow.keras.models import load_model
 
 # ============================
 # CẤU HÌNH CHO DỰ ĐOÁN ĐỘ ẨM
@@ -17,35 +15,43 @@ from concurrent.futures import ProcessPoolExecutor
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 MODEL_DIR = BASE_DIR / "models_humidity"
-MODEL_DIR.mkdir(parents=True, exist_ok=True)
+
+DJANGO_PROJECT_DIR = BASE_DIR.parent
+sys.path.insert(0, str(DJANGO_PROJECT_DIR))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Weather_Project_Python.settings')
+django.setup()
+
+from Weather_App.models import Location, HourlyForecast
+from check_and_update_data import check_and_update_province
 
 TARGET_COLUMN = 'relative_humidity_2m'
 SEQ_LENGTH = 72  # 3 ngày dữ liệu quá khứ
 PREDICT_HORIZON = 24  # Dự đoán 24 giờ tiếp theo
 
-# --- HYPERPARAMETERS ---
-BATCH_SIZE = 32
-EPOCHS = 50
-MAX_WORKERS = 4  # Train 4 tỉnh cùng lúc
+# Mapping tên file/province → tên Location trong DB
+PROVINCE_TO_LOCATION = {
+    'TP_Ho_Chi_Minh': 'Ho Chi Minh City',
+    'Ha_Noi': 'Hanoi',
+    'Da_Nang': 'Da Nang',
+    'Can_Tho': 'Can Tho',
+    'Hai_Phong': 'Hai Phong',
+}
 
 
-# ============================
-# XỬ LÝ FEATURES CHO ĐỘ ẨM
-# ============================
+def get_location_name(province_name):
+    """Convert tên province sang tên location trong DB"""
+    if province_name in PROVINCE_TO_LOCATION:
+        return PROVINCE_TO_LOCATION[province_name]
+    return province_name.replace('_', ' ')
+
+
 def process_humidity_features(df):
-    """
-    Để dự đoán tương lai, chỉ dùng:
-    - Độ ẩm lịch sử (relative_humidity_2m)
-    - Time features (hour, month) - biết được cho tương lai
-
-    KHÔNG dùng: nhiệt độ, áp suất, gió, mưa vì không có dữ liệu tương lai
-    """
+    """Tạo features giống training"""
     df = df.copy()
     time_col = df.columns[0]
     df[time_col] = pd.to_datetime(df[time_col])
     df = df.sort_values(by=time_col).reset_index(drop=True)
 
-    # Time features - biết được cho tương lai
     df['hour'] = df[time_col].dt.hour
     df['month'] = df[time_col].dt.month
     df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
@@ -53,105 +59,92 @@ def process_humidity_features(df):
     df['month_sin'] = np.sin(2 * np.pi * df['month'] / 12)
     df['month_cos'] = np.cos(2 * np.pi * df['month'] / 12)
 
-    # Chỉ dùng độ ẩm + time features
     return df[[TARGET_COLUMN, 'hour_sin', 'hour_cos', 'month_sin', 'month_cos']]
 
 
-def create_dataset(X_scaled, y_scaled, seq_len, horizon):
-    Xs, ys = [], []
-    for i in range(len(X_scaled) - seq_len - horizon + 1):
-        Xs.append(X_scaled[i: i + seq_len])
-        ys.append(y_scaled[i + seq_len: i + seq_len + horizon, 0])
-    return np.array(Xs), np.array(ys)
+def predict_hourly_humidity(province_name: str, steps: int = 24, force: bool = False):
+    """Dự báo độ ẩm theo giờ và lưu vào DB"""
+    location_name = get_location_name(province_name)
+    location = Location.objects.filter(city_name__icontains=location_name).first()
+    if not location:
+        raise ValueError(f"Location not found: {province_name} (searched: {location_name})")
+    
+    if not force:
+        latest = HourlyForecast.objects.filter(location=location, humidity__isnull=False).order_by('-updated_at').first()
+        if latest:
+            hours_since_update = (tz.now() - latest.updated_at).total_seconds() / 3600
+            if hours_since_update < 1:
+                return f"⏭️ {province_name}: Dự báo humidity mới (<1h), bỏ qua"
+    
+    check_and_update_province(province_name)
+    
+    model_path = MODEL_DIR / f"{province_name}.keras"
+    scaler_x_path = MODEL_DIR / f"scaler_X_{province_name}.pkl"
+    scaler_y_path = MODEL_DIR / f"scaler_Y_{province_name}.pkl"
 
+    if not model_path.exists():
+        raise FileNotFoundError(f"No humidity model for {province_name}")
 
-def train_one_province(file_path):
-    province_name = os.path.splitext(os.path.basename(file_path))[0]
-    model_file = MODEL_DIR / f"{province_name}.keras"
+    model = load_model(model_path, compile=False)
+    scaler_X = joblib.load(scaler_x_path)
+    scaler_Y = joblib.load(scaler_y_path)
 
-    # Nếu đã có model thì bỏ qua
-    if model_file.exists():
-        return f"⏩ {province_name}: Đã xong từ trước."
-
-    scaler_x_file = MODEL_DIR / f"scaler_X_{province_name}.pkl"
-    scaler_y_file = MODEL_DIR / f"scaler_Y_{province_name}.pkl"
-
-    try:
-        raw_df = pd.read_csv(file_path)
-        if TARGET_COLUMN not in raw_df.columns:
-            return f"⚠️ {province_name}: Thiếu cột {TARGET_COLUMN}."
-
-        df = process_humidity_features(raw_df).ffill().bfill()
-        data_values = df.values.astype('float32')
-
-        train_size = int(len(data_values) * 0.9)
-        train_data = data_values[:train_size]
-        test_data = data_values[train_size:]
-
-        scaler_X = MinMaxScaler(feature_range=(0, 1))
-        scaler_Y = MinMaxScaler(feature_range=(0, 1))
-
-        X_train_scaled = scaler_X.fit_transform(train_data)
-        y_train_scaled = scaler_Y.fit_transform(train_data[:, 0].reshape(-1, 1))
-        X_test_scaled = scaler_X.transform(test_data)
-        y_test_scaled = scaler_Y.transform(test_data[:, 0].reshape(-1, 1))
-
-        joblib.dump(scaler_X, scaler_x_file)
-        joblib.dump(scaler_Y, scaler_y_file)
-
-        X_train, y_train = create_dataset(X_train_scaled, y_train_scaled, SEQ_LENGTH, PREDICT_HORIZON)
-        X_test, y_test = create_dataset(X_test_scaled, y_test_scaled, SEQ_LENGTH, PREDICT_HORIZON)
-
-        if len(X_train) == 0:
-            return f"⚠️ {province_name}: Không đủ data."
-
-        # Model LSTM cho độ ẩm
-        model = Sequential([
-            Input(shape=(X_train.shape[1], X_train.shape[2])),
-            LSTM(128, return_sequences=False),
-            Dropout(0.2),
-            Dense(PREDICT_HORIZON)
-        ])
-        model.compile(optimizer='adam', loss='mse')
-
-        early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-        checkpoint = ModelCheckpoint(model_file, monitor='val_loss', save_best_only=True, verbose=0)
-
-        model.fit(
-            X_train, y_train,
-            epochs=EPOCHS,
-            batch_size=BATCH_SIZE,
-            validation_data=(X_test, y_test),
-            callbacks=[early_stop, checkpoint],
-            verbose=1
-        )
-        return f"✅ {province_name}: Hoàn tất!"
-
-    except Exception as e:
-        return f"❌ {province_name}: Lỗi {str(e)}"
-
-
-def main():
-    # Fix lỗi đa luồng trên Windows
-    import tensorflow as tf
-    tf.config.set_visible_devices([], 'GPU')
-
-    all_files = glob.glob(os.path.join(DATA_DIR, "*.csv"))
-    print(f"🌧️  Bắt đầu huấn luyện model DỰ ĐOÁN ĐỘ ẨM với {MAX_WORKERS} luồng...")
-    print(f"📊 Features: Độ ẩm lịch sử + Thời gian (hour, month)")
-    print(f"⚠️  Không dùng nhiệt độ/áp suất/gió/mưa vì không có data tương lai")
-
-    start = time.time()
-
-    with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        results = executor.map(train_one_province, all_files)
-
-        for res in results:
-            print(res)
-
-    print(f"\n🏁 TỔNG THỜI GIAN: {(time.time() - start) / 60:.1f} phút.")
-    print(f"💾 Models lưu tại: {MODEL_DIR}")
+    # Load và process data
+    csv = DATA_DIR / f"{province_name}.csv"
+    if not csv.exists():
+        raise FileNotFoundError(f"No data for {province_name}")
+        
+    df = pd.read_csv(csv)
+    df["time"] = pd.to_datetime(df["time"])
+    vn_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+    df["time"] = df["time"].dt.tz_localize('UTC').dt.tz_convert(vn_tz)
+    df = df.set_index("time").sort_index().asfreq("h").ffill().bfill()
+    
+    df_features = process_humidity_features(df.reset_index())
+    
+    # Lấy SEQ_LENGTH giờ gần nhất
+    recent_data = df_features.tail(SEQ_LENGTH).values
+    
+    # Scale
+    X_scaled = scaler_X.transform(recent_data)
+    y_scaled = scaler_Y.transform(recent_data[:, [0]])
+    
+    # Reshape cho LSTM
+    x_input = X_scaled.reshape((1, SEQ_LENGTH, X_scaled.shape[1]))
+    
+    # Predict
+    yhat_scaled = model.predict(x_input, verbose=0)[0]
+    preds = scaler_Y.inverse_transform(yhat_scaled.reshape(-1, 1)).ravel()
+    
+    # Bắt đầu dự báo từ giờ tiếp theo
+    now = tz.localtime()
+    next_hour = now.replace(minute=0, second=0, microsecond=0) + pd.Timedelta(hours=1)
+    times = pd.date_range(start=next_hour, periods=steps, freq="h")
+    
+    # Dùng bulk_update để update humidity vào records đã có từ temperature prediction
+    humidity_values = [round(h / 10) * 10 for h in preds]  # Làm tròn hàng chục
+    
+    forecasts_to_update = []
+    for time, humidity in zip(times, humidity_values):
+        try:
+            forecast = HourlyForecast.objects.get(location=location, forecast_time=time)
+            forecast.humidity = float(humidity)
+            forecasts_to_update.append(forecast)
+        except HourlyForecast.DoesNotExist:
+            pass  # Bỏ qua nếu chưa có record (không nên xảy ra)
+    
+    if forecasts_to_update:
+        HourlyForecast.objects.bulk_update(forecasts_to_update, ['humidity'])
+    
+    vn_time = tz.localtime(tz.now()).strftime('%Y-%m-%d %H:%M:%S')
+    return f"✅ {province_name}: Saved {steps} humidity forecasts (VN time: {vn_time})"
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if len(sys.argv) > 1:
+        province = sys.argv[1]
+        print(predict_hourly_humidity(province))
+    else:
+        print("Usage: python predict_humidity_lstm.py <province_name>")
+        print("Example: python predict_humidity_lstm.py Ha_Noi")

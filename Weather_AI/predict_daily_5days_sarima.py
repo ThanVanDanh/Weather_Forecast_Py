@@ -108,12 +108,17 @@ def predict_daily_temperature(province_name: str, steps: int = 5, force: bool = 
     tomorrow = today + pd.Timedelta(days=1)
     idx = pd.date_range(start=tomorrow, periods=steps, freq="D")
 
-    for date, temp_min, temp_max in zip(idx, min_pred.values, max_pred.values):
-        DailyForecast.objects.update_or_create(
+    # Dùng bulk_create thay vì update_or_create để nhanh hơn
+    forecasts = [
+        DailyForecast(
             location=location,
             forecast_date=date.date(),
-            defaults={'temp_min': float(temp_min), 'temp_max': float(temp_max)}
+            temp_min=float(temp_min),
+            temp_max=float(temp_max)
         )
+        for date, temp_min, temp_max in zip(idx, min_pred.values, max_pred.values)
+    ]
+    DailyForecast.objects.bulk_create(forecasts)
     
     # Hiển thị thời gian VN (không phải UTC)
     vn_time = tz.localtime(tz.now()).strftime('%Y-%m-%d %H:%M:%S')

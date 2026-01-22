@@ -71,20 +71,15 @@ def fetch_missing_data(lat, lon, start_date, end_date):
 
 
 def check_and_update_province(province_name):
-    """Kiểm tra và cập nhật dữ liệu cho 1 tỉnh"""
     csv_path = DATA_DIR / f"{province_name}.csv"
-    
     if province_name not in PROVINCE_COORDINATES:
-        print(f"❌ {province_name}: Không có tọa độ")
         return False
     
     lat, lon = PROVINCE_COORDINATES[province_name]
-    # Dùng VN time vì API có timezone="Asia/Ho_Chi_Minh"
     now = datetime.now()
     current_hour = now.replace(minute=0, second=0, microsecond=0)
     
     if not csv_path.exists():
-        print(f"❌ {province_name}: File không tồn tại, cần chạy dataset_builder.py")
         return False
     
     df = pd.read_csv(csv_path)
@@ -95,10 +90,7 @@ def check_and_update_province(province_name):
     hours_behind = (current_hour - last_time).total_seconds() / 3600
     
     if hours_behind < 1:
-        print(f"✅ {province_name}: Dữ liệu đã mới nhất ({last_time})")
         return True
-    
-    print(f"⚠️ {province_name}: Thiếu {int(hours_behind)}h data (cuối: {last_time})")
     
     start_date = (last_time + timedelta(hours=1)).strftime("%Y-%m-%d")
     end_date = now.strftime("%Y-%m-%d")
@@ -106,13 +98,11 @@ def check_and_update_province(province_name):
     new_data = fetch_missing_data(lat, lon, start_date, end_date)
     
     if new_data is None or new_data.empty:
-        print(f"❌ {province_name}: Không lấy được dữ liệu mới")
         return False
     
     new_data = new_data[new_data["time"] <= current_hour]
     
     if new_data.empty:
-        print(f"⚠️ {province_name}: API chưa có data mới")
         return False
     
     new_data.rename(columns={"time": time_col}, inplace=True)
@@ -121,24 +111,18 @@ def check_and_update_province(province_name):
     df_combined = df_combined.sort_values(time_col).reset_index(drop=True)
     
     df_combined.to_csv(csv_path, index=False)
-    print(f"✅ {province_name}: Đã cập nhật +{len(new_data)} dòng → {df_combined[time_col].max()}")
-    
+
     return True
 
 
 def check_and_update_all():
-    """Kiểm tra và cập nhật tất cả tỉnh thành"""
-    print(f"🔍 Bắt đầu kiểm tra data tại {datetime.now()}")
-    print("=" * 60)
-    
+
     success_count = 0
     for province in PROVINCE_COORDINATES.keys():
         if check_and_update_province(province):
             success_count += 1
         time.sleep(0.5)
     
-    print("=" * 60)
-    print(f"✅ Hoàn tất: {success_count}/{len(PROVINCE_COORDINATES)} tỉnh có data đầy đủ")
     return success_count == len(PROVINCE_COORDINATES)
 
 
@@ -150,3 +134,4 @@ if __name__ == "__main__":
         check_and_update_province(province)
     else:
         check_and_update_all()
+

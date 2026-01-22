@@ -192,11 +192,8 @@ function updateDailyForecastDOM(dailyForecast) {
         card.innerHTML = `
             <h3><span>${dayOfWeek}</span> <span>${dayMonth}</span></h3>
             <img class="main-img" src="/static/image/${icon}" alt="${statusText}">
-            <p class="img-eyes">
-                <img class="detail-img" src="/static/image/icon-style-1-drop.svg" alt=""><span>-- %</span>
-            </p>
             <div class="status"><p>${statusText}</p></div>
-            <div class="temp"><p>${Math.round(day.temp_max)}°/ ${Math.round(day.temp_min)}°</p></div>
+            <div class="temp"><p>${Math.round(day.temp_min)}°/ ${Math.round(day.temp_max)}°</p></div>
         `;
         container.appendChild(card);
     });
@@ -228,12 +225,8 @@ function updateAIForecastDOM(forecastData) {
         card.innerHTML = `
             <h3>${dayDisplay}</h3>
             <img class="main-img" src="/static/image/${icon}" alt="">
-            <p class="img-eyes">
-                <img class="detail-img" src="/static/image/icon-style-1-drop.svg" alt="">
-                <span>${day.predicted_precipitation_probability || '--'} %</span>
-            </p>
             <div class="status"><p>${statusText}</p></div>
-            <div class="temp">${Math.round(day.predicted_temp_max)}°/ ${Math.round(day.predicted_temp_min)}°</div>
+            <div class="temp">${Math.round(day.predicted_temp_min)}°/ ${Math.round(day.predicted_temp_max)}°</div>
         `;
         container.appendChild(card);
     });
@@ -278,7 +271,7 @@ async function loadFeaturedCities() {
                         <span>${hourly.relativehumidity_2m[new Date().getHours()]} %</span>
                     </p>
                     <div class="status"><p>${statusText}</p></div>
-                    <div class="temp">${Math.round(daily.temperature_2m_max[0])}°/ ${Math.round(daily.temperature_2m_min[0])}°</div>
+                    <div class="temp">${Math.round(daily.temperature_2m_min[0])}°/ ${Math.round(daily.temperature_2m_max[0])}°</div>
                 `;
 
                 card.addEventListener('click', () => {

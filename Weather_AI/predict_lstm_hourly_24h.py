@@ -103,13 +103,17 @@ def predict_hourly_temperature(province_name: str, steps: int = 24, force: bool 
     now = tz.localtime()  # Lấy thời gian VN hiện tại
     next_hour = now.replace(minute=0, second=0, microsecond=0) + pd.Timedelta(hours=1)
     times = pd.date_range(start=next_hour, periods=steps, freq="h")
-    
-    for time, temp in zip(times, preds):
-        HourlyForecast.objects.update_or_create(
+
+    # Dùng bulk_create thay vì update_or_create để nhanh hơn
+    forecasts = [
+        HourlyForecast(
             location=location,
             forecast_time=time,
-            defaults={'temperature': float(temp)}
+            temperature=float(temp)
         )
+        for time, temp in zip(times, preds)
+    ]
+    HourlyForecast.objects.bulk_create(forecasts)
     
     # Hiển thị thời gian VN (không phải UTC)
     vn_time = tz.localtime(tz.now()).strftime('%Y-%m-%d %H:%M:%S')

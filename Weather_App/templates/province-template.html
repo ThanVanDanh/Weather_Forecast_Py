@@ -1,10 +1,15 @@
 {% load static %}
+{% load l10n %}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 	<script>
         const LOCATION_ID = "{{ location_id }}";
         const CITY_NAME = "{{ city_name }}";
+        {% localize off %}
+        const LAT = {{ latitude|default:"null" }};
+        const LON = {{ longitude|default:"null" }};
+        {% endlocalize %}
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
