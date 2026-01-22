@@ -446,3 +446,18 @@ function displayOutfitAdvice(adviceText) {
         </div>
     `;
 }
+//Ẩn message
+setTimeout(function() {
+    document.querySelectorAll('.alert').forEach(function(el) {
+        el.style.transition = 'opacity 0.7s';
+        el.style.opacity = '0';
+        setTimeout(function() {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                var alert = bootstrap.Alert.getOrCreateInstance(el);
+                alert.close();
+            } else {
+                el.style.display = 'none';
+            }
+        }, 700);
+    });
+}, 2000);
