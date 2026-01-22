@@ -101,3 +101,12 @@ class WeatherAlert(models.Model):
     class Meta:
         verbose_name = "Cảnh báo thời tiết"
         verbose_name_plural = "6. Cảnh báo thời tiết"
+
+class SolarForecast(models.Model):
+    location = models.ForeignKey(Location, on_delete=models.CASCADE)
+    forecast_time = models.DateTimeField()
+    shortwave_radiation = models.FloatField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        unique_together = ['location', 'forecast_time']
+        ordering = ['forecast_time']

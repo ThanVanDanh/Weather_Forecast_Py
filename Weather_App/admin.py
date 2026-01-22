@@ -4,7 +4,7 @@ from .models_profile import UserProfile
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'phone', 'address', 'latitude', 'longitude')
     search_fields = ('user__username', 'phone', 'address')
-from .models import Location, CurrentWeatherCache, HistoricalData, HourlyForecast, DailyForecast, WeatherAlert
+from .models import Location, CurrentWeatherCache, HistoricalData, HourlyForecast, DailyForecast, WeatherAlert, SolarForecast
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
@@ -35,3 +35,10 @@ class DailyForecastAdmin(admin.ModelAdmin):
 @admin.register(WeatherAlert)
 class WeatherAlertAdmin(admin.ModelAdmin):
     list_display = ('location', 'event_name', 'start_time', 'end_time')
+
+
+@admin.register(SolarForecast)
+class SolarForecastAdmin(admin.ModelAdmin):
+    list_display = ('location', 'forecast_time', 'shortwave_radiation', 'created_at')
+    list_filter = ('location', 'forecast_time')
+    ordering = ('-forecast_time',)

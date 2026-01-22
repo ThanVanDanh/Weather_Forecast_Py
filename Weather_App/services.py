@@ -2,6 +2,9 @@ import requests
 from django.conf import settings
 from django.utils import timezone
 from django.db.models import Max
+from django.db import transaction
+from datetime import datetime, time, timedelta, timezone as dt_timezone
+import subprocess
 import sys
 from pathlib import Path
 
@@ -15,6 +18,45 @@ PROVINCE_NAME_MAPPING = {
     'Hai Phong': 'Hai_Phong',
     'Hue': 'Hue',
     # Thêm các mapping khác nếu cần
+}
+
+
+# Mapping location ID sang tên tỉnh trong file predict_solar_lstm_34.py
+SOLAR_LOCATION_TO_PROVINCE = {
+    1: "An_Giang",
+    2: "Bac_Ninh",
+    3: "Ca_Mau",
+    4: "Can_Tho",
+    5: "Cao_Bang",
+    6: "Da_Nang",
+    7: "Dak_Lak",
+    8: "Dien_Bien",
+    9: "Dong_Nai",
+    10: "Dong_Thap",
+    11: "Ha_Noi",
+    12: "Gia_Lai",
+    13: "Hai_Phong",
+    14: "Ha_Tinh",
+    15: "Khanh_Hoa",
+    16: "Lam_Dong",
+    17: "Lang_Son",
+    18: "Lao_Cai",
+    19: "Lai_Chau",
+    20: "Nghe_An",
+    21: "Ninh_Binh",
+    22: "Phu_Tho",
+    23: "Quang_Ngai",
+    24: "Quang_Ninh",
+    25: "Quang_Tri",
+    26: "Son_La",
+    27: "Tay_Ninh",
+    28: "Thai_Nguyen",
+    29: "Hue",
+    30: "TP_Ho_Chi_Minh",
+    31: "Thanh_Hoa",
+    32: "Tuyen_Quang",
+    33: "Vinh_Long",
+    34: "Hung_Yen",
 }
 
 
@@ -191,3 +233,125 @@ class ForecastService:
         
         # Trả về forecasts
         return DailyForecast.objects.filter(location=location).order_by('forecast_date')
+
+    @staticmethod
+    def get_or_refresh_solar_daily(location, target_date=None, max_age_hours=1):
+        """Lấy hoặc refresh dự báo solar cho 0-23h của 1 ngày.
+
+        Rule: mỗi lần refresh sẽ xoá toàn bộ bản ghi ngày đó và tạo lại 24 giờ.
+        """
+        from .models import SolarForecast, HourlyForecast
+        import pandas as pd
+
+        if target_date is None:
+            target_date = timezone.localdate()
+
+        tz = timezone.get_current_timezone()
+        day_start = timezone.make_aware(datetime.combine(target_date, time.min), tz)
+        day_end = day_start + timedelta(days=1)
+
+        def _utc_hour_key(dt):
+            if timezone.is_naive(dt):
+                dt = timezone.make_aware(dt, tz)
+            dt_utc = dt.astimezone(dt_timezone.utc)
+            return dt_utc.replace(minute=0, second=0, microsecond=0)
+
+        existing = SolarForecast.objects.filter(
+            location=location,
+            forecast_time__gte=day_start,
+            forecast_time__lt=day_end,
+        ).order_by('forecast_time')
+
+        should_refresh = False
+        if existing.count() != 24:
+            should_refresh = True
+        else:
+            latest_created = existing.order_by('-created_at').first().created_at
+            age_hours = (timezone.now() - latest_created).total_seconds() / 3600
+            if age_hours > max_age_hours:
+                should_refresh = True
+
+        if should_refresh:
+            province_name = SOLAR_LOCATION_TO_PROVINCE.get(location.id) or get_province_name(location)
+
+            base_dir = Path(__file__).resolve().parent.parent
+            script_path = base_dir / "Weather_AI" / "predict_solar_lstm_34.py"
+            result_dir = base_dir / "Weather_AI" / "results_train_shortwave_radiation_lstm"
+            forecast_file = result_dir / f"forecast_{province_name}.csv"
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(script_path),
+                    province_name,
+                    '--date',
+                    target_date.strftime('%Y-%m-%d'),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                cwd=str(base_dir / "Weather_AI"),
+            )
+            if result.returncode != 0:
+                raise RuntimeError(result.stderr or result.stdout or 'Solar predict failed')
+
+            if not forecast_file.exists():
+                raise FileNotFoundError(f"Không tìm thấy file dự báo: {forecast_file}")
+
+            df = pd.read_csv(forecast_file)
+            if 'Time' not in df.columns or 'Radiation_Forecast' not in df.columns:
+                raise ValueError('File dự báo solar thiếu cột Time hoặc Radiation_Forecast')
+
+            df['Time'] = pd.to_datetime(df['Time'])
+            df = df[df['Time'].dt.date == target_date].copy()
+            df = df.sort_values('Time')
+
+            if len(df) != 24:
+                raise ValueError(f"Dự báo solar không đủ 24 giờ cho {target_date} (got={len(df)})")
+
+            solar_rows = []
+            time_to_value = {}
+            for _, row in df.iterrows():
+                dt = row['Time'].to_pydatetime() if hasattr(row['Time'], 'to_pydatetime') else row['Time']
+                if timezone.is_naive(dt):
+                    dt = timezone.make_aware(dt, tz)
+
+                radiation_value = float(row['Radiation_Forecast'])
+                solar_rows.append(
+                    SolarForecast(
+                        location=location,
+                        forecast_time=dt,
+                        shortwave_radiation=radiation_value,
+                    )
+                )
+                time_to_value[_utc_hour_key(dt)] = radiation_value
+
+            with transaction.atomic():
+                SolarForecast.objects.filter(
+                    location=location,
+                    forecast_time__gte=day_start,
+                    forecast_time__lt=day_end,
+                ).delete()
+                SolarForecast.objects.bulk_create(solar_rows, ignore_conflicts=False)
+
+            # Sync radiation into existing HourlyForecast rows (update-only)
+            hourly_qs = HourlyForecast.objects.filter(
+                location=location,
+                forecast_time__gte=day_start,
+                forecast_time__lt=day_end,
+            )
+            hourly = list(hourly_qs)
+            now_ts = timezone.now()
+            for hf in hourly:
+                key = _utc_hour_key(hf.forecast_time)
+                if key in time_to_value:
+                    hf.shortwave_radiation = time_to_value[key]
+                    hf.updated_at = now_ts
+            if hourly:
+                HourlyForecast.objects.bulk_update(hourly, ['shortwave_radiation', 'updated_at'])
+
+        return SolarForecast.objects.filter(
+            location=location,
+            forecast_time__gte=day_start,
+            forecast_time__lt=day_end,
+        ).order_by('forecast_time')
