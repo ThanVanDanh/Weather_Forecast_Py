@@ -25,7 +25,7 @@ from django.contrib import messages
 from django.contrib.auth.views import LoginView, LogoutView
 from django.views.generic.edit import CreateView
 from .forms import RegisterForm
-from .models_profile import UserProfile
+from .models import UserProfile
 from django.contrib.auth.decorators import login_required
 from .forms import UserUpdateForm, ProfileUpdateForm
 from django.shortcuts import redirect
