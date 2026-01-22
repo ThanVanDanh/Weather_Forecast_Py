@@ -324,6 +324,13 @@ async function loadProvinceDetails(locationId, cityName, lat, lon) {
             if (forecastData.daily_forecast) {
                 console.log('[DEBUG] Rendering daily forecast, count:', forecastData.daily_forecast.length);
                 renderDailyForecast(forecastData.daily_forecast, forecastData.hourly_forecast);
+
+                // Lazy: chỉ khi daily_forecast đã về thì mới vẽ biểu đồ min/max
+                const daily5 = forecastData.daily_forecast.slice(0, 5);
+                const labels = daily5.map(d => formatShortDayLabel(d.forecast_date));
+                const minTemps = daily5.map(d => Math.round(d.temp_min));
+                const maxTemps = daily5.map(d => Math.round(d.temp_max));
+                drawDailyMinMaxChart(labels, minTemps, maxTemps);
             } else {
                 console.error('[ERROR] No daily_forecast in response');
                 if (dailyContainer) dailyContainer.innerHTML = '<p>Không có dữ liệu dự báo 5 ngày</p>';
@@ -376,64 +383,108 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof LOCATION_ID !== 'undefined' && LOCATION_ID && typeof LAT !== 'undefined' && typeof LON !== 'undefined') {
         loadProvinceDetails(LOCATION_ID, CITY_NAME, LAT, LON);
     }
-    const fakeApiData = [
-        { time: "01:00 PM", temp: "18°/18°", humidity: 94, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "02:00 PM", temp: "18°/18°", humidity: 94, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "03:00 PM", temp: "18°/18°", humidity: 94, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "04:00 PM", temp: "17°/18°", humidity: 95, desc: "Có mưa", icon: "/static/image/mayden.png" },
-        { time: "05:00 PM", temp: "17°/17°", humidity: 95, desc: "Có mưa", icon: "/static/image/mayden.png" },
-        { time: "06:00 PM", temp: "17°/17°", humidity: 96, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "07:00 PM", temp: "16°/17°", humidity: 96, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "08:00 PM", temp: "16°/16°", humidity: 97, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "09:00 PM", temp: "16°/16°", humidity: 97, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "10:00 PM", temp: "15°/16°", humidity: 98, desc: "Trời quang", icon: "/static/image/mayden.png" },
-        { time: "11:00 PM", temp: "18°/18°", humidity: 94, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "12:00 PM", temp: "18°/18°", humidity: 94, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "13:00 PM", temp: "18°/18°", humidity: 94, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "14:00 PM", temp: "17°/18°", humidity: 95, desc: "Có mưa", icon: "/static/image/mayden.png" },
-        { time: "15:00 PM", temp: "17°/17°", humidity: 95, desc: "Có mưa", icon: "/static/image/mayden.png" },
-        { time: "16:00 PM", temp: "17°/17°", humidity: 96, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "17:00 PM", temp: "16°/17°", humidity: 96, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "18:00 PM", temp: "16°/16°", humidity: 97, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "19:00 PM", temp: "16°/16°", humidity: 97, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "20:00 PM", temp: "15°/16°", humidity: 98, desc: "Trời quang", icon: "/static/image/mayden.png" },
-        { time: "21:00 PM", temp: "18°/18°", humidity: 94, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "22:00 PM", temp: "18°/18°", humidity: 94, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "23:00 PM", temp: "18°/18°", humidity: 94, desc: "Mây đen u ám", icon: "/static/image/mayden.png" },
-        { time: "24:00 PM", temp: "17°/18°", humidity: 95, desc: "Có mưa", icon: "/static/image/mayden.png" },
-    ];
-
-    
     // //////////////////////////////////////////////////////////////////////////////
     // Đăng ký plugin datalabels cho tất cả biểu đồ
     Chart.register(ChartDataLabels);
 
-    // ==========================================================
-    // DỮ LIỆU VÀ HÀM VẼ BIỂU ĐỒ 1 (12H TỚI)
-    // ==========================================================
+    // Giữ biểu đồ 12h tới & lượng mưa theo dữ liệu placeholder hiện tại
+    // (biểu đồ min/max 5 ngày sẽ vẽ lazy sau khi API daily_forecast trả về)
     const hourlyLabels = ['16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00', '00:00', '01:00', '02:00', '03:00'];
     const hourlyTemps = [27, 25, 24, 23, 20, 21, 21, 21, 21, 21, 21, 20];
     const hourlyRain = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
     drawHourlyChart(hourlyLabels, hourlyTemps, hourlyRain);
 
-    // ==========================================================
-    // DỮ LIỆU VÀ HÀM VẼ BIỂU ĐỒ 2 (NGÀY TỚI)
-    // ==========================================================
-    const dailyLabels = ['CN 16', 'T2 17', 'T3 18', 'T4 19', 'T5 20', 'T6 21', 'T7 22'];
-    const dailyTemps = [24, 22, 17, 13, 18, 17, 19];
-    const dailyRain = [0, 98, 100, 96, 0, 0, 0];
-
-    drawDailyWeatherChart(dailyLabels, dailyTemps, dailyRain);
-
-    // ==========================================================
-    // DỮ LIỆU VÀ HÀM VẼ BIỂU ĐỒ 3 (LƯỢNG MƯA)
-    // ==========================================================
     const dailyRainLabels = ['CN 16', 'T2 17', 'T3 18', 'T4 19', 'T5 20', 'T6 21', 'T7 22'];
-    const dailyRainAmounts = [0, 1.51, 11.99, 0.23, 0, 0, 0]; // Dùng 0 cho các ngày không có dữ liệu
-
+    const dailyRainAmounts = [0, 1.51, 11.99, 0.23, 0, 0, 0];
     drawDailyRainChart(dailyRainLabels, dailyRainAmounts);
 });
+
+let dailyMinMaxChartInstance = null;
+
+function formatShortDayLabel(dateString) {
+    const d = new Date(dateString);
+    const weekdays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+    const wd = weekdays[d.getDay()];
+    return `${wd} ${d.getDate()}`;
+}
+
+function drawDailyMinMaxChart(labels, minData, maxData) {
+    const ctx = document.getElementById('dailyWeatherChart');
+    if (!ctx) return;
+
+    if (dailyMinMaxChartInstance) {
+        dailyMinMaxChartInstance.destroy();
+        dailyMinMaxChartInstance = null;
+    }
+
+    const allTemps = [...minData, ...maxData].filter(v => v !== null && v !== undefined);
+    const tMin = allTemps.length ? Math.floor(Math.min(...allTemps) - 2) : 0;
+    const tMax = allTemps.length ? Math.ceil(Math.max(...allTemps) + 2) : 40;
+
+    dailyMinMaxChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Nhiệt độ max',
+                    data: maxData,
+                    borderColor: '#22c55e',
+                    backgroundColor: '#22c55e',
+                    tension: 0.1,
+                    datalabels: {
+                        color: '#22c55e',
+                        align: 'top',
+                        font: { weight: 'bold', size: 13 },
+                        formatter: (value) => `${value}°`
+                    }
+                },
+                {
+                    label: 'Nhiệt độ min',
+                    data: minData,
+                    borderColor: '#f97316',
+                    backgroundColor: '#f97316',
+                    tension: 0.1,
+                    datalabels: {
+                        color: '#f97316',
+                        align: 'bottom',
+                        font: { weight: 'bold', size: 13 },
+                        formatter: (value) => `${value}°`
+                    }
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'center',
+                    labels: { usePointStyle: true, boxWidth: 8 }
+                },
+                tooltip: { enabled: true },
+                datalabels: {
+                    display: true,
+                    offset: 5
+                }
+            },
+            scales: {
+                y: {
+                    min: tMin,
+                    max: tMax,
+                    ticks: { stepSize: 5 }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            },
+            elements: {
+                point: { radius: 0 }
+            }
+        }
+    });
+}
 
 // ==========================================================
 // HÀM VẼ BIỂU ĐỒ 1: #hourlyChart
