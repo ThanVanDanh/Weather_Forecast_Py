@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models_profile import UserProfile
+from .models import UserProfile
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'phone', 'address', 'latitude', 'longitude')

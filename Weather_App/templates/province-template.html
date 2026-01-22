@@ -26,6 +26,15 @@
 	<link rel="stylesheet" href="{% static 'css/footer.css' %}">
     <link rel="stylesheet" href="{% static 'css/province-template.css' %}">
     <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+    <style>
+.fade-out-message {
+    transition: opacity 1s linear;
+    opacity: 1;
+}
+.fade-out-message.hide {
+    opacity: 0;
+}
+</style>
 </head>
 <body>
 {% include 'header.html' %}
@@ -118,8 +127,11 @@
 							</div>
 					</div>
 						<div class="card chart-card">
-							<h3>Nhiệt độ và khả năng có mưa Hà Giang trong 12h tới</h3>
-							<canvas id="hourlyChart"></canvas>
+							<h3>Nhiệt độ và độ ẩm {{ city_name }} trong 12h tới</h3>
+							<div id="hourlyChart12h-loader" style="text-align:center;padding:20px;">
+        <i class="fa-solid fa-spinner fa-spin"></i> Đang tải biểu đồ...
+    </div>
+    <canvas id="hourlyChart12h" style="display:none;"></canvas>
 						</div>
 						<div class="card chart-card">
 							<h3>Nhiệt độ min/max {{ city_name }} 5 ngày tới</h3>

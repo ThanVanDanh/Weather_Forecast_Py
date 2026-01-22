@@ -1,12 +1,23 @@
 // weather/static/weather/js/script.js
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    // Tự động làm mờ và ẩn các message Django trên mọi trang
+    const messages = document.querySelectorAll('.fade-out-message');
+    messages.forEach(function(msg) {
+        setTimeout(function() {
+            msg.classList.add('hide');
+            setTimeout(function() {
+                msg.style.display = 'none';
+            }, 700);
+        }, 1000);
+    });
+
     // Chỉ chạy logic index.html nếu có forecast-container
     if (!document.getElementById('forecast-container')) {
         console.log('[DEBUG] Not on index.html, skipping script.js initialization');
         return;
     }
-
 
     const DEFAULT_LOCATION_ID = 30; // TP.HCM
 

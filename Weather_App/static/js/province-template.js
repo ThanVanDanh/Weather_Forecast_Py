@@ -335,6 +335,32 @@ async function loadProvinceDetails(locationId, cityName, lat, lon) {
                 console.error('[ERROR] No daily_forecast in response');
                 if (dailyContainer) dailyContainer.innerHTML = '<p>Không có dữ liệu dự báo 5 ngày</p>';
             }
+            // Sau khi có dữ liệu dự báo từ backend, nếu có hourly_forecast thì vẽ lại biểu đồ 12h
+            if (forecastData.hourly_forecast && forecastData.hourly_forecast.length >= 12) {
+                const loader = document.getElementById('hourlyChart12h-loader');
+                const chartCanvas = document.getElementById('hourlyChart12h');
+                if (loader) loader.style.display = '';
+                if (chartCanvas) chartCanvas.style.display = 'none';
+                setTimeout(() => {
+                    const now = new Date();
+                    const currentHour = now.getHours();
+                    let hourLabels = [];
+                    let tempData = [];
+                    let humidityData = [];
+                    for (let i = 0; i < 12; i++) {
+                        const hour = forecastData.hourly_forecast[i];
+                        // Nếu backend trả về forecast_time dạng ISO
+                        let date = hour.forecast_time ? new Date(hour.forecast_time) : null;
+                        let label = date ? (date.getHours()<10?'0':'')+date.getHours()+':00' : (i<10?'0':'')+i+':00';
+                        hourLabels.push(label);
+                        tempData.push(Math.round(hour.temperature));
+                        humidityData.push(Math.round(hour.humidity));
+                    }
+                    drawHourlyChart12h(hourLabels, tempData, humidityData);
+                    if (loader) loader.style.display = 'none';
+                    if (chartCanvas) chartCanvas.style.display = '';
+                }, 200); // chỉ delay nhẹ để UX mượt
+            }
         } else {
             console.error('[ERROR] Forecast API failed:', forecastResponse.status);
             if (hourlyContainer) hourlyContainer.innerHTML = '<p>Lỗi tải dự báo 24h</p>';
@@ -659,3 +685,115 @@ function sharedLineChartOptions() {
         }
     };
 }
+
+// ==========================================================
+// HÀM VẼ BIỂU ĐỒ 12H: #hourlyChart12h (Nhiệt độ & Độ ẩm)
+// ==========================================================
+function drawHourlyChart12h(labels, tempData, humidityData) {
+    const ctx = document.getElementById('hourlyChart12h');
+    if (!ctx) return;
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Nhiệt độ',
+                    data: tempData,
+                    borderColor: '#22c55e',
+                    backgroundColor: '#22c55e',
+                    yAxisID: 'y',
+                    tension: 0.1,
+                    datalabels: {
+                        color: '#22c55e',
+                        align: 'top',
+                        font: { weight: 'bold', size: 13 },
+                        formatter: (value) => value + '°'
+                    }
+                },
+                {
+                    label: 'Độ ẩm',
+                    data: humidityData,
+                    borderColor: '#3b82f6',
+                    backgroundColor: '#3b82f6',
+                    yAxisID: 'y1',
+                    tension: 0.1,
+                    datalabels: {
+                        color: '#3b82f6',
+                        align: 'top',
+                        font: { weight: 'bold', size: 13 },
+                        formatter: (value) => value + '%'
+                    }
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'center',
+                    labels: { usePointStyle: true, boxWidth: 8 }
+                },
+                tooltip: { enabled: true },
+                datalabels: {
+                    display: true,
+                    offset: 5
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    min: 0,
+                    max: 50,
+                    title: { display: true, text: 'Nhiệt độ (°C)' }
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    min: 0,
+                    max: 100,
+                    title: { display: true, text: 'Độ ẩm (%)' },
+                    grid: { drawOnChartArea: false }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            },
+            elements: {
+                point: { radius: 0 }
+            }
+        }
+    });
+}
+
+// === LẤY DỮ LIỆU 12H TỚI VÀ VẼ BIỂU ĐỒ NHIỆT ĐỘ & ĐỘ ẨM (LAZY LOADING) ===
+    if (currentData && currentData.hourly && currentData.hourly.temperature_2m && currentData.hourly.relativehumidity_2m) {
+        // Loader: show spinner, hide canvas
+        const loader = document.getElementById('hourlyChart12h-loader');
+        const chartCanvas = document.getElementById('hourlyChart12h');
+        if (loader) loader.style.display = '';
+        if (chartCanvas) chartCanvas.style.display = 'none';
+
+        setTimeout(() => {
+            // Lấy 12h tới từ thời điểm hiện tại
+            const now = new Date();
+            const currentHour = now.getHours();
+            let hourLabels = [];
+            let tempData = [];
+            let humidityData = [];
+            for (let i = 0; i < 12; i++) {
+                let hourIdx = (currentHour + i) % 24;
+                hourLabels.push((hourIdx < 10 ? '0' : '') + hourIdx + ':00');
+                tempData.push(Math.round(currentData.hourly.temperature_2m[hourIdx]));
+                humidityData.push(Math.round(currentData.hourly.relativehumidity_2m[hourIdx]));
+            }
+            drawHourlyChart12h(hourLabels, tempData, humidityData);
+            // Hide loader, show chart
+            if (loader) loader.style.display = 'none';
+            if (chartCanvas) chartCanvas.style.display = '';
+        }, 600); // 600ms cho cảm giác lazy loading
+    }

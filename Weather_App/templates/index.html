@@ -18,6 +18,14 @@
 
 <body>
     {% include 'header.html' %}
+	{% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show fade-out-message" role="alert" id="fade-message-{{ forloop.counter }}">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+	{% endif %}
     <main>
         <section class="weather-dashboard">
             <div id="rain-canvas-container"></div>
