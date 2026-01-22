@@ -32,6 +32,20 @@ class CurrentWeatherCache(models.Model):
         return (timezone.now() - self.last_updated).total_seconds() > (minutes * 60)
 
 
+class RainForecastCache(models.Model):
+    location = models.OneToOneField(Location, on_delete=models.CASCADE, primary_key=True, related_name='rain_forecast_cache')
+    data = models.JSONField(verbose_name="Dữ liệu dự báo mưa minutely")
+    last_updated = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lần cuối")
+
+    class Meta:
+        verbose_name = "Cache dự báo mưa minutely"
+        verbose_name_plural = "2b. Cache dự báo mưa"
+
+    def is_stale(self, minutes=15):
+        """Cache có cũ không? Mặc định 15 phút"""
+        return (timezone.now() - self.last_updated).total_seconds() > (minutes * 60)
+
+
 class HistoricalData(models.Model):
     location = models.ForeignKey(
         Location,
@@ -58,7 +72,7 @@ class HourlyForecast(models.Model):
     temperature = models.FloatField(verbose_name="Nhiệt độ (°C)")
     humidity = models.FloatField(null=True, blank=True, verbose_name="Độ ẩm (%)")
     shortwave_radiation = models.FloatField(null=True, blank=True, verbose_name="Bức xạ (W/m²)")
-    
+
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lúc")
 
     class Meta:

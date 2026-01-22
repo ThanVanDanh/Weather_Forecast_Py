@@ -143,16 +143,24 @@
                             <div class="section-content">
                                 <p class="section-intro">Các hiện tượng thời tiết nguy hiểm</p>
 
-                                <div class="alert-types-compact">
-                                    <div class="alert-badge storm"><i class="fa-solid fa-hurricane"></i></div>
-                                    <div class="alert-badge flood"><i class="fa-solid fa-house-flood-water"></i></div>
-                                    <div class="alert-badge heat"><i class="fa-solid fa-temperature-arrow-up"></i></div>
-                                    <div class="alert-badge cold"><i class="fa-solid fa-snowflake"></i></div>
+                                <!-- Dropdown chọn tỉnh/thành phố -->
+                                <div class="location-selector" style="margin-bottom: 15px;">
+                                    <select id="alert-location-select" class="form-select" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; cursor: pointer;">
+                                        <option value="">-- Chọn tỉnh/thành phố --</option>
+                                    </select>
                                 </div>
 
-                                <div class="alert-message safe">
-                                    <i class="fa-solid fa-circle-check"></i>
-                                    <p>Không có cảnh báo</p>
+                                <div id="alert-loading" style="display: none; text-align: center; padding: 20px;">
+                                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #ffc107;"></i>
+                                    <p style="margin-top: 10px; color: #fff;">Đang kiểm tra...</p>
+                                </div>
+
+                                <div id="alert-container">
+                                    <!-- Alerts will be dynamically inserted here -->
+                                    <div class="alert-message safe">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        <p>Chọn địa điểm để kiểm tra cảnh báo</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -172,35 +180,31 @@
                                 <h2>Dự Báo Mưa Có Thể Xảy Ra</h2>
                             </div>
                             <div class="section-content">
-                                <p class="section-intro">Hệ thống dự báo mưa thông minh giúp bạn chuẩn bị trước.</p>
+                                <p class="section-intro">Hệ thống dự báo mưa minutely (phút) cho 60 phút tới. Tự động cập nhật mỗi 15 phút.</p>
 
-                                <div class="info-grid">
-                                    <div class="info-item">
-                                        <i class="fa-solid fa-clock"></i>
-                                        <div>
-                                            <strong>Cập nhật liên tục</strong>
-                                            <span>Mỗi 30 phút</span>
-                                        </div>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fa-solid fa-bell"></i>
-                                        <div>
-                                            <strong>Thông báo kịp thời</strong>
-                                            <span>Trước 1-3 giờ</span>
-                                        </div>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fa-solid fa-map-location-dot"></i>
-                                        <div>
-                                            <strong>Theo vị trí</strong>
-                                            <span>Chính xác theo tỉnh/TP</span>
-                                        </div>
+                                <!-- Dropdown chọn tỉnh/thành phố -->
+                                <div class="location-selector" style="margin-bottom: 15px;">
+                                    <select id="rain-location-select" class="form-select" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; cursor: pointer;">
+                                        <option value="">-- Chọn tỉnh/thành phố --</option>
+                                    </select>
+                                </div>
+
+                                <div id="rain-loading" style="display: none; text-align: center; padding: 20px;">
+                                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #2196F3;"></i>
+                                    <p style="margin-top: 10px; color: #fff;">Đang phân tích dữ liệu mưa...</p>
+                                </div>
+
+                                <div id="rain-forecast-container">
+                                    <!-- Rain forecast will be inserted here -->
+                                    <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                                        <i class="fa-solid fa-umbrella" style="font-size: 48px; color: #2196F3; opacity: 0.5;"></i>
+                                        <p style="margin-top: 15px; color: #fff;">Chọn địa điểm để xem dự báo mưa</p>
                                     </div>
                                 </div>
 
-                                <div class="placeholder-content">
-                                    <i class="fa-solid fa-umbrella"></i>
-                                    <p>Nội dung dự báo mưa sẽ được hiển thị tại đây</p>
+                                <div id="rain-next-update" style="margin-top: 15px; text-align: center; font-size: 12px; color: rgba(255,255,255,0.6); display: none;">
+                                    <i class="fa-solid fa-clock"></i>
+                                    <span>Cập nhật tiếp theo sau: <strong id="rain-countdown">--</strong></span>
                                 </div>
                             </div>
                         </div>
@@ -815,6 +819,444 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     solarLocationSelect.value = defaultLocationId;
     loadSolarData(defaultLocationId);
+});
+
+// ============================================
+// SCRIPT CHO CẢNH BÁO THỜI TIẾT CỰC ĐOAN
+// ============================================
+document.addEventListener('DOMContentLoaded', async function() {
+    const alertLocationSelect = document.getElementById('alert-location-select');
+    const alertContainer = document.getElementById('alert-container');
+    const alertLoading = document.getElementById('alert-loading');
+    
+    let alertCitiesList = [];
+
+    // Lấy tên thành phố đã định vị từ header
+    function getCurrentCityName() {
+        const cityEl = document.getElementById('current-city');
+        if (cityEl) {
+            const cityName = cityEl.innerText.trim();
+            if (cityName && cityName !== 'Chưa xác định') {
+                return cityName;
+            }
+        }
+        return null;
+    }
+
+    // Tìm location ID từ API search
+    async function searchLocationByName(cityName) {
+        if (!cityName) return null;
+        
+        try {
+            let searchQuery = cityName
+                .replace(/^(thành phố|tỉnh|tp\.?)\s*/i, '')
+                .trim();
+            
+            console.log('[Alert] Searching for:', searchQuery);
+            
+            const response = await fetch(`/api/weather/search/?city=${encodeURIComponent(searchQuery)}`);
+            if (!response.ok) return null;
+            
+            const locations = await response.json();
+            if (locations && locations.length > 0) {
+                console.log('[Alert] Found location:', locations[0]);
+                return locations[0];
+            }
+        } catch (error) {
+            console.error('[Alert] Search error:', error);
+        }
+        return null;
+    }
+
+    // Load danh sách tất cả tỉnh/thành phố
+    async function loadAlertLocations() {
+        try {
+            const response = await fetch('/api/weather/locations/');
+            if (!response.ok) throw new Error('Không thể tải danh sách địa điểm');
+            
+            alertCitiesList = await response.json();
+            alertCitiesList.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city.id;
+                option.textContent = city.city_name_vn || city.city_name;
+                alertLocationSelect.appendChild(option);
+            });
+            
+            return alertCitiesList;
+        } catch (error) {
+            console.error('Lỗi tải danh sách địa điểm:', error);
+            return [];
+        }
+    }
+
+    // Hiển thị loading
+    function showAlertLoading() {
+        alertContainer.style.display = 'none';
+        alertLoading.style.display = 'block';
+    }
+
+    // Hiển thị alerts
+    function showAlerts(data) {
+        alertLoading.style.display = 'none';
+        alertContainer.style.display = 'block';
+        
+        if (data.alert_count === 0) {
+            alertContainer.innerHTML = `
+                <div class="alert-message safe">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <p>Không có cảnh báo thời tiết nguy hiểm</p>
+                    <small style="opacity: 0.7; display: block; margin-top: 5px;">
+                        Điều kiện thời tiết ổn định
+                    </small>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        data.alerts.forEach(alert => {
+            html += `
+                <div class="alert-card" style="margin-bottom: 15px; padding: 15px; background: linear-gradient(135deg, ${alert.color}22, ${alert.color}11); border-left: 4px solid ${alert.color}; border-radius: 10px;">
+                    <div class="alert-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <i class="fa-solid ${alert.icon}" style="font-size: 24px; color: ${alert.color};"></i>
+                        <div>
+                            <h4 style="margin: 0; color: #fff; font-size: 16px;">${alert.title}</h4>
+                            <span style="font-size: 12px; color: ${alert.color}; font-weight: bold;">Mức độ: ${alert.level}</span>
+                        </div>
+                        <div style="margin-left: auto; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 5px;">
+                            <strong style="color: #fff; font-size: 14px;">${alert.value}</strong>
+                        </div>
+                    </div>
+                    <div class="alert-advice" style="margin-top: 10px;">
+                        <strong style="color: #ffc107; display: block; margin-bottom: 8px;">
+                            <i class="fa-solid fa-shield-halved"></i> Khuyến cáo an toàn:
+                        </strong>
+                        <ul style="margin: 0; padding-left: 20px; color: #fff;">
+                            ${alert.advice.map(item => `<li style="margin-bottom: 5px;">${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        });
+        
+        alertContainer.innerHTML = html;
+    }
+
+    // Load weather alerts
+    async function loadWeatherAlerts(locationId) {
+        showAlertLoading();
+        
+        try {
+            const response = await fetch(`/api/weather/alerts/?location_id=${locationId}`);
+            const data = await response.json();
+            
+            if (response.ok && data.status === 'success') {
+                showAlerts(data);
+            } else {
+                alertContainer.innerHTML = `
+                    <div class="alert-message" style="background: rgba(255,0,0,0.1); border-left-color: #ff6b6b;">
+                        <i class="fa-solid fa-exclamation-triangle" style="color: #ff6b6b;"></i>
+                        <p>Không thể tải cảnh báo: ${data.error || 'Lỗi không xác định'}</p>
+                    </div>
+                `;
+                alertLoading.style.display = 'none';
+                alertContainer.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Lỗi tải cảnh báo:', error);
+            alertContainer.innerHTML = `
+                <div class="alert-message" style="background: rgba(255,0,0,0.1); border-left-color: #ff6b6b;">
+                    <i class="fa-solid fa-exclamation-triangle" style="color: #ff6b6b;"></i>
+                    <p>Lỗi kết nối. Vui lòng thử lại sau.</p>
+                </div>
+            `;
+            alertLoading.style.display = 'none';
+            alertContainer.style.display = 'block';
+        }
+    }
+
+    // Event listener cho dropdown alert
+    alertLocationSelect.addEventListener('change', function() {
+        const locationId = this.value;
+        if (locationId) {
+            loadWeatherAlerts(locationId);
+        } else {
+            alertContainer.innerHTML = `
+                <div class="alert-message safe">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <p>Chọn địa điểm để kiểm tra cảnh báo</p>
+                </div>
+            `;
+        }
+    });
+
+    // Khởi tạo
+    await loadAlertLocations();
+    
+    // Lấy vị trí đã định vị từ current-city
+    const currentCityName = getCurrentCityName();
+    let defaultLocationId = null;
+    
+    if (currentCityName) {
+        const foundLocation = await searchLocationByName(currentCityName);
+        if (foundLocation) {
+            defaultLocationId = foundLocation.id;
+            console.log(`[Alert] Đã tìm thấy vị trí định vị: ${foundLocation.city_name_vn || foundLocation.city_name} (ID: ${defaultLocationId})`);
+        }
+    }
+    
+    if (!defaultLocationId) {
+        defaultLocationId = 30;
+        console.log('[Alert] Không tìm thấy vị trí đã định vị, sử dụng mặc định TP.HCM');
+    }
+    
+    alertLocationSelect.value = defaultLocationId;
+    loadWeatherAlerts(defaultLocationId);
+});
+
+// ============================================
+// SCRIPT CHO DỰ BÁO MƯA MINUTELY (60 PHÚT)
+// ============================================
+document.addEventListener('DOMContentLoaded', async function() {
+    const rainLocationSelect = document.getElementById('rain-location-select');
+    const rainForecastContainer = document.getElementById('rain-forecast-container');
+    const rainLoading = document.getElementById('rain-loading');
+    const rainNextUpdate = document.getElementById('rain-next-update');
+    const rainCountdown = document.getElementById('rain-countdown');
+    
+    let rainCitiesList = [];
+    let currentRainLocationId = null;
+    let refreshInterval = null;
+    let countdownInterval = null;
+    let nextRefreshTime = null;
+
+    // Lấy tên thành phố đã định vị từ header
+    function getCurrentCityName() {
+        const cityEl = document.getElementById('current-city');
+        if (cityEl) {
+            const cityName = cityEl.innerText.trim();
+            if (cityName && cityName !== 'Chưa xác định') {
+                return cityName;
+            }
+        }
+        return null;
+    }
+
+    // Tìm location ID từ API search
+    async function searchLocationByName(cityName) {
+        if (!cityName) return null;
+        
+        try {
+            let searchQuery = cityName
+                .replace(/^(thành phố|tỉnh|tp\.?)\s*/i, '')
+                .trim();
+            
+            const response = await fetch(`/api/weather/search/?city=${encodeURIComponent(searchQuery)}`);
+            if (!response.ok) return null;
+            
+            const locations = await response.json();
+            if (locations && locations.length > 0) {
+                return locations[0];
+            }
+        } catch (error) {
+            console.error('[Rain] Search error:', error);
+        }
+        return null;
+    }
+
+    // Load danh sách tất cả tỉnh/thành phố
+    async function loadRainLocations() {
+        try {
+            const response = await fetch('/api/weather/locations/');
+            if (!response.ok) throw new Error('Không thể tải danh sách địa điểm');
+            
+            rainCitiesList = await response.json();
+            rainCitiesList.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city.id;
+                option.textContent = city.city_name_vn || city.city_name;
+                rainLocationSelect.appendChild(option);
+            });
+            
+            return rainCitiesList;
+        } catch (error) {
+            console.error('Lỗi tải danh sách địa điểm:', error);
+            return [];
+        }
+    }
+
+    // Hiển thị loading
+    function showRainLoading() {
+        rainForecastContainer.style.display = 'none';
+        rainLoading.style.display = 'block';
+        rainNextUpdate.style.display = 'none';
+    }
+
+    // Hiển thị dự báo mưa
+    function showRainForecast(data) {
+        rainLoading.style.display = 'none';
+        rainForecastContainer.style.display = 'block';
+        rainNextUpdate.style.display = 'block';
+        
+        const icon = data.icon || 'fa-cloud-rain';
+        const color = data.color || '#2196F3';
+        const message = data.message || 'Đang cập nhật...';
+        
+        let html = `
+            <div style="text-align: center; padding: 30px; background: linear-gradient(135deg, ${color}22, ${color}11); border-radius: 15px; border-left: 5px solid ${color};">
+                <i class="fa-solid ${icon}" style="font-size: 64px; color: ${color}; margin-bottom: 20px;"></i>
+                <h3 style="color: #fff; font-size: 20px; margin-bottom: 10px;">${message}</h3>
+        `;
+        
+        // Hiển thị timeline nếu có
+        if (data.timeline && data.timeline.length > 0) {
+            html += `
+                <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                    <h4 style="color: #fff; font-size: 14px; margin-bottom: 10px;">Timeline 60 phút tới:</h4>
+                    <div style="display: flex; gap: 2px; height: 60px; align-items: flex-end;">
+            `;
+            
+            // Hiển thị bars cho mỗi 5 phút (12 bars)
+            for (let i = 0; i < 60; i += 5) {
+                const minute = data.timeline[i];
+                const height = minute.precipitation > 0 ? Math.min((minute.precipitation / 10) * 100, 100) : 5;
+                const barColor = minute.intensity === 'no_rain' ? '#ddd' : 
+                                minute.intensity === 'light' ? '#81C784' :
+                                minute.intensity === 'moderate' ? '#FFB74D' :
+                                minute.intensity === 'heavy' ? '#FF7043' : '#E53935';
+                
+                html += `
+                    <div style="flex: 1; background: ${barColor}; height: ${height}%; border-radius: 3px 3px 0 0; opacity: 0.8;" 
+                         title="${i}-${i+5} phút: ${minute.precipitation.toFixed(1)}mm"></div>
+                `;
+            }
+            
+            html += `
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 11px; color: rgba(255,255,255,0.7);">
+                        <span>0p</span>
+                        <span>15p</span>
+                        <span>30p</span>
+                        <span>45p</span>
+                        <span>60p</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        html += `</div>`;
+        rainForecastContainer.innerHTML = html;
+        
+        // Bắt đầu countdown 15 phút
+        startRefreshCountdown();
+    }
+
+    // Bắt đầu đếm ngược 15 phút
+    function startRefreshCountdown() {
+        nextRefreshTime = Date.now() + 15 * 60 * 1000; // 15 phút
+        
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+        
+        countdownInterval = setInterval(() => {
+            const remaining = Math.max(0, nextRefreshTime - Date.now());
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            
+            rainCountdown.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (remaining === 0) {
+                clearInterval(countdownInterval);
+                // Auto refresh
+                if (currentRainLocationId) {
+                    loadRainForecast(currentRainLocationId);
+                }
+            }
+        }, 1000);
+    }
+
+    // Load dự báo mưa
+    async function loadRainForecast(locationId) {
+        showRainLoading();
+        currentRainLocationId = locationId;
+        
+        try {
+            const response = await fetch(`/api/weather/rain-forecast/?location_id=${locationId}`);
+            const data = await response.json();
+            
+            if (response.ok && data.status === 'success') {
+                showRainForecast(data);
+            } else {
+                rainForecastContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: rgba(255,0,0,0.1); border-radius: 10px; border-left: 4px solid #ff6b6b;">
+                        <i class="fa-solid fa-exclamation-triangle" style="font-size: 48px; color: #ff6b6b;"></i>
+                        <p style="margin-top: 15px; color: #fff;">Không thể tải dự báo: ${data.error || 'Lỗi không xác định'}</p>
+                    </div>
+                `;
+                rainLoading.style.display = 'none';
+                rainForecastContainer.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Lỗi tải dự báo mưa:', error);
+            rainForecastContainer.innerHTML = `
+                <div style="text-align: center; padding: 40px; background: rgba(255,0,0,0.1); border-radius: 10px; border-left: 4px solid #ff6b6b;">
+                    <i class="fa-solid fa-exclamation-triangle" style="font-size: 48px; color: #ff6b6b;"></i>
+                    <p style="margin-top: 15px; color: #fff;">Lỗi kết nối. Vui lòng thử lại sau.</p>
+                </div>
+            `;
+            rainLoading.style.display = 'none';
+            rainForecastContainer.style.display = 'block';
+        }
+    }
+
+    // Event listener cho dropdown
+    rainLocationSelect.addEventListener('change', function() {
+        const locationId = this.value;
+        if (locationId) {
+            // Dừng countdown cũ nếu có
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            loadRainForecast(locationId);
+        } else {
+            // Reset về trạng thái ban đầu
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            currentRainLocationId = null;
+            rainForecastContainer.innerHTML = `
+                <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                    <i class="fa-solid fa-umbrella" style="font-size: 48px; color: #2196F3; opacity: 0.5;"></i>
+                    <p style="margin-top: 15px; color: #fff;">Chọn địa điểm để xem dự báo mưa</p>
+                </div>
+            `;
+            rainNextUpdate.style.display = 'none';
+        }
+    });
+
+    // Khởi tạo
+    await loadRainLocations();
+    
+    // Lấy vị trí đã định vị từ current-city
+    const currentCityName = getCurrentCityName();
+    let defaultLocationId = null;
+    
+    if (currentCityName) {
+        const foundLocation = await searchLocationByName(currentCityName);
+        if (foundLocation) {
+            defaultLocationId = foundLocation.id;
+            console.log(`[Rain] Đã tìm thấy vị trí định vị: ${foundLocation.city_name_vn || foundLocation.city_name} (ID: ${defaultLocationId})`);
+        }
+    }
+    
+    if (!defaultLocationId) {
+        defaultLocationId = 30;
+        console.log('[Rain] Không tìm thấy vị trí đã định vị, sử dụng mặc định TP.HCM');
+    }
+    
+    rainLocationSelect.value = defaultLocationId;
+    loadRainForecast(defaultLocationId);
 });
 </script>
 </body>
