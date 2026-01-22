@@ -1,5 +1,6 @@
 import os
 import sys
+import argparse
 import numpy as np
 import pandas as pd
 import joblib
@@ -204,8 +205,112 @@ def predict_dual(province_name):
         print(f"Loi {province_name}: {e}")
 
 
+def predict_for_date(province_name, target_date):
+    """Predict shortwave radiation for 00:00..23:00 of a specific date."""
+    past_csv = DATA_DIR / f"{province_name}.csv"
+    future_csv = FUTURE_DIR / f"{province_name}.csv"
+    model_path = MODEL_DIR / f"{province_name}.keras"
+    scaler_x_path = MODEL_DIR / f"scaler_X_{province_name}.pkl"
+    scaler_y_path = MODEL_DIR / f"scaler_Y_{province_name}.pkl"
+
+    if not past_csv.exists() or not model_path.exists():
+        print(f"Loi: Thieu file cho {province_name}")
+        return
+
+    try:
+        model = load_model(model_path)
+        scaler_X = joblib.load(scaler_x_path)
+        scaler_Y = joblib.load(scaler_y_path)
+
+        df_past_raw = pd.read_csv(past_csv)
+        df_past, exog_cols = process_features_for_prediction(df_past_raw, province_name)
+        if len(df_past) < SEQ_LENGTH:
+            return
+
+        # Build target 24h timeline for the requested date
+        start_pred_time = pd.Timestamp(target_date)  # 00:00
+        end_pred_time = start_pred_time + pd.Timedelta(hours=23)
+
+        df_future_raw = pd.DataFrame()
+        if future_csv.exists():
+            try:
+                df_future_raw = pd.read_csv(future_csv)
+                t_col = df_future_raw.columns[0]
+                df_future_raw[t_col] = pd.to_datetime(df_future_raw[t_col])
+                # Ensure cache contains the target date fully
+                mask_date = df_future_raw[t_col].dt.date == target_date
+                if mask_date.sum() < 24:
+                    df_future_raw = pd.DataFrame()
+            except Exception:
+                df_future_raw = pd.DataFrame()
+
+        if df_future_raw.empty:
+            lat, lon = PROVINCE_COORDINATES[province_name]
+            df_future_raw = fetch_weather_forecast(lat, lon, start_pred_time.date(), start_pred_time.date())
+            if not df_future_raw.empty:
+                df_future_raw.to_csv(future_csv, index=False)
+
+        if df_future_raw.empty:
+            return
+
+        t_col = df_future_raw.columns[0]
+        df_future_raw[t_col] = pd.to_datetime(df_future_raw[t_col])
+        mask = (df_future_raw[t_col] >= start_pred_time) & (df_future_raw[t_col] <= end_pred_time)
+        df_future_target = df_future_raw.loc[mask].copy()
+
+        # Some APIs may include more than 24 rows due to DST/timezone quirks; force 24 hours
+        df_future_target = df_future_target.sort_values(t_col).head(FORECAST_HORIZON)
+
+        if len(df_future_target) < FORECAST_HORIZON:
+            return
+
+        future_timeline = df_future_target[t_col].reset_index(drop=True)
+
+        feature_cols = ['shortwave_radiation'] + exog_cols + ['hour_sin', 'hour_cos', 'month_sin', 'month_cos',
+                                                              'wet_season', 'solar_elevation']
+
+        last_seq = df_past.tail(SEQ_LENGTH)[feature_cols].values.astype('float32')
+        input_past = np.expand_dims(scaler_X.transform(last_seq), axis=0)
+
+        df_future_processed, _ = process_features_for_prediction(df_future_target, province_name)
+        future_req_cols = exog_cols + ['hour_sin', 'hour_cos', 'month_sin', 'month_cos', 'wet_season',
+                                       'solar_elevation']
+        future_vals = df_future_processed[future_req_cols].values.astype('float32')
+
+        future_full_scaled = scaler_X.transform(np.hstack([np.zeros((FORECAST_HORIZON, 1)), future_vals]))
+        input_future = np.expand_dims(future_full_scaled[:, 1:], axis=0)
+
+        pred_scaled = model.predict([input_past, input_future], verbose=0)
+        pred_values = scaler_Y.inverse_transform(pred_scaled.reshape(-1, 1)).flatten()
+        pred_values = np.maximum(pred_values, 0)
+
+        night_mask = df_future_processed['solar_elevation'].values <= 0
+        pred_values[night_mask] = 0.0
+
+        result_df = pd.DataFrame({'Time': future_timeline, 'Radiation_Forecast': pred_values, 'Province': province_name})
+        result_df.to_csv(RESULT_DIR / f"forecast_{province_name}.csv", index=False)
+        print(f"Hoan tat: {province_name} ({target_date})")
+
+    except Exception as e:
+        print(f"Loi {province_name}: {e}")
+
+
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        predict_dual(sys.argv[1])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('province', nargs='?', help='Ten tinh (vd: Ha_Noi)')
+    parser.add_argument('--date', dest='date', help='YYYY-MM-DD (predict 00-23h of that day)')
+    args = parser.parse_args()
+
+    if not args.province:
+        print("Cach dung: python predict_solar_lstm_34.py <Ten_Tinh> [--date YYYY-MM-DD]")
+        raise SystemExit(1)
+
+    if args.date:
+        try:
+            target_date = pd.to_datetime(args.date).date()
+        except Exception:
+            print("Sai dinh dang --date, dung YYYY-MM-DD")
+            raise SystemExit(1)
+        predict_for_date(args.province, target_date)
     else:
-        print("Cach dung: python predict_solar_lstm_34.py <Ten_Tinh>")
+        predict_dual(args.province)

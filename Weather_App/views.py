@@ -30,12 +30,12 @@ from django.contrib.auth.decorators import login_required
 from .forms import UserUpdateForm, ProfileUpdateForm
 from django.shortcuts import redirect
 
-from .models import Location, CurrentWeatherCache, HourlyForecast, DailyForecast, WeatherAlert
+from .models import Location, CurrentWeatherCache, HourlyForecast, DailyForecast, WeatherAlert, SolarForecast
 from .outfit_advisor import DBOutfitAdvisor
 from .serializers import (
     LocationSerializer, FeaturedCitySerializer, HourlyForecastSerializer, DailyForecastSerializer
 )
-from .services import MeteoAPIService, ForecastService
+from .services import MeteoAPIService, ForecastService, SOLAR_LOCATION_TO_PROVINCE
 import subprocess
 import pandas as pd
 from pathlib import Path
@@ -75,6 +75,18 @@ def get_location_search(request):
         return Response({"error": "Không tìm thấy tỉnh/thành phố"},
                         status=status.HTTP_404_NOT_FOUND)
 
+    serializer = LocationSerializer(locations, many=True)
+    return Response(serializer.data)
+
+
+# API LẤY TẤT CẢ TỈNH/THÀNH PHỐ (34 tỉnh)
+@api_view(['GET'])
+def get_all_locations(request):
+    """
+    API lấy danh sách tất cả 34 tỉnh/thành phố
+    GET /api/weather/locations/
+    """
+    locations = Location.objects.filter(country_code='VN').order_by('city_name')
     serializer = LocationSerializer(locations, many=True)
     return Response(serializer.data)
 
@@ -156,180 +168,49 @@ def get_outfit_advice(request):
         return Response({'error': 'Lỗi xử lý gợi ý'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# Mapping location ID sang tên tỉnh trong file predict_solar_lstm_34.py
-LOCATION_TO_PROVINCE = {
-    1: "An_Giang",
-    2: "Bac_Ninh",
-    3: "Ca_Mau",
-    4: "Can_Tho",
-    5: "Cao_Bang",
-    6: "Da_Nang",
-    7: "Dak_Lak",
-    8: "Dien_Bien",
-    9: "Dong_Nai",
-    10: "Dong_Thap",
-    11: "Ha_Noi",
-    12: "Gia_Lai",
-    13: "Hai_Phong",
-    14: "Ha_Tinh",
-    15: "Khanh_Hoa",
-    16: "Lam_Dong",
-    17: "Lang_Son",
-    18: "Lao_Cai",
-    19: "Lai_Chau",
-    20: "Nghe_An",
-    21: "Ninh_Binh",
-    22: "Phu_Tho",
-    23: "Quang_Ngai",
-    24: "Quang_Ninh",
-    25: "Quang_Tri",
-    26: "Son_La",
-    27: "Tay_Ninh",
-    28: "Thai_Nguyen",
-    29: "Hue",
-    30: "TP_Ho_Chi_Minh",
-    31: "Thanh_Hoa",
-    32: "Tuyen_Quang",
-    33: "Vinh_Long",
-    34: "Hung_Yen",
-}
-
-
 @api_view(['GET'])
 def get_solar_radiation(request):
     """
     API trả về dự báo bức xạ mặt trời cho tỉnh/thành
     URL: /api/weather/solar/?location_id=1
-    
+
     Nếu chưa có dữ liệu, sẽ tự động chạy predict_solar_lstm_34.py
     """
     location_id = request.query_params.get('location_id')
-    
+
     if not location_id:
         return Response({'error': 'Thiếu location_id'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     try:
         location_id = int(location_id)
         location = get_object_or_404(Location, id=location_id)
-        
+
         # Lấy tên tỉnh từ mapping
-        province_name = LOCATION_TO_PROVINCE.get(location_id)
-        
+        province_name = SOLAR_LOCATION_TO_PROVINCE.get(location_id)
+
         if not province_name:
             return Response({
                 'status': 'error',
                 'error': f'Chưa hỗ trợ dự báo bức xạ cho tỉnh này (ID: {location_id})'
             }, status=status.HTTP_404_NOT_FOUND)
-        
-        # Đường dẫn file kết quả
-        BASE_DIR = Path(__file__).resolve().parent.parent
-        RESULT_DIR = BASE_DIR / "Weather_AI" / "results_train_shortwave_radiation_lstm"
-        forecast_file = RESULT_DIR / f"forecast_{province_name}.csv"
-        
-        # Kiểm tra file có tồn tại và còn mới không (< 1 giờ)
-        need_predict = True
-        if forecast_file.exists():
-            import os
-            file_mtime = os.path.getmtime(forecast_file)
-            file_age_hours = (timezone.now().timestamp() - file_mtime) / 3600
-            if file_age_hours < 1:  # File còn mới (< 1 giờ)
-                need_predict = False
-        
-        # Nếu cần predict lại
-        if need_predict:
-            print(f"[SOLAR] Chạy predict cho {province_name}...")
-            script_path = BASE_DIR / "Weather_AI" / "predict_solar_lstm_34.py"
-            
-            try:
-                result = subprocess.run(
-                    ['python', str(script_path), province_name],
-                    capture_output=True,
-                    text=True,
-                    timeout=60,  # Timeout 60 giây
-                    cwd=str(BASE_DIR / "Weather_AI")
-                )
-                
-                if result.returncode != 0:
-                    print(f"[SOLAR] Lỗi predict: {result.stderr}")
-                    return Response({
-                        'status': 'error',
-                        'error': 'Không thể dự báo bức xạ',
-                        'detail': result.stderr
-                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                    
-                print(f"[SOLAR] Predict thành công: {result.stdout}")
-                
-            except subprocess.TimeoutExpired:
-                return Response({
-                    'status': 'error',
-                    'error': 'Timeout khi dự báo bức xạ'
-                }, status=status.HTTP_504_GATEWAY_TIMEOUT)
-            except Exception as e:
-                print(f"[SOLAR] Lỗi subprocess: {e}")
-                return Response({
-                    'status': 'error', 
-                    'error': str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        # Đọc file kết quả
-        if not forecast_file.exists():
-            return Response({
-                'status': 'error',
-                'error': 'Không tìm thấy file dự báo'
-            }, status=status.HTTP_404_NOT_FOUND)
-        
-        df = pd.read_csv(forecast_file)
-        
-        # ===== LƯU DỮ LIỆU BỨC XẠ VÀO DATABASE =====
-        saved_count = 0
-        for _, row in df.iterrows():
-            try:
-                forecast_time = pd.to_datetime(row['Time'])
-                radiation_value = float(row['Radiation_Forecast'])
-                
-                # Kiểm tra xem bản ghi HourlyForecast đã tồn tại chưa
-                existing_forecast = HourlyForecast.objects.filter(
-                    location=location,
-                    forecast_time=forecast_time
-                ).first()
-                
-                if existing_forecast:
-                    # Nếu đã tồn tại, chỉ cập nhật shortwave_radiation
-                    existing_forecast.shortwave_radiation = radiation_value
-                    existing_forecast.save(update_fields=['shortwave_radiation', 'updated_at'])
-                    saved_count += 1
-                else:
-                    # Nếu chưa tồn tại, tạo mới với temperature mặc định = 0
-                    # (Temperature sẽ được cập nhật sau khi gọi forecast API)
-                    HourlyForecast.objects.create(
-                        location=location,
-                        forecast_time=forecast_time,
-                        temperature=0,  # Giá trị tạm, sẽ được cập nhật sau
-                        shortwave_radiation=radiation_value
-                    )
-                    saved_count += 1
-                    
-            except Exception as e:
-                print(f"[SOLAR] Lỗi lưu bản ghi {row['Time']}: {e}")
-                continue
-        
-        print(f"[SOLAR] Đã lưu {saved_count}/{len(df)} bản ghi bức xạ vào DB cho {province_name}")
-        
-        # Tính toán tổng kết
-        total_radiation = df['Radiation_Forecast'].sum()
-        avg_radiation = df['Radiation_Forecast'].mean()
-        max_radiation = df['Radiation_Forecast'].max()
-        
-        # Tính số giờ nắng (bức xạ > 100 W/m²)
-        sunshine_hours = len(df[df['Radiation_Forecast'] > 100])
-        
+
+        # Lấy / refresh dự báo từ DB (mỗi lần refresh sẽ xoá + tạo lại 0-23h của ngày hôm đó)
+        target_date = timezone.localdate()
+        forecasts = ForecastService.get_or_refresh_solar_daily(location, target_date=target_date, max_age_hours=1)
+
+        values = [f.shortwave_radiation or 0 for f in forecasts]
+        total_radiation = sum(values)
+        avg_radiation = (total_radiation / len(values)) if values else 0
+        max_radiation = max(values) if values else 0
+        sunshine_hours = len([v for v in values if v > 100])
+
         # Ước tính sản lượng điện mặt trời (giả sử panel 5kW, hiệu suất 15%)
         # kWh = (W/m² * m² * hiệu suất * giờ) / 1000
         # Giả sử 20m² panel, hiệu suất 18%
         panel_area = 20  # m²
         efficiency = 0.18
         estimated_kwh = (total_radiation * panel_area * efficiency) / 1000
-        
+
         # Đánh giá mức độ
         if avg_radiation > 400:
             rating = "Rất tốt"
@@ -343,9 +224,14 @@ def get_solar_radiation(request):
         else:
             rating = "Thấp"
             rating_color = "low"
-        
-        # Trả về dữ liệu
-        hourly_data = df.to_dict('records')
+
+        # Trả về dữ liệu (giữ format gần giống CSV: Time + Radiation_Forecast)
+        hourly_data = []
+        for f in forecasts:
+            hourly_data.append({
+                'Time': timezone.localtime(f.forecast_time).strftime('%Y-%m-%d %H:%M:%S'),
+                'Radiation_Forecast': float(f.shortwave_radiation or 0),
+            })
         
         return Response({
             'status': 'success',
@@ -653,3 +539,256 @@ def profile_view(request):
         'profile': profile  # Truyền profile để hiển thị lat/lon dạng text (read-only)
     }
     return render(request, 'registration/profile.html', context)
+
+
+# API CẢNH BÁO THỜI TIẾT CỰC ĐOAN
+@api_view(['GET'])
+def get_weather_alerts(request):
+    """
+    API lấy cảnh báo thời tiết cực đoan - Đọc từ database WeatherAlert
+    GET /api/weather/alerts/?location_id=X
+    """
+    from .weather_alerts import get_weather_alerts as fetch_alerts
+
+    location_id = request.GET.get('location_id')
+    if not location_id:
+        return Response({
+            'status': 'error',
+            'error': 'Thiếu location_id'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        location = Location.objects.get(id=location_id)
+        # Truyền location object để có thể lưu/đọc từ database
+        result = fetch_alerts(
+            location.latitude,
+            location.longitude,
+            location_obj=location
+        )
+        return Response(result)
+    except Location.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'error': 'Không tìm thấy địa điểm'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# API GỢI Ý TRANG PHỤC
+@api_view(['GET'])
+def get_outfit_advice(request):
+    """
+    API gợi ý trang phục theo thời tiết
+    GET /api/weather/outfit/?location_id=X
+    """
+    location_id = request.GET.get('location_id')
+    if not location_id:
+        return Response({
+            'status': 'error',
+            'error': 'Thiếu location_id'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        location = Location.objects.get(id=location_id)
+
+        # Sử dụng DBOutfitAdvisor để lấy gợi ý
+        from .outfit_advisor import DBOutfitAdvisor
+        advisor = DBOutfitAdvisor(location_id=location_id)
+        advice = advisor.get_advice()
+
+        return Response({
+            'status': 'success',
+            'advice': advice
+        })
+
+    except Location.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'error': 'Không tìm thấy địa điểm'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# API DỰ BÁO BỨC XẠ MẶT TRỜI
+@api_view(['GET'])
+def get_solar_radiation(request):
+    """
+    API dự báo bức xạ mặt trời và năng lượng điện mặt trời
+    GET /api/weather/solar/?location_id=X
+    """
+    location_id = request.GET.get('location_id')
+    if not location_id:
+        return Response({
+            'status': 'error',
+            'error': 'Thiếu location_id'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        location = Location.objects.get(id=location_id)
+
+        # Lấy dữ liệu hourly forecast có shortwave_radiation
+        from .models import HourlyForecast
+        from django.utils import timezone
+        from datetime import timedelta
+
+        now = timezone.localtime()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + timedelta(days=1)
+
+        forecasts = HourlyForecast.objects.filter(
+            location=location,
+            forecast_time__gte=today_start,
+            forecast_time__lt=today_end,
+            shortwave_radiation__isnull=False
+        ).order_by('forecast_time')
+
+        if not forecasts.exists():
+            # Fallback: ước tính từ Open-Meteo
+            import requests
+            url = "https://api.open-meteo.com/v1/forecast"
+            params = {
+                'latitude': location.latitude,
+                'longitude': location.longitude,
+                'hourly': 'shortwave_radiation',
+                'timezone': 'Asia/Ho_Chi_Minh',
+                'forecast_days': 1
+            }
+
+            response = requests.get(url, params=params, timeout=10)
+            if response.ok:
+                data = response.json()
+                hourly_radiation = data['hourly']['shortwave_radiation']
+
+                # Tính toán
+                avg_radiation = sum([r for r in hourly_radiation if r > 0]) / len([r for r in hourly_radiation if r > 0]) if any(r > 0 for r in hourly_radiation) else 0
+                max_radiation = max(hourly_radiation)
+                sunshine_hours = sum(1 for r in hourly_radiation if r > 100)
+
+                # Ước tính kWh (giả sử hệ thống 1kW)
+                # kWh = (tổng bức xạ W/m² * diện tích m² * hiệu suất) / 1000
+                # Đơn giản: kWh ≈ (avg_radiation * sunshine_hours) / 1000
+                estimated_kwh = (avg_radiation * sunshine_hours) / 1000
+
+                # Đánh giá
+                if avg_radiation >= 600:
+                    rating = "Xuất sắc"
+                    rating_color = "rating-excellent"
+                elif avg_radiation >= 400:
+                    rating = "Tốt"
+                    rating_color = "rating-good"
+                elif avg_radiation >= 200:
+                    rating = "Trung bình"
+                    rating_color = "rating-medium"
+                else:
+                    rating = "Thấp"
+                    rating_color = "rating-low"
+
+                return Response({
+                    'status': 'success',
+                    'summary': {
+                        'avg_radiation_w': avg_radiation,
+                        'max_radiation_w': max_radiation,
+                        'sunshine_hours': sunshine_hours,
+                        'estimated_kwh': estimated_kwh,
+                        'rating': rating,
+                        'rating_color': rating_color
+                    },
+                    'hourly': hourly_radiation
+                })
+            else:
+                return Response({
+                    'status': 'error',
+                    'error': 'Không có dữ liệu bức xạ mặt trời'
+                }, status=status.HTTP_404_NOT_FOUND)
+
+        # Có dữ liệu từ database
+        radiation_values = [f.shortwave_radiation for f in forecasts]
+        avg_radiation = sum([r for r in radiation_values if r > 0]) / len([r for r in radiation_values if r > 0]) if any(r > 0 for r in radiation_values) else 0
+        max_radiation = max(radiation_values)
+        sunshine_hours = sum(1 for r in radiation_values if r > 100)
+        estimated_kwh = (avg_radiation * sunshine_hours) / 1000
+
+        if avg_radiation >= 600:
+            rating = "Xuất sắc"
+            rating_color = "rating-excellent"
+        elif avg_radiation >= 400:
+            rating = "Tốt"
+            rating_color = "rating-good"
+        elif avg_radiation >= 200:
+            rating = "Trung bình"
+            rating_color = "rating-medium"
+        else:
+            rating = "Thấp"
+            rating_color = "rating-low"
+
+        return Response({
+            'status': 'success',
+            'summary': {
+                'avg_radiation_w': avg_radiation,
+                'max_radiation_w': max_radiation,
+                'sunshine_hours': sunshine_hours,
+                'estimated_kwh': estimated_kwh,
+                'rating': rating,
+                'rating_color': rating_color
+            },
+            'hourly': radiation_values
+        })
+
+    except Location.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'error': 'Không tìm thấy địa điểm'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# API DỰ BÁO MƯA MINUTELY (60 PHÚT TỚI)
+@api_view(['GET'])
+def get_rain_forecast(request):
+    """
+    API dự báo mưa minutely cho 60 phút tới
+    GET /api/weather/rain-forecast/?location_id=X
+    Tự động refresh mỗi 15 phút
+    """
+    location_id = request.GET.get('location_id')
+    if not location_id:
+        return Response({
+            'status': 'error',
+            'error': 'Thiếu location_id'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        location = Location.objects.get(id=location_id)
+
+        # Gọi rain forecast service (với cache 10 phút)
+        from .rain_forecast import get_rain_forecast_minutely
+        result = get_rain_forecast_minutely(
+            location.latitude,
+            location.longitude,
+            location_obj=location  # Truyền location để sử dụng cache
+        )
+
+        return Response(result)
+
+    except Location.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'error': 'Không tìm thấy địa điểm'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

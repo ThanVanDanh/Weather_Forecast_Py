@@ -26,6 +26,14 @@ urlpatterns = [
     # GET /api/weather/forecast/?location_id=X
     path('forecast/', views.get_ai_forecast, name='api_ai_forecast'),
 
+    # 3.6. API cảnh báo thời tiết cực đoan
+    # GET /api/weather/alerts/?location_id=X
+    path('alerts/', views.get_weather_alerts, name='api_weather_alerts'),
+
+    # 3.7. API dự báo mưa minutely (60 phút tới)
+    # GET /api/weather/rain-forecast/?location_id=X
+    path('rain-forecast/', views.get_rain_forecast, name='api_rain_forecast'),
+
     # 4. URL cho trang chi tiết tỉnh
     # Sẽ khớp với các URL như /tinh/ha-noi/, /tinh/tuyen-quang/
     path('tinh/<slug:slug>/', views.province_view, name='province_detail'),
