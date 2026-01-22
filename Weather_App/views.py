@@ -30,12 +30,12 @@ from django.contrib.auth.decorators import login_required
 from .forms import UserUpdateForm, ProfileUpdateForm
 from django.shortcuts import redirect
 
-from .models import Location, CurrentWeatherCache, HourlyForecast, DailyForecast, WeatherAlert
+from .models import Location, CurrentWeatherCache, HourlyForecast, DailyForecast, WeatherAlert, SolarForecast
 from .outfit_advisor import DBOutfitAdvisor
 from .serializers import (
     LocationSerializer, FeaturedCitySerializer, HourlyForecastSerializer, DailyForecastSerializer
 )
-from .services import MeteoAPIService, ForecastService
+from .services import MeteoAPIService, ForecastService, SOLAR_LOCATION_TO_PROVINCE
 import subprocess
 import pandas as pd
 from pathlib import Path
@@ -156,45 +156,6 @@ def get_outfit_advice(request):
         return Response({'error': 'Lỗi xử lý gợi ý'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# Mapping location ID sang tên tỉnh trong file predict_solar_lstm_34.py
-LOCATION_TO_PROVINCE = {
-    1: "An_Giang",
-    2: "Bac_Ninh",
-    3: "Ca_Mau",
-    4: "Can_Tho",
-    5: "Cao_Bang",
-    6: "Da_Nang",
-    7: "Dak_Lak",
-    8: "Dien_Bien",
-    9: "Dong_Nai",
-    10: "Dong_Thap",
-    11: "Ha_Noi",
-    12: "Gia_Lai",
-    13: "Hai_Phong",
-    14: "Ha_Tinh",
-    15: "Khanh_Hoa",
-    16: "Lam_Dong",
-    17: "Lang_Son",
-    18: "Lao_Cai",
-    19: "Lai_Chau",
-    20: "Nghe_An",
-    21: "Ninh_Binh",
-    22: "Phu_Tho",
-    23: "Quang_Ngai",
-    24: "Quang_Ninh",
-    25: "Quang_Tri",
-    26: "Son_La",
-    27: "Tay_Ninh",
-    28: "Thai_Nguyen",
-    29: "Hue",
-    30: "TP_Ho_Chi_Minh",
-    31: "Thanh_Hoa",
-    32: "Tuyen_Quang",
-    33: "Vinh_Long",
-    34: "Hung_Yen",
-}
-
-
 @api_view(['GET'])
 def get_solar_radiation(request):
     """
@@ -213,7 +174,7 @@ def get_solar_radiation(request):
         location = get_object_or_404(Location, id=location_id)
         
         # Lấy tên tỉnh từ mapping
-        province_name = LOCATION_TO_PROVINCE.get(location_id)
+        province_name = SOLAR_LOCATION_TO_PROVINCE.get(location_id)
         
         if not province_name:
             return Response({
@@ -221,107 +182,15 @@ def get_solar_radiation(request):
                 'error': f'Chưa hỗ trợ dự báo bức xạ cho tỉnh này (ID: {location_id})'
             }, status=status.HTTP_404_NOT_FOUND)
         
-        # Đường dẫn file kết quả
-        BASE_DIR = Path(__file__).resolve().parent.parent
-        RESULT_DIR = BASE_DIR / "Weather_AI" / "results_train_shortwave_radiation_lstm"
-        forecast_file = RESULT_DIR / f"forecast_{province_name}.csv"
-        
-        # Kiểm tra file có tồn tại và còn mới không (< 1 giờ)
-        need_predict = True
-        if forecast_file.exists():
-            import os
-            file_mtime = os.path.getmtime(forecast_file)
-            file_age_hours = (timezone.now().timestamp() - file_mtime) / 3600
-            if file_age_hours < 1:  # File còn mới (< 1 giờ)
-                need_predict = False
-        
-        # Nếu cần predict lại
-        if need_predict:
-            print(f"[SOLAR] Chạy predict cho {province_name}...")
-            script_path = BASE_DIR / "Weather_AI" / "predict_solar_lstm_34.py"
-            
-            try:
-                result = subprocess.run(
-                    ['python', str(script_path), province_name],
-                    capture_output=True,
-                    text=True,
-                    timeout=60,  # Timeout 60 giây
-                    cwd=str(BASE_DIR / "Weather_AI")
-                )
-                
-                if result.returncode != 0:
-                    print(f"[SOLAR] Lỗi predict: {result.stderr}")
-                    return Response({
-                        'status': 'error',
-                        'error': 'Không thể dự báo bức xạ',
-                        'detail': result.stderr
-                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                    
-                print(f"[SOLAR] Predict thành công: {result.stdout}")
-                
-            except subprocess.TimeoutExpired:
-                return Response({
-                    'status': 'error',
-                    'error': 'Timeout khi dự báo bức xạ'
-                }, status=status.HTTP_504_GATEWAY_TIMEOUT)
-            except Exception as e:
-                print(f"[SOLAR] Lỗi subprocess: {e}")
-                return Response({
-                    'status': 'error', 
-                    'error': str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        # Đọc file kết quả
-        if not forecast_file.exists():
-            return Response({
-                'status': 'error',
-                'error': 'Không tìm thấy file dự báo'
-            }, status=status.HTTP_404_NOT_FOUND)
-        
-        df = pd.read_csv(forecast_file)
-        
-        # ===== LƯU DỮ LIỆU BỨC XẠ VÀO DATABASE =====
-        saved_count = 0
-        for _, row in df.iterrows():
-            try:
-                forecast_time = pd.to_datetime(row['Time'])
-                radiation_value = float(row['Radiation_Forecast'])
-                
-                # Kiểm tra xem bản ghi HourlyForecast đã tồn tại chưa
-                existing_forecast = HourlyForecast.objects.filter(
-                    location=location,
-                    forecast_time=forecast_time
-                ).first()
-                
-                if existing_forecast:
-                    # Nếu đã tồn tại, chỉ cập nhật shortwave_radiation
-                    existing_forecast.shortwave_radiation = radiation_value
-                    existing_forecast.save(update_fields=['shortwave_radiation', 'updated_at'])
-                    saved_count += 1
-                else:
-                    # Nếu chưa tồn tại, tạo mới với temperature mặc định = 0
-                    # (Temperature sẽ được cập nhật sau khi gọi forecast API)
-                    HourlyForecast.objects.create(
-                        location=location,
-                        forecast_time=forecast_time,
-                        temperature=0,  # Giá trị tạm, sẽ được cập nhật sau
-                        shortwave_radiation=radiation_value
-                    )
-                    saved_count += 1
-                    
-            except Exception as e:
-                print(f"[SOLAR] Lỗi lưu bản ghi {row['Time']}: {e}")
-                continue
-        
-        print(f"[SOLAR] Đã lưu {saved_count}/{len(df)} bản ghi bức xạ vào DB cho {province_name}")
-        
-        # Tính toán tổng kết
-        total_radiation = df['Radiation_Forecast'].sum()
-        avg_radiation = df['Radiation_Forecast'].mean()
-        max_radiation = df['Radiation_Forecast'].max()
-        
-        # Tính số giờ nắng (bức xạ > 100 W/m²)
-        sunshine_hours = len(df[df['Radiation_Forecast'] > 100])
+        # Lấy / refresh dự báo từ DB (mỗi lần refresh sẽ xoá + tạo lại 0-23h của ngày hôm đó)
+        target_date = timezone.localdate()
+        forecasts = ForecastService.get_or_refresh_solar_daily(location, target_date=target_date, max_age_hours=1)
+
+        values = [f.shortwave_radiation or 0 for f in forecasts]
+        total_radiation = sum(values)
+        avg_radiation = (total_radiation / len(values)) if values else 0
+        max_radiation = max(values) if values else 0
+        sunshine_hours = len([v for v in values if v > 100])
         
         # Ước tính sản lượng điện mặt trời (giả sử panel 5kW, hiệu suất 15%)
         # kWh = (W/m² * m² * hiệu suất * giờ) / 1000
@@ -344,8 +213,13 @@ def get_solar_radiation(request):
             rating = "Thấp"
             rating_color = "low"
         
-        # Trả về dữ liệu
-        hourly_data = df.to_dict('records')
+        # Trả về dữ liệu (giữ format gần giống CSV: Time + Radiation_Forecast)
+        hourly_data = []
+        for f in forecasts:
+            hourly_data.append({
+                'Time': timezone.localtime(f.forecast_time).strftime('%Y-%m-%d %H:%M:%S'),
+                'Radiation_Forecast': float(f.shortwave_radiation or 0),
+            })
         
         return Response({
             'status': 'success',
