@@ -4,7 +4,8 @@
 
 /* CSS Variables */
 :root {
-    --care-bg-gradient: linear-gradient(135deg, #1b2735 0%, #090a0f 50%, #0d1b2a 100%);
+    /*--care-bg-gradient: linear-gradient(135deg, #1b2735 0%, #090a0f 50%, #0d1b2a 100%);*/
+    --care-bg-gradient:#0b0f16;
     --care-glass-bg: rgba(255, 255, 255, 0.05);
     --care-glass-border: rgba(255, 255, 255, 0.1);
     --care-glass-hover: rgba(255, 255, 255, 0.1);
@@ -23,11 +24,31 @@
 /* ============================================
    MAIN PAGE LAYOUT
    ============================================ */
-.customer-care-page {
-    background: var(--care-bg-gradient);
-    min-height: 100vh;
-    color: var(--care-text-primary);
+/*.customer-care-page {*/
+/*    background: var(--care-bg-gradient);*/
+/*    min-height: 100vh;*/
+/*    color: var(--care-text-primary);*/
+/*}*/
+#threejs-background {
+    position: fixed; /* Cố định vị trí để không cuộn theo trang */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none; /* Cho phép chuột click xuyên qua nền vào nội dung */
+    background: #0b0f16; /* Màu nền gốc của vũ trụ */
 }
+
+/* Cập nhật: Xóa hoặc ẩn màu nền cũ của body để lộ canvas */
+body {
+    margin: 0;
+    overflow-x: hidden;
+    background: transparent; /* Để trong suốt vì màu nền đã nằm ở #threejs-background */
+}
+ canvas {
+     display: block; /* Loại bỏ khoảng trắng mặc định */
+ }
 
 /* ============================================
    HERO SECTION
@@ -51,11 +72,7 @@
     z-index: 1;
 }
 
-#particles-container canvas {
-    display: block;
-    width: 100% !important;
-    height: 100% !important;
-}
+
 
 .hero-overlay {
     position: absolute;

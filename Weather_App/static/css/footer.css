@@ -4,19 +4,19 @@
     align-items: center;
     padding: 25px 60px;
     font-size: 15px;
-    color: #111;
+    color: #ffffff;
     border-top: 1px solid #eee;
 }
 
 .footer-center a {
     padding: 0 8px;
-    color: #111;
+    color: #ffffff;
     font-size: 18px;
 }
 
 .footer-right a {
     margin-left: 20px;
-    color: #111;
+    color: #ffffff;
     text-decoration: none;
 }
 

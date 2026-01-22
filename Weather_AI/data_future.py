@@ -156,7 +156,7 @@ if __name__ == "__main__":
             df.to_csv(save_path, index_label="time")
             # print(f"✔ {province}: {len(df)} dòng") # Tắt print đỡ rối màn hình
         except Exception as e:
-            print(f"❌ Lỗi {province}: {e}")
+            print(f" Lỗi {province}: {e}")
 
         # Nghỉ nhẹ
         time.sleep(random.uniform(1.0, 2.0))

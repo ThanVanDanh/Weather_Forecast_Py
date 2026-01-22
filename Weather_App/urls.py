@@ -78,4 +78,8 @@ urlpatterns = [
     # 7. URL cho trang chăm sóc khách hàng
     path('customer-care/', views.customer_care, name='customer_care'),
 
+    # API gợi ý trang phục
+    # GET /api/weather/outfit/?location_id=1
+    path('outfit/', views.get_outfit_advice, name='get_outfit_advice'),
+
 ]

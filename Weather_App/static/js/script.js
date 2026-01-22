@@ -308,29 +308,141 @@ function getWeatherStatusFromCode(code, isDay = 1) {
     if (code === null || code === undefined) return "--";
 
     switch (code) {
-        case 0: return isDay ? "Trời nắng" : "Trời quang đãng";
-        case 1: return isDay ? "Nắng nhẹ" : "Ít mây";
-        case 2: return isDay ? "Mây rải rác" : "Đêm có mây";
-        case 3: return "Nhiều mây";
-        case 45: case 48: return "Sương mù";
-        case 51: return "Mưa phùn nhẹ";
-        case 53: return "Mưa phùn vừa";
-        case 55: return "Mưa phùn dày";
-        case 56: case 57: return "Mưa phùn lạnh";
-        case 61: return "Mưa nhỏ";
-        case 63: return "Mưa vừa";
-        case 65: return "Mưa to";
-        case 66: case 67: return "Mưa lạnh";
-        case 71: return "Tuyết rơi nhẹ";
-        case 73: return "Tuyết rơi vừa";
-        case 75: return "Tuyết rơi dày";
-        case 77: return "Tuyết hạt";
-        case 80: return "Mưa rào nhẹ";
-        case 81: return "Mưa rào vừa";
-        case 82: return "Mưa rào to";
-        case 85: case 86: return "Mưa tuyết";
-        case 95: return "Có giông";
-        case 96: case 99: return "Giông mưa đá";
-        default: return "Có mây";
+        case 0:
+            return isDay ? "Trời nắng" : "Trời quang đãng";
+        case 1:
+            return isDay ? "Nắng nhẹ" : "Ít mây";
+        case 2:
+            return isDay ? "Mây rải rác" : "Đêm có mây";
+        case 3:
+            return "Nhiều mây";
+        case 45:
+        case 48:
+            return "Sương mù";
+        case 51:
+            return "Mưa phùn nhẹ";
+        case 53:
+            return "Mưa phùn vừa";
+        case 55:
+            return "Mưa phùn dày";
+        case 56:
+        case 57:
+            return "Mưa phùn lạnh";
+        case 61:
+            return "Mưa nhỏ";
+        case 63:
+            return "Mưa vừa";
+        case 65:
+            return "Mưa to";
+        case 66:
+        case 67:
+            return "Mưa lạnh";
+        case 71:
+            return "Tuyết rơi nhẹ";
+        case 73:
+            return "Tuyết rơi vừa";
+        case 75:
+            return "Tuyết rơi dày";
+        case 77:
+            return "Tuyết hạt";
+        case 80:
+            return "Mưa rào nhẹ";
+        case 81:
+            return "Mưa rào vừa";
+        case 82:
+            return "Mưa rào to";
+        case 85:
+        case 86:
+            return "Mưa tuyết";
+        case 95:
+            return "Có giông";
+        case 96:
+        case 99:
+            return "Giông mưa đá";
+        default:
+            return "Có mây";
     }
+}
+async function loadWeatherForLocation(locationId, cityName) {
+    try {
+        document.getElementById('current-city-name').innerText = `Thời tiết ${cityName}`;
+
+        // Reset ô lời khuyên cũ (nếu có)
+        const adviceDiv = document.getElementById('outfit-advice');
+        if (adviceDiv) adviceDiv.innerHTML = '<small>Đang tải gợi ý...</small>';
+
+        // GỌI 3 API SONG SONG: Hiện tại, Dự báo 5 ngày, Gợi ý trang phục
+        const [currentResp, forecastResp, outfitResp] = await Promise.all([
+            fetch(`/api/weather/current/?location_id=${locationId}`),
+            fetch(`/api/weather/forecast/?location_id=${locationId}`),
+            fetch(`/api/weather/outfit/?location_id=${locationId}`)
+        ]);
+
+        // 1. Xử lý Thời tiết hiện tại
+        if (currentResp.ok) {
+            const currentData = await currentResp.json();
+            updateCurrentWeatherDOM(currentData);
+        } else {
+             throw new Error('Không thể tải thời tiết hiện tại');
+        }
+
+        // 2. Xử lý Dự báo 5 ngày (AI)
+        if (forecastResp.ok) {
+            const forecastData = await forecastResp.json();
+            if (forecastData && forecastData.daily_forecast) {
+                updateDailyForecastDOM(forecastData.daily_forecast);
+            }
+        }
+
+        // 3. Xử lý Gợi ý trang phục (MỚI)
+        if (outfitResp.ok) {
+            const outfitData = await outfitResp.json();
+            displayOutfitAdvice(outfitData.advice);
+        } else {
+            console.warn("Chưa có gợi ý trang phục cho địa điểm này");
+            if (adviceDiv) adviceDiv.innerText = ""; // Xóa text "đang tải"
+        }
+
+    } catch (error) {
+        console.error("Lỗi tải dữ liệu:", error);
+        document.getElementById('current-city-name').innerText = `Lỗi tải ${cityName}`;
+    }
+}
+
+/**
+ * Hàm hiển thị lời khuyên lên giao diện
+ */
+function displayOutfitAdvice(adviceText) {
+    // Tìm khung chứa thông tin thời tiết chính
+    const detailsContainer = document.querySelector('.current-weather-card,.current-weather-card-province');
+    if (!detailsContainer) return;
+
+    // Tạo div chứa nếu chưa có
+    let adviceDiv = document.getElementById('outfit-advice');
+    if (!adviceDiv) {
+        adviceDiv = document.createElement('div');
+        adviceDiv.id = 'outfit-advice';
+        adviceDiv.className = 'mt-3 p-3 rounded text-center';
+        // Style inline để đảm bảo đẹp ngay cả khi chưa có CSS
+        adviceDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+        adviceDiv.style.backdropFilter = 'blur(5px)';
+        adviceDiv.style.marginTop = '15px';
+        adviceDiv.style.padding = '10px';
+        adviceDiv.style.borderRadius = '10px';
+        adviceDiv.style.borderLeft = '4px solid #ffc107'; // Màu vàng nổi bật
+        adviceDiv.style.color = '#fff';
+        adviceDiv.style.textShadow = '1px 1px 2px rgba(0,0,0,0.5)';
+
+        detailsContainer.appendChild(adviceDiv);
+    }
+
+    // Gắn nội dung
+    adviceDiv.innerHTML = `
+        <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 5px;">
+            🧥 Gợi ý trang phục
+        </div>
+        <div style="font-style: italic;">
+            "${adviceText}"
+        </div>
+    `;
 }

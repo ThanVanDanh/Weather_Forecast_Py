@@ -1,5 +1,5 @@
 :root {
-    --primary-green: linear-gradient(to bottom, #1b2735 0%, #090a0f 100%);
+    --primary-green:#0b0f16;
     --card-bg: #ffffff;
     --text-primary: #212529;
     --text-secondary: rgba(53, 51, 51, 0.94);
@@ -17,8 +17,8 @@
 body {
     font-family: Arial, sans-serif;
     /*background-color: #ffffff;*/
-      background: linear-gradient(to bottom, #1b2735 0%, #090a0f 100%);
-    color: var(--text-primary);
+      background: #0b0f16;
+    /*color: #ffffff;*/
     line-height: 1.5;
 }
 
@@ -47,7 +47,8 @@ body {
     overflow: hidden;
 
     /* QUAN TRỌNG: Thêm màu nền tối giống Apple Weather */
-    background: linear-gradient(to bottom, #1b2735 0%, #090a0f 100%);
+    /*background: linear-gradient(to bottom, #1b2735 0%, #090a0f 100%);*/
+    background: #0b0f16;
 }
 
 #rain-canvas-container {
@@ -319,6 +320,64 @@ body {
         gap: 15px;
     }
     .map-container iframe {
+
+    /* === OUTFIT WIDGET (nút hình nổi trên trang chủ) === */
+    .outfit-widget {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 9999;
+    }
+
+    .outfit-widget__button {
+        width: 64px;
+        height: 64px;
+        border-radius: 999px;
+        border: 0;
+        padding: 0;
+        background: var(--card-bg);
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        animation: outfit-bounce 1.6s ease-in-out infinite;
+    }
+
+    .outfit-widget__icon {
+        width: 44px;
+        height: 44px;
+        object-fit: contain;
+    }
+
+    .outfit-widget__panel {
+        position: absolute;
+        right: 0;
+        bottom: 76px;
+        width: min(320px, calc(100vw - 36px));
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 14px 16px;
+    }
+
+    .outfit-widget__title {
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .outfit-widget__text {
+        color: var(--text-secondary);
+        font-style: italic;
+    }
+
+    .outfit-widget.is-open .outfit-widget__button {
+        animation: none;
+    }
+
+    @keyframes outfit-bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+    }
         width: 100%;
     }
 }

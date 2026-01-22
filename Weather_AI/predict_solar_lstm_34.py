@@ -1,7 +1,10 @@
 import os
+import sys
 import numpy as np
 import pandas as pd
 import joblib
+import requests
+import time
 from pathlib import Path
 from tensorflow.keras.models import load_model
 
@@ -11,6 +14,7 @@ FUTURE_DIR = BASE_DIR / "data_future"
 MODEL_DIR = BASE_DIR / "models_solar_multi_provinces"
 RESULT_DIR = BASE_DIR / "results_train_shortwave_radiation_lstm"
 
+FUTURE_DIR.mkdir(exist_ok=True)
 RESULT_DIR.mkdir(exist_ok=True)
 
 SEQ_LENGTH = 72
@@ -21,7 +25,6 @@ EXOG_COLUMNS = [
     'temperature_2m', 'relative_humidity_2m',
     'cloud_cover', 'cloudcover',
     'precipitation', 'rain', 'wind_speed_10m'
-
 ]
 
 PROVINCE_COORDINATES = {
@@ -79,7 +82,6 @@ def process_features_for_prediction(df, province_name):
     df = df.copy()
     time_col = df.columns[0]
     df[time_col] = pd.to_datetime(df[time_col])
-
     df['hour'] = df[time_col].dt.hour
     df['month'] = df[time_col].dt.month
     df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
@@ -98,6 +100,31 @@ def process_features_for_prediction(df, province_name):
     return df, avail_exog
 
 
+def fetch_weather_forecast(lat, lon, start_date, end_date):
+    url = "https://api.open-meteo.com/v1/forecast"
+    fields = ["temperature_2m", "relative_humidity_2m", "cloudcover", "precipitation", "rain", "wind_speed_10m"]
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "start_date": start_date.strftime("%Y-%m-%d"),
+        "end_date": end_date.strftime("%Y-%m-%d"),
+        "hourly": ",".join(fields),
+        "timezone": "Asia/Bangkok"
+    }
+    try:
+        response = requests.get(url, params=params, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+        if "hourly" not in data: return pd.DataFrame()
+        df = pd.DataFrame(data["hourly"])
+        if "time" in df.columns: df.rename(columns={"time": "Time"}, inplace=True)
+        df["Time"] = pd.to_datetime(df["Time"])
+        if 'cloudcover' in df.columns: df['cloud_cover'] = df['cloudcover']
+        return df
+    except:
+        return pd.DataFrame()
+
+
 def predict_dual(province_name):
     past_csv = DATA_DIR / f"{province_name}.csv"
     future_csv = FUTURE_DIR / f"{province_name}.csv"
@@ -105,11 +132,9 @@ def predict_dual(province_name):
     scaler_x_path = MODEL_DIR / f"scaler_X_{province_name}.pkl"
     scaler_y_path = MODEL_DIR / f"scaler_Y_{province_name}.pkl"
 
-    if not past_csv.exists() or not future_csv.exists() or not model_path.exists():
-        print(f"️ Thiếu file cho {province_name}")
+    if not past_csv.exists() or not model_path.exists():
+        print(f"Loi: Thieu file cho {province_name}")
         return
-
-    print(f"Dự báo {province_name}...")
 
     try:
         model = load_model(model_path)
@@ -118,82 +143,69 @@ def predict_dual(province_name):
 
         df_past_raw = pd.read_csv(past_csv)
         df_past, exog_cols = process_features_for_prediction(df_past_raw, province_name)
-
-        if len(df_past) < SEQ_LENGTH:
-            print(f" {province_name}: Dữ liệu quá khứ không đủ {SEQ_LENGTH} dòng.")
-            return
+        if len(df_past) < SEQ_LENGTH: return
 
         last_past_time = df_past.iloc[-1, 0]
         start_pred_time = last_past_time + pd.Timedelta(hours=1)
         end_pred_time = last_past_time + pd.Timedelta(hours=FORECAST_HORIZON)
 
-        print(f" Data end: {last_past_time} -> Predict: {start_pred_time} đến {end_pred_time}")
+        df_future_raw = pd.DataFrame()
+        if future_csv.exists():
+            df_future_raw = pd.read_csv(future_csv)
+            t_col = df_future_raw.columns[0]
+            df_future_raw[t_col] = pd.to_datetime(df_future_raw[t_col])
+            if df_future_raw.empty or df_future_raw[t_col].min() > start_pred_time or df_future_raw[
+                t_col].max() < end_pred_time:
+                df_future_raw = pd.DataFrame()
 
-        feature_cols = ['shortwave_radiation'] + exog_cols + [
-            'hour_sin', 'hour_cos', 'month_sin', 'month_cos', 'wet_season',
-            'solar_elevation'
-        ]
+        if df_future_raw.empty:
+            lat, lon = PROVINCE_COORDINATES[province_name]
+            df_future_raw = fetch_weather_forecast(lat, lon, start_pred_time.date(),
+                                                   (end_pred_time + pd.Timedelta(days=1)).date())
+            if not df_future_raw.empty: df_future_raw.to_csv(future_csv, index=False)
+
+        if df_future_raw.empty: return
+
+        t_col = df_future_raw.columns[0]
+        df_future_raw[t_col] = pd.to_datetime(df_future_raw[t_col])
+        mask = (df_future_raw[t_col] >= start_pred_time) & (df_future_raw[t_col] <= end_pred_time)
+        df_future_target = df_future_raw.loc[mask].head(FORECAST_HORIZON).copy()
+
+        if len(df_future_target) < FORECAST_HORIZON: return
+
+        future_timeline = df_future_target[t_col].reset_index(drop=True)
+        feature_cols = ['shortwave_radiation'] + exog_cols + ['hour_sin', 'hour_cos', 'month_sin', 'month_cos',
+                                                              'wet_season', 'solar_elevation']
 
         last_seq = df_past.tail(SEQ_LENGTH)[feature_cols].values.astype('float32')
-        input_past_scaled = scaler_X.transform(last_seq)
-        input_past = np.expand_dims(input_past_scaled, axis=0)
-
-        # 3. Xử lý TƯƠNG LAI
-        df_future_raw = pd.read_csv(future_csv)
-        time_col_future = df_future_raw.columns[0]
-        df_future_raw[time_col_future] = pd.to_datetime(df_future_raw[time_col_future])
-
-        mask = (df_future_raw[time_col_future] >= start_pred_time) & (df_future_raw[time_col_future] <= end_pred_time)
-        df_future_target = df_future_raw.loc[mask].copy()
-
-        if len(df_future_target) < FORECAST_HORIZON:
-            print(f" Thiếu dữ liệu tương lai. Tìm thấy {len(df_future_target)} dòng.")
-            return
-
-        df_future_target = df_future_target.head(FORECAST_HORIZON)
-        future_timeline = df_future_target[time_col_future].reset_index(drop=True)
+        input_past = np.expand_dims(scaler_X.transform(last_seq), axis=0)
 
         df_future_processed, _ = process_features_for_prediction(df_future_target, province_name)
+        future_req_cols = exog_cols + ['hour_sin', 'hour_cos', 'month_sin', 'month_cos', 'wet_season',
+                                       'solar_elevation']
+        future_vals = df_future_processed[future_req_cols].values.astype('float32')
 
-        future_vals = df_future_processed[exog_cols + [
-            'hour_sin', 'hour_cos', 'month_sin', 'month_cos', 'wet_season',
-            'solar_elevation'
-        ]].values.astype('float32')
-
-
-        dummy_target = np.zeros((FORECAST_HORIZON, 1))
-        future_full_raw = np.hstack([dummy_target, future_vals])
-        future_full_scaled = scaler_X.transform(future_full_raw)
-
-        input_future_vals = future_full_scaled[:, 1:]
-        input_future = np.expand_dims(input_future_vals, axis=0)
+        future_full_scaled = scaler_X.transform(np.hstack([np.zeros((FORECAST_HORIZON, 1)), future_vals]))
+        input_future = np.expand_dims(future_full_scaled[:, 1:], axis=0)
 
         pred_scaled = model.predict([input_past, input_future], verbose=0)
         pred_values = scaler_Y.inverse_transform(pred_scaled.reshape(-1, 1)).flatten()
         pred_values = np.maximum(pred_values, 0)
 
-
-        future_elevations = df_future_processed['solar_elevation'].values
-
-        night_mask = future_elevations <= 0
-
+        night_mask = df_future_processed['solar_elevation'].values <= 0
         pred_values[night_mask] = 0.0
 
-        result_df = pd.DataFrame({
-            'Time': future_timeline,
-            'Radiation_Forecast': pred_values,
-            'Province': province_name
-        })
-
-        output_path = RESULT_DIR / f"forecast_{province_name}.csv"
-        result_df.to_csv(output_path, index=False)
-        print(f"  Xong: {output_path.name}")
+        result_df = pd.DataFrame(
+            {'Time': future_timeline, 'Radiation_Forecast': pred_values, 'Province': province_name})
+        result_df.to_csv(RESULT_DIR / f"forecast_{province_name}.csv", index=False)
+        print(f"Hoan tat: {province_name}")
 
     except Exception as e:
-        print(f" Lỗi {province_name}: {e}")
+        print(f"Loi {province_name}: {e}")
 
 
 if __name__ == "__main__":
-    files = list(DATA_DIR.glob("*.csv"))
-    for f in files:
-        predict_dual(f.stem)
+    if len(sys.argv) > 1:
+        predict_dual(sys.argv[1])
+    else:
+        print("Cach dung: python predict_solar_lstm_34.py <Ten_Tinh>")
