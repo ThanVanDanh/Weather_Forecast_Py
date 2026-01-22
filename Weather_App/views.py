@@ -82,6 +82,9 @@ def get_location_search(request):
 # API 2: LẤY THỜI TIẾT HIỆN TẠI (DÙNG CACHE)
 @api_view(['GET'])
 def get_current_weather(request):
+    import time
+    from django.db import OperationalError
+    
     location_id = request.query_params.get('location_id')
     location = get_object_or_404(Location, id=location_id)
 
@@ -97,11 +100,23 @@ def get_current_weather(request):
     new_data = service.fetch_current_weather()
 
     if new_data:
-        cache, _ = CurrentWeatherCache.objects.update_or_create(
-            location=location,
-            defaults={'data': new_data, 'last_updated': timezone.now()}
-        )
-        return Response(cache.data)
+        # Retry logic để xử lý database locked
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                cache, _ = CurrentWeatherCache.objects.update_or_create(
+                    location=location,
+                    defaults={'data': new_data, 'last_updated': timezone.now()}
+                )
+                return Response(cache.data)
+            except OperationalError as e:
+                if 'database is locked' in str(e) and attempt < max_retries - 1:
+                    wait_time = (attempt + 1) * 1.0  # Đợi 1s, 2s, 3s, 4s
+                    print(f"[RETRY] Database locked, waiting {wait_time}s... (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(wait_time)
+                else:
+                    print(f"[ERROR] Database locked after {max_retries} retries")
+                    raise  # Raise lại exception nếu hết retries hoặc lỗi khác
     else:
         return Response({"error": "Không thể lấy dữ liệu từ API"},
                         status=status.HTTP_503_SERVICE_UNAVAILABLE)
