@@ -7,11 +7,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    const DEFAULT_LOCATION_ID = 30; // TP.HCM
-    const DEFAULT_CITY_NAME = "Ho Chi Minh City";
 
-    // 1. Tải dữ liệu mặc định
-    loadWeatherForLocation(DEFAULT_LOCATION_ID, DEFAULT_CITY_NAME);
+    const DEFAULT_LOCATION_ID = 30; // TP.HCM
+
+    // 1. Lấy city_name_vn cho TP.HCM nếu có
+    fetch(`/api/weather/search/?city=Ho Chi Minh City`)
+        .then(res => res.json())
+        .then(locations => {
+            if (locations.length > 0) {
+                const loc = locations[0];
+                const cityNameDisplay = loc.city_name_vn || loc.city_name;
+                loadWeatherForLocation(DEFAULT_LOCATION_ID, cityNameDisplay);
+            } else {
+                loadWeatherForLocation(DEFAULT_LOCATION_ID, "Ho Chi Minh City");
+            }
+        })
+        .catch(() => {
+            loadWeatherForLocation(DEFAULT_LOCATION_ID, "Ho Chi Minh City");
+        });
 
     // 2. Tải các thành phố nổi bật
     loadFeaturedCities();
@@ -29,7 +42,8 @@ async function handleSearch(cityName) {
         const locations = await response.json();
         if (locations.length > 0) {
             const loc = locations[0];
-            loadWeatherForLocation(loc.id, loc.city_name);
+            const cityNameDisplay = loc.city_name_vn || loc.city_name;
+            loadWeatherForLocation(loc.id, cityNameDisplay);
         } else {
             alert("Không tìm thấy tỉnh/thành phố này.");
         }
@@ -244,10 +258,11 @@ async function loadFeaturedCities() {
                 const statusText = getWeatherStatusFromCode(weather.weathercode, isDay);
                 const icon = getWeatherIcon(weather.weathercode, isDay);
 
+                const cityNameDisplay = city.city_name_vn || city.city_name;
                 const card = document.createElement('div');
                 card.className = 'card city-card';
                 card.innerHTML = `
-                    <div class="main-title">${city.city_name}</div>
+                    <div class="main-title">${cityNameDisplay}</div>
                     <img src="/static/image/${icon}" alt="" class="main-img">
                     <p class="img-eyes">
                         <img class="detail-img" src="/static/image/icon-style-1-drop.svg" alt="">
@@ -258,7 +273,7 @@ async function loadFeaturedCities() {
                 `;
 
                 card.addEventListener('click', () => {
-                    loadWeatherForLocation(city.id, city.city_name);
+                    loadWeatherForLocation(city.id, cityNameDisplay);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 });
                 wrapper.appendChild(card);

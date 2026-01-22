@@ -4,7 +4,7 @@ from .models import HourlyForecast, DailyForecast, WeatherAlert, Location, Curre
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
-        fields = ('id', 'city_name', 'country_code', 'latitude', 'longitude')
+        fields = ('id', 'city_name', 'city_name_vn', 'country_code', 'latitude', 'longitude')
 
 class FeaturedCitySerializer(serializers.ModelSerializer):
     current_weather = serializers.JSONField(
@@ -14,7 +14,7 @@ class FeaturedCitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Location
-        fields = ('id', 'city_name', 'current_weather')
+        fields = ('id', 'city_name', 'city_name_vn', 'current_weather')
 
 
 class HourlyForecastSerializer(serializers.ModelSerializer):
