@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/header.css' %}">
     <link rel="stylesheet" href="{% static 'css/profile.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body class="profile-page">
 
@@ -23,24 +23,17 @@
                 <h4>{{ user.username }}</h4>
                 <p class="text-white-50">{{ user.email }}</p>
                 <hr>
-                <div class="text-start">
-                    <p><i class="fa-solid fa-location-dot me-2"></i>
-                        {% if profile.address %}{{ profile.address }}{% else %}Chưa cập nhật{% endif %}
-                    </p>
-                    <p><i class="fa-solid fa-map-pin me-2"></i>
-                        Lat: {{ profile.latitude|default:"--" }}, Lon: {{ profile.longitude|default:"--" }}
-                    </p>
-                </div>
+                <div class="list-group glass">
+					<a href="{% url 'Weather_App:dashboard' %}" class="list-group-item list-group-item-action">
+						<i class="fa-solid fa-arrow-left me-2"></i> Quay lại trang chủ
+					</a>
+					<a href="{% url 'Weather_App:password_change' %}" class="list-group-item list-group-item-action">
+						<i class="fa-solid fa-key me-2"></i> Đổi mật khẩu
+					</a>
+				</div>
             </div>
 
-            <div class="list-group glass">
-                <a href="{% url 'Weather_App:dashboard' %}" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-arrow-left me-2"></i> Quay lại trang chủ
-                </a>
-                <a href="{% url 'Weather_App:password_change' %}" class="list-group-item list-group-item-action">
-                    <i class="fa-solid fa-key me-2"></i> Đổi mật khẩu
-                </a>
-            </div>
+
         </div>
 
         <div class="col-md-8">

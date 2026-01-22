@@ -1,7 +1,6 @@
 /* profile.css - Dark Glassmorphism + Neon/Gradient for Profile Page */
 body.profile-page {
     background: #0b0f16;
-    color: #e6e6f0;
 }
 .glass {
     background: rgba(36, 40, 60, 0.55);
@@ -40,25 +39,6 @@ body.profile-page {
 .form-label {
     color: #00cfff;
     font-weight: 500;
-}
-input[type="text"], input[type="email"], input[type="password"], textarea {
-    background: rgba(30, 34, 54, 0.7);
-    border: 1.5px solid #00cfff;
-    color: #e6e6f0;
-    border-radius: 10px;
-    box-shadow: 0 0 8px #00cfff80 inset;
-    transition: box-shadow 0.2s, border 0.2s;
-}
-input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, textarea:focus {
-    box-shadow: 0 0 16px #00cfffcc, 0 0 8px #00cfff80 inset;
-    border-color: #00fff7;
-    outline: none;
-}
-input[readonly], .readonly-field {
-    background: rgba(60, 70, 90, 0.5);
-    color: #b0b8c1;
-    border: none;
-    cursor: not-allowed;
 }
 .btn-submit {
     background: linear-gradient(90deg, #00cfff 0%, #00fff7 100%);
