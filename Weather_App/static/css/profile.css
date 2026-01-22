@@ -1,6 +1,6 @@
 /* profile.css - Dark Glassmorphism + Neon/Gradient for Profile Page */
 body.profile-page {
-    background: linear-gradient(135deg, #181c2a 0%, #232946 100%);
+    background: #0b0f16;
     color: #e6e6f0;
 }
 .glass {

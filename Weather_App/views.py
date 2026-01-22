@@ -31,6 +31,7 @@ from .forms import UserUpdateForm, ProfileUpdateForm
 from django.shortcuts import redirect
 
 from .models import Location, CurrentWeatherCache, HourlyForecast, DailyForecast, WeatherAlert
+from .outfit_advisor import DBOutfitAdvisor
 from .serializers import (
     LocationSerializer, FeaturedCitySerializer, HourlyForecastSerializer, DailyForecastSerializer
 )
@@ -102,6 +103,39 @@ def get_current_weather(request):
         return Response({"error": "Không thể lấy dữ liệu từ API"},
                         status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
+
+@api_view(['GET'])
+def get_outfit_advice(request):
+    """
+    API trả về lời khuyên trang phục dựa trên dữ liệu DB (Daily/Hourly)
+    URL: /api/weather/outfit/?location_id=1
+    """
+    location_id = request.query_params.get('location_id')
+
+    if not location_id:
+        return Response({'error': 'Thiếu location_id'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Kiểm tra tồn tại + lấy location
+    location = get_object_or_404(Location, id=location_id)
+
+    try:
+        # Đảm bảo có dữ liệu HourlyForecast để tư vấn theo độ ẩm & bức xạ
+        # (Tránh race condition khi frontend gọi outfit song song với forecast)
+        ForecastService.get_or_predict_hourly(location)
+
+        # Gọi Class Advisor trong utils
+        advisor = DBOutfitAdvisor(location_id=location_id)
+        advice_text = advisor.get_advice()
+
+        return Response({
+            'status': 'success',
+            'location_id': location_id,
+            'advice': advice_text
+        })
+    except Exception as e:
+        # Log lỗi ra console để debug nếu cần
+        print(f"Lỗi gợi ý trang phục: {e}")
+        return Response({'error': 'Lỗi xử lý gợi ý'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def get_featured_weather(request):
