@@ -78,4 +78,10 @@ urlpatterns = [
     # GET /api/weather/solar/?location_id=1
     path('solar/', views.get_solar_radiation, name='get_solar_radiation'),
 
+    # API lịch sử tìm kiếm (theo user)
+    # POST /api/weather/search-history/ - Lưu lịch sử
+    # GET /api/weather/search-history/ - Lấy lịch sử
+    # DELETE /api/weather/search-history/ - Xóa tất cả lịch sử
+    path('search-history/', views.search_history_api, name='search_history_api'),
+
 ]

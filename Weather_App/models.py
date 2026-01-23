@@ -115,6 +115,28 @@ class WeatherAlert(models.Model):
         verbose_name = "Cảnh báo thời tiết"
         verbose_name_plural = "6. Cảnh báo thời tiết"
 
+class SearchHistory(models.Model):
+    """Lịch sử tìm kiếm thời tiết của mỗi user"""
+    from django.contrib.auth.models import User
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='search_history')
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='search_history')
+
+    # Thông tin thời tiết tại thời điểm tìm kiếm (để hiển thị nhanh)
+    temperature = models.FloatField(null=True, blank=True, verbose_name="Nhiệt độ lúc tìm kiếm")
+    weather_code = models.IntegerField(null=True, blank=True, verbose_name="Mã thời tiết")
+    is_day = models.BooleanField(default=True, verbose_name="Là ban ngày")
+
+    searched_at = models.DateTimeField(auto_now=True, verbose_name="Thời gian tìm kiếm")
+
+    class Meta:
+        ordering = ['-searched_at']  # Mới nhất lên đầu
+        verbose_name = "Lịch sử tìm kiếm"
+        verbose_name_plural = "7. Lịch sử tìm kiếm"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.location.city_name_vn or self.location.city_name}"
+
 class SolarForecast(models.Model):
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
     forecast_time = models.DateTimeField()
