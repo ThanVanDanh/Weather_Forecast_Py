@@ -129,9 +129,9 @@
 						<div class="card chart-card">
 							<h3>Nhiệt độ và độ ẩm {{ city_name }} trong 12h tới</h3>
 							<div id="hourlyChart12h-loader" style="text-align:center;padding:20px;">
-        <i class="fa-solid fa-spinner fa-spin"></i> Đang tải biểu đồ...
-    </div>
-    <canvas id="hourlyChart12h" style="display:none;"></canvas>
+								<i class="fa-solid fa-spinner fa-spin"></i> Đang tải biểu đồ...
+							</div>
+							<canvas id="hourlyChart12h" style="display:none;"></canvas>
 						</div>
 						<div class="card chart-card">
 							<h3>Nhiệt độ min/max {{ city_name }} 5 ngày tới</h3>
@@ -171,7 +171,7 @@
 							</div>
 						</div>
 						<div class="card windy-map-card">
-							<h3>Bản đồ thời tiết Hà Giang</h3>
+							<h3>Bản đồ thời tiết {{ city_name }}</h3>
 							<div class="map-container">
 								<iframe width="100%" height="400" src="https://embed.windy.com/embed.html?type=map&location=coordinates&zoom=5&lat=22.825&lon=104.988" frameborder="0"></iframe>
 							</div>
