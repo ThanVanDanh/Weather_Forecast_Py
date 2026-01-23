@@ -83,5 +83,6 @@ class ProfileUpdateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['phone'].label = "Số điện thoại"
         self.fields['address'].label = "Địa chỉ"
+        self.fields['address'].widget.attrs['readonly'] = True
         for field in self.fields.values():
             field.widget.attrs['class'] = 'form-control'

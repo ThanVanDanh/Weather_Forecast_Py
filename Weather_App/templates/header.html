@@ -26,6 +26,9 @@
 									<i class="fa-regular fa-user"></i> Hồ sơ cá nhân
 								</a>
 							</li>
+							{% if user.is_superuser or user.is_staff %}
+                            <li><a class="dropdown-item" href="/admin/"><i class="fa-solid fa-gears"></i> Quản trị</a></li>
+                            {% endif %}
                             <li><a class="dropdown-item" href="{% url 'Weather_App:password_change' %}"><i class="fa-solid fa-key"></i> Đổi mật khẩu</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
