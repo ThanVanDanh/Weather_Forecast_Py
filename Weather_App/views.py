@@ -96,7 +96,7 @@ def get_all_locations(request):
 def get_current_weather(request):
     import time
     from django.db import OperationalError
-    
+
     location_id = request.query_params.get('location_id')
     location = get_object_or_404(Location, id=location_id)
 
@@ -232,7 +232,7 @@ def get_solar_radiation(request):
                 'Time': timezone.localtime(f.forecast_time).strftime('%Y-%m-%d %H:%M:%S'),
                 'Radiation_Forecast': float(f.shortwave_radiation or 0),
             })
-        
+
         return Response({
             'status': 'success',
             'location_id': location_id,
@@ -249,7 +249,7 @@ def get_solar_radiation(request):
             },
             'hourly_forecast': hourly_data
         })
-        
+
     except Exception as e:
         print(f"[SOLAR] Lỗi: {e}")
         import traceback
@@ -792,3 +792,114 @@ def get_rain_forecast(request):
             'status': 'error',
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# API LỊCH SỬ TÌM KIẾM (THEO USER)
+@api_view(['GET', 'POST', 'DELETE'])
+def search_history_api(request):
+    """
+    API lịch sử tìm kiếm thời tiết (theo user đăng nhập)
+    GET - Lấy danh sách lịch sử (10 mục gần nhất)
+    POST - Lưu một lịch sử tìm kiếm mới
+    DELETE - Xóa tất cả lịch sử của user
+    """
+    from .models import SearchHistory, Location
+    from datetime import timedelta
+
+    # Kiểm tra đăng nhập
+    if not request.user.is_authenticated:
+        return Response({
+            'status': 'error',
+            'error': 'Vui lòng đăng nhập để sử dụng tính năng này'
+        }, status=status.HTTP_401_UNAUTHORIZED)
+
+    user = request.user
+
+    if request.method == 'GET':
+        # Lấy lịch sử tìm kiếm của user (10 mục gần nhất, trong 30 ngày)
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+
+        history = SearchHistory.objects.filter(
+            user=user,
+            searched_at__gte=thirty_days_ago
+        ).select_related('location').order_by('-searched_at')[:10]
+
+        history_data = []
+        for item in history:
+            history_data.append({
+                'locationId': item.location.id,
+                'cityName': item.location.city_name_vn or item.location.city_name,
+                'temperature': item.temperature,
+                'weatherCode': item.weather_code,
+                'isDay': item.is_day,
+                'timestamp': item.searched_at.isoformat()
+            })
+
+        return Response({
+            'status': 'success',
+            'history': history_data
+        })
+
+    elif request.method == 'POST':
+        # Lưu lịch sử tìm kiếm mới
+        location_id = request.data.get('location_id')
+        temperature = request.data.get('temperature')
+        weather_code = request.data.get('weather_code')
+        is_day = request.data.get('is_day', True)
+
+        if not location_id:
+            return Response({
+                'status': 'error',
+                'error': 'Thiếu location_id'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            location = Location.objects.get(id=location_id)
+
+            # Xóa lịch sử cũ của cùng location (tránh trùng lặp)
+            SearchHistory.objects.filter(user=user, location=location).delete()
+
+            # Tạo lịch sử mới
+            history_item = SearchHistory.objects.create(
+                user=user,
+                location=location,
+                temperature=temperature,
+                weather_code=weather_code,
+                is_day=is_day
+            )
+
+            # Giữ tối đa 10 mục - xóa các mục cũ nhất
+            user_history = SearchHistory.objects.filter(user=user).order_by('-searched_at')
+            if user_history.count() > 10:
+                old_ids = list(user_history[10:].values_list('id', flat=True))
+                SearchHistory.objects.filter(id__in=old_ids).delete()
+
+            return Response({
+                'status': 'success',
+                'message': 'Đã lưu lịch sử tìm kiếm',
+                'item': {
+                    'locationId': location.id,
+                    'cityName': location.city_name_vn or location.city_name,
+                    'temperature': temperature,
+                    'timestamp': history_item.searched_at.isoformat()
+                }
+            })
+
+        except Location.DoesNotExist:
+            return Response({
+                'status': 'error',
+                'error': 'Không tìm thấy địa điểm'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                'status': 'error',
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    elif request.method == 'DELETE':
+        # Xóa tất cả lịch sử của user
+        deleted_count, _ = SearchHistory.objects.filter(user=user).delete()
+        return Response({
+            'status': 'success',
+            'message': f'Đã xóa {deleted_count} mục lịch sử'
+        })

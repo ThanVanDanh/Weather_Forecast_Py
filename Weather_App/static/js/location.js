@@ -94,160 +94,196 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 // tìm kiếm tên thành phố
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('search-province-input');
-    const searchBtn = document.getElementById('search-province-btn');
-    const suggestionsBox = document.getElementById('search-suggestions');
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.getElementById('search-province-input');
+  const searchBtn = document.getElementById('search-province-btn');
+  const suggestionsBox = document.getElementById('search-suggestions');
 
-    if (!searchInput || !suggestionsBox) return;
+  if (!searchInput || !suggestionsBox) return;
 
-    let allLocations = [];
-    let debounceTimer;
+  let allLocations = [];
+  let debounceTimer;
 
-    // Load tất cả locations một lần
-    async function loadAllLocations() {
-        try {
-            const response = await fetch('/api/weather/locations/');
-            if (response.ok) {
-                allLocations = await response.json();
-            }
-        } catch (error) {
-            console.error('Lỗi tải danh sách địa điểm:', error);
-        }
+  // Load tất cả locations một lần
+  async function loadAllLocations() {
+    try {
+      const response = await fetch('/api/weather/locations/');
+      if (response.ok) {
+        allLocations = await response.json();
+      }
+    } catch (error) {
+      console.error('Lỗi tải danh sách địa điểm:', error);
+    }
+  }
+
+  // Tạo slug từ tên tỉnh
+  function createSlug(name) {
+    return name.toLowerCase()
+      .replace(/đ/g, 'd')
+      .replace(/[áàảãạăắằẳẵặâấầẩẫậ]/g, 'a')
+      .replace(/[éèẻẽẹêếềểễệ]/g, 'e')
+      .replace(/[íìỉĩị]/g, 'i')
+      .replace(/[óòỏõọôốồổỗộơớờởỡợ]/g, 'o')
+      .replace(/[úùủũụưứừửữự]/g, 'u')
+      .replace(/[ýỳỷỹỵ]/g, 'y')
+      .replace(/\s+/g, '-')
+      .replace(/[^\w-]/g, '');
+  }
+
+  // Lọc và hiển thị gợi ý
+  function showSuggestions(query) {
+    if (!query || query.length < 1) {
+      suggestionsBox.style.display = 'none';
+      return;
     }
 
-    // Tạo slug từ tên tỉnh
-    function createSlug(name) {
-        return name.toLowerCase()
-            .replace(/đ/g, 'd')
-            .replace(/[áàảãạăắằẳẵặâấầẩẫậ]/g, 'a')
-            .replace(/[éèẻẽẹêếềểễệ]/g, 'e')
-            .replace(/[íìỉĩị]/g, 'i')
-            .replace(/[óòỏõọôốồổỗộơớờởỡợ]/g, 'o')
-            .replace(/[úùủũụưứừửữự]/g, 'u')
-            .replace(/[ýỳỷỹỵ]/g, 'y')
-            .replace(/\s+/g, '-')
-            .replace(/[^\w-]/g, '');
-    }
+    const normalizedQuery = query.toLowerCase()
+      .replace(/đ/g, 'd')
+      .replace(/[áàảãạăắằẳẵặâấầẩẫậ]/g, 'a')
+      .replace(/[éèẻẽẹêếềểễệ]/g, 'e')
+      .replace(/[íìỉĩị]/g, 'i')
+      .replace(/[óòỏõọôốồổỗộơớờởỡợ]/g, 'o')
+      .replace(/[úùủũụưứừửữự]/g, 'u')
+      .replace(/[ýỳỷỹỵ]/g, 'y');
 
-    // Lọc và hiển thị gợi ý
-    function showSuggestions(query) {
-        if (!query || query.length < 1) {
-            suggestionsBox.style.display = 'none';
-            return;
-        }
+    const filtered = allLocations.filter(loc => {
+      const nameVn = (loc.city_name_vn || '').toLowerCase();
+      const nameEn = (loc.city_name || '').toLowerCase();
+      const normalizedVn = nameVn
+        .replace(/đ/g, 'd')
+        .replace(/[áàảãạăắằẳẵặâấầẩẫậ]/g, 'a')
+        .replace(/[éèẻẽẹêếềểễệ]/g, 'e')
+        .replace(/[íìỉĩị]/g, 'i')
+        .replace(/[óòỏõọôốồổỗộơớờởỡợ]/g, 'o')
+        .replace(/[úùủũụưứừửữự]/g, 'u')
+        .replace(/[ýỳỷỹỵ]/g, 'y');
 
-        const normalizedQuery = query.toLowerCase()
-            .replace(/đ/g, 'd')
-            .replace(/[áàảãạăắằẳẵặâấầẩẫậ]/g, 'a')
-            .replace(/[éèẻẽẹêếềểễệ]/g, 'e')
-            .replace(/[íìỉĩị]/g, 'i')
-            .replace(/[óòỏõọôốồổỗộơớờởỡợ]/g, 'o')
-            .replace(/[úùủũụưứừửữự]/g, 'u')
-            .replace(/[ýỳỷỹỵ]/g, 'y');
+      return normalizedVn.includes(normalizedQuery) ||
+        nameEn.includes(normalizedQuery) ||
+        nameVn.includes(query.toLowerCase());
+    });
 
-        const filtered = allLocations.filter(loc => {
-            const nameVn = (loc.city_name_vn || '').toLowerCase();
-            const nameEn = (loc.city_name || '').toLowerCase();
-            const normalizedVn = nameVn
-                .replace(/đ/g, 'd')
-                .replace(/[áàảãạăắằẳẵặâấầẩẫậ]/g, 'a')
-                .replace(/[éèẻẽẹêếềểễệ]/g, 'e')
-                .replace(/[íìỉĩị]/g, 'i')
-                .replace(/[óòỏõọôốồổỗộơớờởỡợ]/g, 'o')
-                .replace(/[úùủũụưứừửữự]/g, 'u')
-                .replace(/[ýỳỷỹỵ]/g, 'y');
-
-            return normalizedVn.includes(normalizedQuery) ||
-                   nameEn.includes(normalizedQuery) ||
-                   nameVn.includes(query.toLowerCase());
-        });
-
-        if (filtered.length === 0) {
-            suggestionsBox.innerHTML = '<div class="no-result">Không tìm thấy tỉnh/thành phố</div>';
-        } else {
-            suggestionsBox.innerHTML = filtered.map(loc => {
-                const displayName = loc.city_name_vn || loc.city_name;
-                return `<div class="suggestion-item" data-city="${loc.city_name}" data-id="${loc.id}">
+    if (filtered.length === 0) {
+      suggestionsBox.innerHTML = '<div class="no-result">Không tìm thấy tỉnh/thành phố</div>';
+    } else {
+      suggestionsBox.innerHTML = filtered.map(loc => {
+        const displayName = loc.city_name_vn || loc.city_name;
+        return `<div class="suggestion-item" data-city="${loc.city_name}" data-id="${loc.id}">
                     <i class="fa-solid fa-location-dot"></i>${displayName}
                 </div>`;
-            }).join('');
-        }
-
-        suggestionsBox.style.display = 'block';
+      }).join('');
     }
 
-    // Chuyển hướng đến trang tỉnh
-    function goToProvince(cityName) {
-        const slug = createSlug(cityName);
-        window.location.href = `/tinh/${slug}/`;
+    suggestionsBox.style.display = 'block';
+  }
+
+  // Chuyển hướng đến trang tỉnh (và lưu lịch sử tìm kiếm)
+  function goToProvince(cityName, locationId = null) {
+    // Lưu lịch sử tìm kiếm trước khi chuyển trang
+    if (locationId) {
+      saveSearchHistoryBeforeNavigate(locationId, cityName);
     }
 
-    // Event: Nhập text
-    searchInput.addEventListener('input', function() {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            showSuggestions(this.value.trim());
-        }, 200);
-    });
+    const slug = createSlug(cityName);
+    window.location.href = `/tinh/${slug}/`;
+  }
 
-    // Event: Focus vào input
-    searchInput.addEventListener('focus', function() {
-        if (this.value.trim().length > 0) {
-            showSuggestions(this.value.trim());
+  // Lưu lịch sử tìm kiếm vào localStorage (để sync lên DB sau)
+  function saveSearchHistoryBeforeNavigate(locationId, cityName) {
+    const historyItem = {
+      locationId: locationId,
+      cityName: cityName,
+      temperature: null,  // Sẽ được cập nhật khi sync
+      weatherCode: 1,
+      isDay: 1,
+      timestamp: new Date().toISOString()
+    };
+
+    let history = JSON.parse(localStorage.getItem('weatherSearchHistory') || '[]');
+
+    // Xóa mục trùng lặp
+    history = history.filter(item => item.locationId !== locationId);
+
+    // Thêm mục mới vào đầu
+    history.unshift(historyItem);
+
+    // Giữ tối đa 10 mục
+    if (history.length > 10) {
+      history = history.slice(0, 10);
+    }
+
+    localStorage.setItem('weatherSearchHistory', JSON.stringify(history));
+    console.log('[Search History] Saved to localStorage before navigate:', historyItem);
+  }
+
+  // Event: Nhập text
+  searchInput.addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      showSuggestions(this.value.trim());
+    }, 200);
+  });
+
+  // Event: Focus vào input
+  searchInput.addEventListener('focus', function () {
+    if (this.value.trim().length > 0) {
+      showSuggestions(this.value.trim());
+    }
+  });
+
+  // Event: Click vào gợi ý
+  suggestionsBox.addEventListener('click', function (e) {
+    const item = e.target.closest('.suggestion-item');
+    if (item) {
+      const cityName = item.dataset.city;
+      const locationId = parseInt(item.dataset.id);
+      goToProvince(cityName, locationId);
+    }
+  });
+
+  // Event: Nhấn Enter
+  searchInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const firstItem = suggestionsBox.querySelector('.suggestion-item');
+      if (firstItem) {
+        const locationId = parseInt(firstItem.dataset.id);
+        goToProvince(firstItem.dataset.city, locationId);
+      }
+    }
+  });
+
+  // Event: Click nút tìm kiếm
+  searchBtn.addEventListener('click', function () {
+    const query = searchInput.value.trim();
+    if (query) {
+      const firstItem = suggestionsBox.querySelector('.suggestion-item');
+      if (firstItem) {
+        const locationId = parseInt(firstItem.dataset.id);
+        goToProvince(firstItem.dataset.city, locationId);
+      } else {
+        // Thử tìm kiếm trực tiếp
+        const matched = allLocations.find(loc => {
+          const nameVn = (loc.city_name_vn || '').toLowerCase();
+          const nameEn = (loc.city_name || '').toLowerCase();
+          return nameVn.includes(query.toLowerCase()) || nameEn.includes(query.toLowerCase());
+        });
+        if (matched) {
+          goToProvince(matched.city_name, matched.id);
+        } else {
+          alert('Không tìm thấy tỉnh/thành phố: ' + query);
         }
-    });
+      }
+    }
+  });
 
-    // Event: Click vào gợi ý
-    suggestionsBox.addEventListener('click', function(e) {
-        const item = e.target.closest('.suggestion-item');
-        if (item) {
-            const cityName = item.dataset.city;
-            goToProvince(cityName);
-        }
-    });
+  // Event: Click ra ngoài để đóng gợi ý
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.search-bar')) {
+      suggestionsBox.style.display = 'none';
+    }
+  });
 
-    // Event: Nhấn Enter
-    searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const firstItem = suggestionsBox.querySelector('.suggestion-item');
-            if (firstItem) {
-                goToProvince(firstItem.dataset.city);
-            }
-        }
-    });
-
-    // Event: Click nút tìm kiếm
-    searchBtn.addEventListener('click', function() {
-        const query = searchInput.value.trim();
-        if (query) {
-            const firstItem = suggestionsBox.querySelector('.suggestion-item');
-            if (firstItem) {
-                goToProvince(firstItem.dataset.city);
-            } else {
-                // Thử tìm kiếm trực tiếp
-                const matched = allLocations.find(loc => {
-                    const nameVn = (loc.city_name_vn || '').toLowerCase();
-                    const nameEn = (loc.city_name || '').toLowerCase();
-                    return nameVn.includes(query.toLowerCase()) || nameEn.includes(query.toLowerCase());
-                });
-                if (matched) {
-                    goToProvince(matched.city_name);
-                } else {
-                    alert('Không tìm thấy tỉnh/thành phố: ' + query);
-                }
-            }
-        }
-    });
-
-    // Event: Click ra ngoài để đóng gợi ý
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.search-bar')) {
-            suggestionsBox.style.display = 'none';
-        }
-    });
-
-    // Khởi tạo
-    loadAllLocations();
+  // Khởi tạo
+  loadAllLocations();
 });

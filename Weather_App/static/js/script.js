@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+
     const DEFAULT_LOCATION_ID = 30; // TP.HCM
 
     // 1. Lấy city_name_vn cho TP.HCM nếu có
@@ -54,6 +55,10 @@ async function handleSearch(cityName) {
         if (locations.length > 0) {
             const loc = locations[0];
             const cityNameDisplay = loc.city_name_vn || loc.city_name;
+
+            // Lưu lịch sử tìm kiếm vào localStorage
+            saveSearchHistory(loc.id, cityNameDisplay);
+
             loadWeatherForLocation(loc.id, cityNameDisplay);
         } else {
             alert("Không tìm thấy tỉnh/thành phố này.");
@@ -375,4 +380,108 @@ function getWeatherStatusFromCode(code, isDay = 1) {
         default:
             return "Có mây";
     }
+}
+
+// =======================================================
+// LỊCH SỬ TÌM KIẾM - LƯU VÀO DATABASE (THEO USER)
+// =======================================================
+
+/**
+ * Lưu lịch sử tìm kiếm vào database thông qua API
+ * @param {number} locationId - ID của địa điểm
+ * @param {string} cityName - Tên thành phố
+ */
+async function saveSearchHistory(locationId, cityName) {
+    try {
+        // Lấy thời tiết hiện tại để lưu cùng lịch sử
+        const weatherResponse = await fetch(`/api/weather/current/?location_id=${locationId}`);
+        let temp = null;
+        let weatherCode = 1;
+        let isDay = 1;
+
+        if (weatherResponse.ok) {
+            const data = await weatherResponse.json();
+            const current = data.current_weather;
+            temp = Math.round(current.temperature);
+            weatherCode = current.weathercode;
+            isDay = current.is_day;
+        }
+
+        // Lấy CSRF token từ cookie
+        const csrfToken = getCsrfToken();
+
+        // Gọi API lưu lịch sử (yêu cầu đăng nhập)
+        const response = await fetch('/api/weather/search-history/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                location_id: locationId,
+                temperature: temp,
+                weather_code: weatherCode,
+                is_day: isDay
+            })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log('[Search History] Saved to DB:', result);
+        } else if (response.status === 401) {
+            // User chưa đăng nhập - fallback lưu vào localStorage
+            console.log('[Search History] User not logged in, saving to localStorage');
+            saveToLocalStorage(locationId, cityName, temp, weatherCode, isDay);
+        } else {
+            console.error('[Search History] API error:', response.status);
+        }
+
+    } catch (error) {
+        console.error('[Search History] Error saving:', error);
+    }
+}
+
+// Lấy CSRF token từ cookie
+function getCsrfToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Fallback: Lưu vào localStorage nếu chưa đăng nhập
+function saveToLocalStorage(locationId, cityName, temp, weatherCode, isDay) {
+    const historyItem = {
+        locationId: locationId,
+        cityName: cityName,
+        temperature: temp,
+        weatherCode: weatherCode,
+        isDay: isDay,
+        timestamp: new Date().toISOString()
+    };
+
+    let history = JSON.parse(localStorage.getItem('weatherSearchHistory') || '[]');
+
+    // Xóa mục trùng lặp
+    history = history.filter(item => item.locationId !== locationId);
+
+    // Thêm mục mới vào đầu
+    history.unshift(historyItem);
+
+    // Giữ tối đa 10 mục
+    if (history.length > 10) {
+        history = history.slice(0, 10);
+    }
+
+    localStorage.setItem('weatherSearchHistory', JSON.stringify(history));
+    console.log('[Search History] Saved to localStorage:', historyItem);
 }
