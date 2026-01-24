@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Weather_App', '0005_location_city_name_vn'),
+        ('Weather_App', '0006_rainforecastcache'),
     ]
 
     operations = [

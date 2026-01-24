@@ -29,13 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (locations.length > 0) {
                 const loc = locations[0];
                 const cityNameDisplay = loc.city_name_vn || loc.city_name;
-                loadWeatherForLocation(DEFAULT_LOCATION_ID, cityNameDisplay);
+                const lat = loc.latitude;
+                const lon = loc.longitude;
+                loadWeatherForLocation(DEFAULT_LOCATION_ID, cityNameDisplay, lat, lon);
             } else {
-                loadWeatherForLocation(DEFAULT_LOCATION_ID, "Ho Chi Minh City");
+                loadWeatherForLocation(DEFAULT_LOCATION_ID, "Ho Chi Minh City", null, null);
             }
         })
         .catch(() => {
-            loadWeatherForLocation(DEFAULT_LOCATION_ID, "Ho Chi Minh City");
+            loadWeatherForLocation(DEFAULT_LOCATION_ID, "Ho Chi Minh City", null, null);
         });
 
     // 2. Tải các thành phố nổi bật
@@ -55,11 +57,13 @@ async function handleSearch(cityName) {
         if (locations.length > 0) {
             const loc = locations[0];
             const cityNameDisplay = loc.city_name_vn || loc.city_name;
+            const lat = loc.latitude;
+            const lon = loc.longitude;
 
             // Lưu lịch sử tìm kiếm vào localStorage
             saveSearchHistory(loc.id, cityNameDisplay);
 
-            loadWeatherForLocation(loc.id, cityNameDisplay);
+            loadWeatherForLocation(loc.id, cityNameDisplay, lat, lon);
         } else {
             alert("Không tìm thấy tỉnh/thành phố này.");
         }
@@ -69,49 +73,71 @@ async function handleSearch(cityName) {
 }
 
 /**
- * Hàm chính: Tải và hiển thị dữ liệu
+ * Hàm chính: Tải và hiển thị dữ liệu (Lazy Loading)
  */
-async function loadWeatherForLocation(locationId, cityName) {
+async function loadWeatherForLocation(locationId, cityName, lat, lon) {
     try {
         document.getElementById('current-city-name').innerText = `Thời tiết ${cityName}`;
 
         console.log(`[DEBUG] Loading weather for locationId=${locationId}, cityName=${cityName}`);
 
-        // Gọi API
-        const [currentResponse, forecastResponse] = await Promise.all([
-            fetch(`/api/weather/current/?location_id=${locationId}`),
-            fetch(`/api/weather/forecast/?location_id=${locationId}`)
-        ]);
-
-        console.log(`[DEBUG] Current response status: ${currentResponse.status}`);
-        console.log(`[DEBUG] Forecast response status: ${forecastResponse.status}`);
-
-        if (!currentResponse.ok) {
-            const errorText = await currentResponse.text();
-            console.error('[ERROR] Current weather API failed:', errorText);
-            throw new Error('Không thể tải thời tiết hiện tại');
+        // Nếu không có lat/lon, fetch từ API location
+        if (!lat || !lon) {
+            const locResponse = await fetch(`/api/weather/search/?city=${encodeURIComponent(cityName)}`);
+            if (locResponse.ok) {
+                const locations = await locResponse.json();
+                if (locations.length > 0) {
+                    lat = locations[0].latitude;
+                    lon = locations[0].longitude;
+                }
+            }
         }
 
+        // === BƯỚC 1: Load Current Weather NGAY (Open-Meteo - rất nhanh) ===
+        console.log('[DEBUG] Loading current weather from Open-Meteo...');
+        const meteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=Asia/Ho_Chi_Minh&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset&hourly=temperature_2m,apparent_temperature,relativehumidity_2m,pressure_msl,visibility`;
+        
+        const currentResponse = await fetch(meteoUrl);
+        
+        if (!currentResponse.ok) {
+            throw new Error(`Lỗi HTTP current: ${currentResponse.status}`);
+        }
+        
         const currentData = await currentResponse.json();
-        console.log('[DEBUG] Current data:', currentData);
+        console.log('[DEBUG] ✅ Current weather loaded instantly');
 
-        // Cập nhật DOM
+        // Cập nhật current weather NGAY LẬP TỨC
         updateCurrentWeatherDOM(currentData);
 
-        // Hiển thị dự báo AI 5 ngày
+        // === BƯỚC 2: Hiển thị Loading cho Forecast ===
+        const forecastContainer = document.getElementById('forecast-container');
+        if (forecastContainer) {
+            forecastContainer.innerHTML = '<p style="text-align:center;padding:40px;color:#999;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dự báo 5 ngày...</p>';
+        }
+
+        // === BƯỚC 3: Load Forecast SAU (Django API - có thể mất 2-3s) ===
+        console.log('[DEBUG] Loading forecast from Django API (may take 2-3s)...');
+        const forecastResponse = await fetch(`/api/weather/forecast/?location_id=${locationId}`);
+
         if (forecastResponse.ok) {
             const forecastData = await forecastResponse.json();
-            console.log('[DEBUG] Forecast data:', forecastData);
+            console.log('[DEBUG] ✅ Forecast data loaded');
 
             if (forecastData && forecastData.daily_forecast) {
                 updateDailyForecastDOM(forecastData.daily_forecast);
             } else {
                 console.error('[ERROR] No daily_forecast in response');
+                if (forecastContainer) {
+                    forecastContainer.innerHTML = '<p style="text-align:center;color:#ff6b6b;">Không có dữ liệu dự báo</p>';
+                }
             }
         } else {
             console.error('[ERROR] Forecast response failed:', forecastResponse.status);
             const errorText = await forecastResponse.text();
             console.error('[ERROR] Response:', errorText);
+            if (forecastContainer) {
+                forecastContainer.innerHTML = '<p style="text-align:center;color:#ff6b6b;">Lỗi tải dự báo</p>';
+            }
         }
 
     } catch (error) {
@@ -121,7 +147,7 @@ async function loadWeatherForLocation(locationId, cityName) {
 }
 
 /**
- * Cập nhật khối thời tiết hiện tại
+ * Cập nhật khối thời tiết hiện tại (từ Open-Meteo data)
  */
 function updateCurrentWeatherDOM(data) {
     // Chỉ chạy trên index.html
@@ -134,27 +160,63 @@ function updateCurrentWeatherDOM(data) {
     const daily = data.daily;
 
     // 1. Lấy is_day và icon ngay từ đầu
-    const isDay = current.is_day;
+    const isDay = Number(current.is_day) === 1 ? 1 : 0;
     const icon = getWeatherIcon(current.weathercode, isDay);
     updateBackgroundVideo(current.weathercode, isDay);
 
     const now = new Date();
     const currentHourIndex = now.getHours();
 
-    document.getElementById('current-temp').innerText = `${Math.round(current.temperature)}°`;
-    document.getElementById('current-feels-like').innerText = `Cảm giác như ${Math.round(hourly.apparent_temperature[currentHourIndex])}°`;
-    document.getElementById('current-temp-minmax').innerText = `${Math.round(daily.temperature_2m_min[0])}°/${Math.round(daily.temperature_2m_max[0])}°`;
-    document.getElementById('current-humidity').innerText = `${hourly.relativehumidity_2m[currentHourIndex]}%`;
-    document.getElementById('current-pressure').innerText = `${Math.round(hourly.pressure_msl[currentHourIndex])} hPa`;
-    document.getElementById('current-visibility').innerText = `${(hourly.visibility[currentHourIndex] / 1000).toFixed(0)} km`;
+    // Cập nhật nhiệt độ chính
+    let currentTemp = current.temperature;
+    if (hourly && hourly.temperature_2m && hourly.temperature_2m[currentHourIndex]) {
+        currentTemp = hourly.temperature_2m[currentHourIndex];
+    }
+    
+    document.getElementById('current-temp').innerText = `${Math.round(currentTemp)}°`;
+    
+    // Cập nhật feels like
+    if (hourly && hourly.apparent_temperature) {
+        const feelsLike = Math.round(hourly.apparent_temperature[currentHourIndex]);
+        document.getElementById('current-feels-like').innerText = `Cảm giác như ${feelsLike}°`;
+    }
+    
+    // Min/Max
+    if (daily && daily.temperature_2m_min && daily.temperature_2m_max) {
+        const tempMin = Math.round(daily.temperature_2m_min[0]);
+        const tempMax = Math.round(daily.temperature_2m_max[0]);
+        document.getElementById('current-temp-minmax').innerText = `${tempMin}°/${tempMax}°`;
+    }
+    
+    // Độ ẩm
+    if (hourly && hourly.relativehumidity_2m) {
+        document.getElementById('current-humidity').innerText = `${hourly.relativehumidity_2m[currentHourIndex]}%`;
+    }
+    
+    // Áp suất
+    if (hourly && hourly.pressure_msl) {
+        document.getElementById('current-pressure').innerText = `${Math.round(hourly.pressure_msl[currentHourIndex])} hPa`;
+    }
+    
+    // Tầm nhìn
+    if (hourly && hourly.visibility) {
+        const visibilityKm = (hourly.visibility[currentHourIndex] / 1000).toFixed(0);
+        document.getElementById('current-visibility').innerText = `${visibilityKm} km`;
+    }
+    
+    // Gió
     document.getElementById('current-wind').innerText = `${current.windspeed} km/h`;
-    document.getElementById('current-uvi').innerText = `${daily.uv_index_max[0].toFixed(1)}`;
+    
+    // UV
+    if (daily && daily.uv_index_max) {
+        document.getElementById('current-uvi').innerText = `${daily.uv_index_max[0].toFixed(1)}`;
+    }
 
-    // 2. Gọi hàm status với tham số isDay
+    // Status text
     const statusText = getWeatherStatusFromCode(current.weathercode, isDay);
     document.getElementById('current-description').innerText = statusText;
 
-    // 3. Gán icon (Dùng biến 'icon' đã khai báo ở trên)
+    // Icon
     document.getElementById('current-icon').src = `/static/image/${icon}`;
 }
 
@@ -292,7 +354,7 @@ async function loadFeaturedCities() {
                 `;
 
                 card.addEventListener('click', () => {
-                    loadWeatherForLocation(city.id, cityNameDisplay);
+                    loadWeatherForLocation(city.id, cityNameDisplay, city.latitude, city.longitude);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 });
                 wrapper.appendChild(card);

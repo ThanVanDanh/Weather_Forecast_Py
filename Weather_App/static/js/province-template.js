@@ -166,6 +166,71 @@ function getWeatherVideoName(code, isDay) {
             return "nhieumay.mp4";
     }
 }
+
+// ============== AIR QUALITY UPDATE ==============
+function updateAirQualityDOM(data) {
+    if (!data || !data.current) {
+        console.error("Dữ liệu Air Quality không hợp lệ");
+        return;
+    }
+    
+    const current = data.current;
+    
+    // European AQI: 0-20 Good, 20-40 Fair, 40-60 Moderate, 60-80 Poor, 80-100 Very Poor, 100+ Extremely Poor
+    const eaqi = current.european_aqi || 0;
+    
+    let level, color, desc;
+    if (eaqi <= 20) {
+        level = 'Tốt';
+        color = '#4CAF50';
+        desc = 'Chất lượng không khí tốt, không ảnh hưởng sức khỏe';
+    } else if (eaqi <= 40) {
+        level = 'Khá';
+        color = '#8BC34A';
+        desc = 'Chất lượng không khí chấp nhận được';
+    } else if (eaqi <= 60) {
+        level = 'Trung bình';
+        color = '#FFC107';
+        desc = 'Nhóm nhạy cảm nên hạn chế hoạt động ngoài trời';
+    } else if (eaqi <= 80) {
+        level = 'Kém';
+        color = '#FF9800';
+        desc = 'Ảnh hưởng sức khỏe, hạn chế ra ngoài';
+    } else {
+        level = 'Rất kém';
+        color = '#F44336';
+        desc = 'Nguy hiểm! Tránh hoạt động ngoài trời';
+    }
+    
+    // Cập nhật gauge
+    const gaugeElement = document.querySelector('.aqi-gauge span');
+    if (gaugeElement) {
+        gaugeElement.textContent = level;
+        gaugeElement.style.color = color;
+        gaugeElement.style.fontWeight = 'bold';
+    }
+    
+    // Cập nhật description
+    const descElement = document.querySelector('.aqi-main p');
+    if (descElement) {
+        descElement.textContent = desc;
+    }
+    
+    // Cập nhật các thành phần (chuyển từ µg/m³ sang số đẹp hơn)
+    const detailsGrid = document.querySelector('.aqi-details-grid');
+    if (detailsGrid) {
+        detailsGrid.innerHTML = `
+            <div>CO <strong>${(current.carbon_monoxide || 0).toFixed(0)}</strong></div>
+            <div>NH<sub>3</sub> <strong>${(current.ammonia || 0).toFixed(2)}</strong></div>
+            <div>NO<sub>2</sub> <strong>${(current.nitrogen_dioxide || 0).toFixed(2)}</strong></div>
+            <div>O<sub>3</sub> <strong>${(current.ozone || 0).toFixed(1)}</strong></div>
+            <div>PM10 <strong>${(current.pm10 || 0).toFixed(1)}</strong></div>
+            <div>PM2.5 <strong>${(current.pm2_5 || 0).toFixed(1)}</strong></div>
+            <div>SO<sub>2</sub> <strong>${(current.sulphur_dioxide || 0).toFixed(2)}</strong></div>
+        `;
+    }
+}
+
 function updateBackgroundVideo(code, isDay) {
     const videoElement = document.getElementById('global-bg-video');
 
@@ -382,6 +447,20 @@ async function loadProvinceDetails(locationId, cityName, lat, lon) {
         
         // Hiển thị current weather NGAY LẬP TỨC
         updateCurrentWeatherDOM(currentData, cityName);
+        
+        // === BƯỚC 1.5: Load Air Quality (cũng rất nhanh - Open-Meteo) ===
+        console.log('[DEBUG] Loading air quality...');
+        const airQualityUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=european_aqi,us_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,ammonia`;
+        
+        fetch(airQualityUrl)
+            .then(res => res.json())
+            .then(aqData => {
+                console.log('[DEBUG] ✅ Air Quality loaded');
+                updateAirQualityDOM(aqData);
+            })
+            .catch(err => {
+                console.error('[DEBUG] ❌ Air Quality error:', err);
+            });
         
         // === BƯỚC 2: Hiển thị Loading cho Forecasts ===
         const hourlyContainer = document.getElementById('hourly-forecast-container');
