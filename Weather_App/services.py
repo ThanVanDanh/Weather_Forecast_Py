@@ -9,7 +9,6 @@ import sys
 from pathlib import Path
 
 
-# Mapping tên Location trong DB → tên file CSV/model
 PROVINCE_NAME_MAPPING = {
     'Ho Chi Minh City': 'TP_Ho_Chi_Minh',
     'Hanoi': 'Ha_Noi',
@@ -17,7 +16,6 @@ PROVINCE_NAME_MAPPING = {
     'Can Tho': 'Can_Tho',
     'Hai Phong': 'Hai_Phong',
     'Hue': 'Hue',
-    # Thêm các mapping khác nếu cần
 }
 
 
@@ -80,35 +78,30 @@ class ForecastService:
     
     @staticmethod
     def get_or_predict_hourly(location):
-        """Lấy hoặc tạo dự báo 24h cho location"""
         from .models import HourlyForecast
-        
-        # Tính giờ tiếp theo (bắt đầu dự báo)
+
         now = timezone.now()
         next_hour = now.replace(minute=0, second=0, microsecond=0) + timezone.timedelta(hours=1)
         
-        # Kiểm tra forecast đầu tiên
+        #kiểm tra forecast đầu tiên
         first_forecast = HourlyForecast.objects.filter(location=location).order_by('forecast_time').first()
         
         should_predict = False
         
-        if first_forecast is None:
-            # Chưa có forecast
+        if first_forecast is None: #chưa có forecast
             should_predict = True
         else:
-            # Kiểm tra xem forecast_time đầu tiên có phải là giờ tiếp theo không
             if first_forecast.forecast_time != next_hour:
                 should_predict = True
                 print(f"[DEBUG] First forecast time {first_forecast.forecast_time} != next hour {next_hour}")
             else:
-                # Kiểm tra updated_at có quá cũ không (>1h)
+                #kiểm tra update_at cũ hơn 1h
                 hours_since_update = (now - first_forecast.updated_at).total_seconds() / 3600
                 if hours_since_update > 1:
                     should_predict = True
-                    print(f"[DEBUG] Updated {hours_since_update:.1f}h ago, re-predicting")
-        
+                    print(f"{hours_since_update:.1f}h ago, repredict")
+
         if should_predict:
-            # Import predict functions
             ai_dir = Path(__file__).resolve().parent.parent / 'Weather_AI'
             sys.path.insert(0, str(ai_dir))
             from Weather_AI.predict_lstm_hourly_24h import predict_hourly_temperature
@@ -118,26 +111,21 @@ class ForecastService:
             
             province_name = get_province_name(location)
             
-            # Retry logic để xử lý database locked
+            #retry khi db bị lock
             max_retries = 5
             for attempt in range(max_retries):
                 try:
-                    # BƯỚC 1: Predict temperature (transaction riêng)
                     with transaction.atomic():
-                        # Xóa dữ liệu cũ
+                        #predict temp
                         HourlyForecast.objects.filter(location=location).delete()
-                        
-                        # Predict temperature
-                        result_temp = predict_hourly_temperature(province_name, steps=24, force=True)
-                        print(f"✅ Temperature: {result_temp}")
+                        predict_hourly_temperature(province_name, steps=24, force=True)
                     
-                    # BƯỚC 2: Predict humidity (transaction riêng, không làm mất temperature nếu fail)
                     try:
                         with transaction.atomic():
-                            result_hum = predict_hourly_humidity(province_name, steps=24, force=True)
-                            print(f"✅ Humidity: {result_hum}")
+                            #predict humidity
+                            predict_hourly_humidity(province_name, steps=24, force=True)
                     except Exception as e:
-                        print(f"⚠️ Warning: Humidity prediction failed (temperature saved): {e}")
+                        print(f"Humidity prediction failed (temp saved): {e}")
                     
                     break  # Thành công, thoát loop
                     
@@ -147,70 +135,55 @@ class ForecastService:
                         print(f"Database locked, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})")
                         time.sleep(wait_time)
                     else:
-                        print(f"❌ Error predicting hourly: {e}")
+                        print(f"Error predict hourly: {e}")
                         return []
         
-        # Trả về forecasts
+        #trả về forecasts
         return HourlyForecast.objects.filter(location=location).order_by('forecast_time')
     
     @staticmethod
     def get_or_predict_daily(location):
-        """Lấy hoặc tạo dự báo 5 ngày cho location"""
         from .models import DailyForecast
         from datetime import timedelta
         
-        # Lấy forecast hiện có
         forecasts = DailyForecast.objects.filter(location=location).order_by('forecast_date')
-        
-        # Kiểm tra xem có cần predict lại không
         should_predict = False
         
-        if not forecasts.exists():
-            # Chưa có dữ liệu → predict
+        if not forecasts.exists(): #check chưa tồn tại
             should_predict = True
         else:
-            # Kiểm tra updated_at
             latest = forecasts.aggregate(Max('updated_at'))['updated_at__max']
             if (timezone.now() - latest).total_seconds() > 86400:
-                # Quá 24h → predict lại
+                #quá 24h → re predicting
                 should_predict = True
             else:
-                # Kiểm tra xem ngày dự báo có đúng không (phải bắt đầu từ ngày mai)
+                #bắt đầu từ ngày mai
                 base_date = timezone.localdate() if getattr(settings, 'USE_TZ', False) else timezone.now().date()
                 tomorrow = base_date + timedelta(days=1)
                 first_forecast = forecasts.first()
                 if first_forecast.forecast_date != tomorrow:
-                    # Ngày dự báo sai → predict lại
+                    #ngày dự báo sai → predict lại
                     should_predict = True
                     print(f"[INFO] Forecast dates incorrect. Expected {tomorrow}, got {first_forecast.forecast_date}")
         
         if should_predict:
-            # Xóa dữ liệu cũ
             DailyForecast.objects.filter(location=location).delete()
-            
-            # Gọi predict function
             province_name = get_province_name(location)
             try:
-                # Import predict function
                 ai_dir = Path(__file__).resolve().parent.parent / 'Weather_AI'
                 sys.path.insert(0, str(ai_dir))
                 from Weather_AI.predict_daily_5days_sarima import predict_daily_temperature
-                
-                result = predict_daily_temperature(province_name, steps=5, force=True)
-                print(f"Daily prediction: {result}")
+
+                predict_daily_temperature(province_name, steps=5, force=True)
             except Exception as e:
-                print(f"Error predicting daily: {e}")
+                print(f"Error predict daily: {e}")
                 return []
         
-        # Trả về forecasts
+        #trả về forecasts
         return DailyForecast.objects.filter(location=location).order_by('forecast_date')
 
     @staticmethod
     def get_or_refresh_solar_daily(location, target_date=None, max_age_hours=1):
-        """Lấy hoặc refresh dự báo solar cho 0-23h của 1 ngày.
-
-        Rule: mỗi lần refresh sẽ xoá toàn bộ bản ghi ngày đó và tạo lại 24 giờ.
-        """
         from .models import SolarForecast, HourlyForecast
         import pandas as pd
 
@@ -221,11 +194,6 @@ class ForecastService:
         day_end = day_start + timedelta(days=1)
 
         def _hour_key(dt):
-            """Return a stable hour key for matching rows.
-
-            - With USE_TZ=False: datetimes are naive local (VN), so use naive rounding.
-            - With USE_TZ=True (legacy/other envs): convert to localtime then drop tzinfo.
-            """
             if timezone.is_aware(dt):
                 dt = timezone.localtime(dt).replace(tzinfo=None)
             return dt.replace(minute=0, second=0, microsecond=0)
