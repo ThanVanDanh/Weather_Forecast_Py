@@ -7,7 +7,7 @@ from django.conf import settings
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'phone', 'address', 'latitude', 'longitude')
     search_fields = ('user__username', 'phone', 'address')
-from .models import Location, CurrentWeatherCache, HistoricalData, HourlyForecast, DailyForecast, WeatherAlert, SolarForecast
+from .models import Location, CurrentWeatherCache, HourlyForecast, DailyForecast, WeatherAlert, SolarForecast, RainForecastCache, SearchHistory
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
@@ -17,11 +17,6 @@ class LocationAdmin(admin.ModelAdmin):
 @admin.register(CurrentWeatherCache)
 class CurrentWeatherCacheAdmin(admin.ModelAdmin):
     list_display = ('location', 'last_updated')
-
-@admin.register(HistoricalData)
-class HistoricalDataAdmin(admin.ModelAdmin):
-    list_display = ('location', 'observation_date', 'temp_avg', 'humidity_avg')
-    list_filter = ('location',)
 
 @admin.register(HourlyForecast)
 class HourlyForecastAdmin(admin.ModelAdmin):
@@ -34,6 +29,16 @@ class DailyForecastAdmin(admin.ModelAdmin):
     list_display = ('location', 'forecast_date', 'temp_max', 'temp_min', 'updated_at')
     list_filter = ('location', 'forecast_date')
     ordering = ('-forecast_date',)
+
+@admin.register(RainForecastCache)
+class RainForecastCacheAdmin(admin.ModelAdmin):
+    list_display = ('location', 'last_updated')
+
+@admin.register(SearchHistory)
+class SearchHistoryAdmin(admin.ModelAdmin):
+    list_display = ('user', 'location', 'temperature', 'weather_code', 'is_day', 'searched_at')
+    list_filter = ('user', 'location', 'is_day')
+    search_fields = ('user__username', 'location__city_name', 'location__city_name_vn')
 
 @admin.register(WeatherAlert)
 class WeatherAlertAdmin(admin.ModelAdmin):
