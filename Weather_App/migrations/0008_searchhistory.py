@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Weather_App', '0007_merge_0006_rainforecastcache_0006_solarforecast'),
+        ('Weather_App', '0007_solarforecast'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
