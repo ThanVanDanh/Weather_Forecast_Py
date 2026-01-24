@@ -25,11 +25,17 @@ function updateCurrentWeatherDOM(data, cityName) {
     if (tempElement) tempElement.textContent = `${Math.round(currentTemp)}°`;
 
     // 2. Cập nhật Trạng thái chữ & Icon
-    const isDay = current.is_day !== undefined ? current.is_day : 1;
+    // Normalize is_day to 0/1 number (API/Django may return boolean/string)
+    const isDay = Number(current.is_day) === 1 ? 1 : 0;
+
 
     const statusText = getWeatherStatusFromCode(current.weathercode, isDay);
     const statusElement = document.getElementById('current-status-text');
     if (statusElement) statusElement.textContent = statusText;
+    if (typeof updateBackgroundVideo === "function") {
+        console.log("Đang cập nhật background video...");
+        updateBackgroundVideo(current.weathercode, isDay);
+    }
 
     const iconName = getWeatherIcon(current.weathercode, isDay);
     const iconContainer = document.getElementById('current-icon');
@@ -111,6 +117,91 @@ function updateCurrentWeatherDOM(data, cityName) {
         const sunsetElement = document.getElementById('sunset-time');
         if (sunsetElement) sunsetElement.textContent = sunsetTime;
     }
+}
+function getWeatherVideoName(code, isDay) {
+
+    if (!isDay && (code >= 0 && code <= 2)) {
+        return "troidem.mp4";
+    }
+
+    switch (code) {
+        case 0: // Quang đãng
+        case 1: // Nắng nhẹ
+            return "troisang.mp4";
+
+        // --- NHÓM CÓ MÂY ---
+        case 2: // Mây rải rác
+            return "mayrairac.mp4";
+        case 3: // Nhiều mây
+            return "nhieumay.mp4";
+
+        // --- NHÓM SƯƠNG MÙ ---
+        case 45:
+        case 48:
+            return "amu.mp4";
+
+        // --- NHÓM MƯA (Gộp nhiều code mưa lại) ---
+        case 51: case 53: case 55: // Mưa phùn
+        case 61: case 63: case 65: // Mưa thường
+        case 80: case 81: case 82: // Mưa rào
+            return "rain6.mp4";
+
+        // --- NHÓM MƯA LẠNH / TUYẾT ---
+        case 56: case 57: // Mưa phùn lạnh
+        case 66: case 67: // Mưa lạnh
+            return "rain6.mp4";
+
+        // Không có video tuyết trong static/video -> fallback
+        case 71: case 73: case 75: case 77: // Tuyết
+        case 85: case 86: // Mưa tuyết
+            return "nhieumay.mp4";
+
+        // --- NHÓM GIÔNG BÃO ---
+        case 95: // Có giông
+        case 96: case 99: // Giông mưa đá
+            // Không có giong.mp4 trong static/video -> dùng video mưa
+            return "rain6.mp4";
+
+        default:
+            return "nhieumay.mp4";
+    }
+}
+function updateBackgroundVideo(code, isDay) {
+    const videoElement = document.getElementById('global-bg-video');
+
+    // Nếu không tìm thấy thẻ video (ví dụ đang ở trang khác không có video bg) thì thoát
+    if (!videoElement) return;
+
+    const availableVideos = new Set([
+        'amu.mp4',
+        'mayrairac.mp4',
+        'nhieumay.mp4',
+        'rain6.mp4',
+        'troidem.mp4',
+        'troisang.mp4'
+    ]);
+
+    let fileName = getWeatherVideoName(code, isDay);
+    if (!availableVideos.has(fileName)) {
+        console.warn('[Video] File không tồn tại trong static/video, fallback:', fileName);
+        fileName = 'nhieumay.mp4';
+    }
+    const newSrc = `/static/video/${fileName}`; // Đường dẫn tới thư mục static
+
+    // Kiểm tra xem source hiện tại có trùng với cái mới không (tránh reload lại video nếu không cần thiết)
+    const currentSrc = videoElement.querySelector('source').getAttribute('src');
+
+    if (currentSrc && currentSrc.includes(fileName)) {
+        console.log(`[Video] Giữ nguyên video: ${fileName}`);
+        return;
+    }
+
+    console.log(`[Video] Đổi background sang: ${fileName}`);
+
+    // Cập nhật source và reload video
+    videoElement.querySelector('source').src = newSrc;
+    videoElement.load(); // Bắt buộc gọi load() để trình duyệt nhận file mới
+    videoElement.play().catch(e => console.log("Autoplay bị chặn hoặc lỗi:", e));
 }
 
 // ============== WEATHER HELPER FUNCTIONS ==============
@@ -708,7 +799,7 @@ function drawHourlyChart12h(labels, tempData, humidityData) {
                     datalabels: {
                         color: '#22c55e',
                         align: 'top',
-                        font: { weight: 'bold', size: 13 },
+                        font: {weight: 'bold', size: 13},
                         formatter: (value) => value + '°'
                     }
                 },
@@ -722,7 +813,7 @@ function drawHourlyChart12h(labels, tempData, humidityData) {
                     datalabels: {
                         color: '#3b82f6',
                         align: 'top',
-                        font: { weight: 'bold', size: 13 },
+                        font: {weight: 'bold', size: 13},
                         formatter: (value) => value + '%'
                     }
                 }
@@ -735,9 +826,9 @@ function drawHourlyChart12h(labels, tempData, humidityData) {
                 legend: {
                     position: 'top',
                     align: 'center',
-                    labels: { usePointStyle: true, boxWidth: 8 }
+                    labels: {usePointStyle: true, boxWidth: 8}
                 },
-                tooltip: { enabled: true },
+                tooltip: {enabled: true},
                 datalabels: {
                     display: true,
                     offset: 5
@@ -749,51 +840,23 @@ function drawHourlyChart12h(labels, tempData, humidityData) {
                     position: 'left',
                     min: 0,
                     max: 50,
-                    title: { display: true, text: 'Nhiệt độ (°C)' }
+                    title: {display: true, text: 'Nhiệt độ (°C)'}
                 },
                 y1: {
                     type: 'linear',
                     position: 'right',
                     min: 0,
                     max: 100,
-                    title: { display: true, text: 'Độ ẩm (%)' },
-                    grid: { drawOnChartArea: false }
+                    title: {display: true, text: 'Độ ẩm (%)'},
+                    grid: {drawOnChartArea: false}
                 },
                 x: {
-                    grid: { display: false }
+                    grid: {display: false}
                 }
             },
             elements: {
-                point: { radius: 0 }
+                point: {radius: 0}
             }
         }
     });
 }
-
-// === LẤY DỮ LIỆU 12H TỚI VÀ VẼ BIỂU ĐỒ NHIỆT ĐỘ & ĐỘ ẨM (LAZY LOADING) ===
-    if (currentData && currentData.hourly && currentData.hourly.temperature_2m && currentData.hourly.relativehumidity_2m) {
-        // Loader: show spinner, hide canvas
-        const loader = document.getElementById('hourlyChart12h-loader');
-        const chartCanvas = document.getElementById('hourlyChart12h');
-        if (loader) loader.style.display = '';
-        if (chartCanvas) chartCanvas.style.display = 'none';
-
-        setTimeout(() => {
-            // Lấy 12h tới từ thời điểm hiện tại
-            const now = new Date();
-            const currentHour = now.getHours();
-            let hourLabels = [];
-            let tempData = [];
-            let humidityData = [];
-            for (let i = 0; i < 12; i++) {
-                let hourIdx = (currentHour + i) % 24;
-                hourLabels.push((hourIdx < 10 ? '0' : '') + hourIdx + ':00');
-                tempData.push(Math.round(currentData.hourly.temperature_2m[hourIdx]));
-                humidityData.push(Math.round(currentData.hourly.relativehumidity_2m[hourIdx]));
-            }
-            drawHourlyChart12h(hourLabels, tempData, humidityData);
-            // Hide loader, show chart
-            if (loader) loader.style.display = 'none';
-            if (chartCanvas) chartCanvas.style.display = '';
-        }, 600); // 600ms cho cảm giác lazy loading
-    }

@@ -4,6 +4,7 @@ import django
 from pathlib import Path
 from datetime import datetime
 from django.utils import timezone as tz
+from django.conf import settings
 import pandas as pd
 import joblib
 from statsmodels.tsa.statespace.sarimax import SARIMAX
@@ -104,7 +105,7 @@ def predict_daily_temperature(province_name: str, steps: int = 5, force: bool = 
     max_pred = forecast_one_target(province_name, "max", daily["temp_max"], steps)
 
     # Dự báo từ NGÀY MAI (không phụ thuộc vào ngày cuối trong CSV)
-    today = tz.localtime().date()  # Ngày hôm nay theo VN time
+    today = (tz.localtime(tz.now()) if getattr(settings, 'USE_TZ', False) else tz.now()).date()
     tomorrow = today + pd.Timedelta(days=1)
     idx = pd.date_range(start=tomorrow, periods=steps, freq="D")
 
@@ -121,8 +122,8 @@ def predict_daily_temperature(province_name: str, steps: int = 5, force: bool = 
     DailyForecast.objects.bulk_create(forecasts)
     
     # Hiển thị thời gian VN (không phải UTC)
-    vn_time = tz.localtime(tz.now()).strftime('%Y-%m-%d %H:%M:%S')
-    return f"✅ {province_name}: Saved {steps} daily forecasts (VN time: {vn_time})"
+    vn_time = (tz.localtime(tz.now()) if getattr(settings, 'USE_TZ', False) else tz.now()).strftime('%Y-%m-%d %H:%M:%S')
+    return f" {province_name}: Saved {steps} daily forecasts (VN time: {vn_time})"
 
 
 if __name__ == "__main__":

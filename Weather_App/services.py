@@ -21,43 +21,13 @@ PROVINCE_NAME_MAPPING = {
 }
 
 
-# Mapping location ID sang tên tỉnh trong file predict_solar_lstm_34.py
-SOLAR_LOCATION_TO_PROVINCE = {
-    1: "An_Giang",
-    2: "Bac_Ninh",
-    3: "Ca_Mau",
-    4: "Can_Tho",
-    5: "Cao_Bang",
-    6: "Da_Nang",
-    7: "Dak_Lak",
-    8: "Dien_Bien",
-    9: "Dong_Nai",
-    10: "Dong_Thap",
-    11: "Ha_Noi",
-    12: "Gia_Lai",
-    13: "Hai_Phong",
-    14: "Ha_Tinh",
-    15: "Khanh_Hoa",
-    16: "Lam_Dong",
-    17: "Lang_Son",
-    18: "Lao_Cai",
-    19: "Lai_Chau",
-    20: "Nghe_An",
-    21: "Ninh_Binh",
-    22: "Phu_Tho",
-    23: "Quang_Ngai",
-    24: "Quang_Ninh",
-    25: "Quang_Tri",
-    26: "Son_La",
-    27: "Tay_Ninh",
-    28: "Thai_Nguyen",
-    29: "Hue",
-    30: "TP_Ho_Chi_Minh",
-    31: "Thanh_Hoa",
-    32: "Tuyen_Quang",
-    33: "Vinh_Long",
-    34: "Hung_Yen",
-}
+def solar_model_path(province_name: str) -> Path:
+    base_dir = Path(__file__).resolve().parent.parent
+    return base_dir / 'Weather_AI' / 'models_solar_multi_provinces' / f'{province_name}.keras'
+
+
+def is_solar_supported(province_name: str) -> bool:
+    return solar_model_path(province_name).exists()
 
 
 def get_province_name(location):
@@ -206,7 +176,8 @@ class ForecastService:
                 should_predict = True
             else:
                 # Kiểm tra xem ngày dự báo có đúng không (phải bắt đầu từ ngày mai)
-                tomorrow = timezone.localtime().date() + timedelta(days=1)
+                base_date = timezone.localdate() if getattr(settings, 'USE_TZ', False) else timezone.now().date()
+                tomorrow = base_date + timedelta(days=1)
                 first_forecast = forecasts.first()
                 if first_forecast.forecast_date != tomorrow:
                     # Ngày dự báo sai → predict lại
@@ -244,17 +215,20 @@ class ForecastService:
         import pandas as pd
 
         if target_date is None:
-            target_date = timezone.localdate()
+            target_date = timezone.localdate() if getattr(settings, 'USE_TZ', False) else timezone.now().date()
 
-        tz = timezone.get_current_timezone()
-        day_start = timezone.make_aware(datetime.combine(target_date, time.min), tz)
+        day_start = datetime.combine(target_date, time.min)
         day_end = day_start + timedelta(days=1)
 
-        def _utc_hour_key(dt):
-            if timezone.is_naive(dt):
-                dt = timezone.make_aware(dt, tz)
-            dt_utc = dt.astimezone(dt_timezone.utc)
-            return dt_utc.replace(minute=0, second=0, microsecond=0)
+        def _hour_key(dt):
+            """Return a stable hour key for matching rows.
+
+            - With USE_TZ=False: datetimes are naive local (VN), so use naive rounding.
+            - With USE_TZ=True (legacy/other envs): convert to localtime then drop tzinfo.
+            """
+            if timezone.is_aware(dt):
+                dt = timezone.localtime(dt).replace(tzinfo=None)
+            return dt.replace(minute=0, second=0, microsecond=0)
 
         existing = SolarForecast.objects.filter(
             location=location,
@@ -272,7 +246,9 @@ class ForecastService:
                 should_refresh = True
 
         if should_refresh:
-            province_name = SOLAR_LOCATION_TO_PROVINCE.get(location.id) or get_province_name(location)
+            province_name = get_province_name(location)
+            if not is_solar_supported(province_name):
+                raise ValueError(f"Chưa hỗ trợ dự báo bức xạ cho tỉnh này: {province_name}")
 
             base_dir = Path(__file__).resolve().parent.parent
             script_path = base_dir / "Weather_AI" / "predict_solar_lstm_34.py"
@@ -313,8 +289,8 @@ class ForecastService:
             time_to_value = {}
             for _, row in df.iterrows():
                 dt = row['Time'].to_pydatetime() if hasattr(row['Time'], 'to_pydatetime') else row['Time']
-                if timezone.is_naive(dt):
-                    dt = timezone.make_aware(dt, tz)
+                if timezone.is_aware(dt):
+                    dt = timezone.localtime(dt).replace(tzinfo=None)
 
                 radiation_value = float(row['Radiation_Forecast'])
                 solar_rows.append(
@@ -324,7 +300,7 @@ class ForecastService:
                         shortwave_radiation=radiation_value,
                     )
                 )
-                time_to_value[_utc_hour_key(dt)] = radiation_value
+                time_to_value[_hour_key(dt)] = radiation_value
 
             with transaction.atomic():
                 SolarForecast.objects.filter(
@@ -343,7 +319,7 @@ class ForecastService:
             hourly = list(hourly_qs)
             now_ts = timezone.now()
             for hf in hourly:
-                key = _utc_hour_key(hf.forecast_time)
+                key = _hour_key(hf.forecast_time)
                 if key in time_to_value:
                     hf.shortwave_radiation = time_to_value[key]
                     hf.updated_at = now_ts

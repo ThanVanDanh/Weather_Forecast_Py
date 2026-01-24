@@ -17,6 +17,7 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from django.conf import settings
 from django.utils import timezone
 from django.db.models import Q
 import requests
@@ -35,7 +36,7 @@ from .outfit_advisor import DBOutfitAdvisor
 from .serializers import (
     LocationSerializer, FeaturedCitySerializer, HourlyForecastSerializer, DailyForecastSerializer
 )
-from .services import MeteoAPIService, ForecastService, SOLAR_LOCATION_TO_PROVINCE
+from .services import MeteoAPIService, ForecastService, get_province_name, is_solar_supported
 import subprocess
 import pandas as pd
 from pathlib import Path
@@ -185,24 +186,29 @@ def get_solar_radiation(request):
         location_id = int(location_id)
         location = get_object_or_404(Location, id=location_id)
 
-        # Lấy tên tỉnh từ mapping
-        province_name = SOLAR_LOCATION_TO_PROVINCE.get(location_id)
-
-        if not province_name:
+        province_name = get_province_name(location)
+        if not is_solar_supported(province_name):
             return Response({
                 'status': 'error',
-                'error': f'Chưa hỗ trợ dự báo bức xạ cho tỉnh này (ID: {location_id})'
+                'error': f'Chưa hỗ trợ dự báo bức xạ cho tỉnh này: {province_name}'
             }, status=status.HTTP_404_NOT_FOUND)
 
         # Lấy / refresh dự báo từ DB (mỗi lần refresh sẽ xoá + tạo lại 0-23h của ngày hôm đó)
-        target_date = timezone.localdate()
+        target_date = timezone.localdate() if getattr(settings, 'USE_TZ', False) else timezone.now().date()
         forecasts = ForecastService.get_or_refresh_solar_daily(location, target_date=target_date, max_age_hours=1)
 
-        values = [f.shortwave_radiation or 0 for f in forecasts]
+        values = [float(f.shortwave_radiation or 0) for f in forecasts]
         total_radiation = sum(values)
-        avg_radiation = (total_radiation / len(values)) if values else 0
+
+        # Định nghĩa "giờ nắng": số giờ có bức xạ đáng kể.
+        # Ngưỡng thấp để phù hợp dữ liệu shortwave_radiation (global) và tránh đếm nhiễu rất nhỏ.
+        SUNSHINE_THRESHOLD_W = 10.0
+        daylight_values = [v for v in values if v >= SUNSHINE_THRESHOLD_W]
+
+        # Bức xạ TB nên tính trên giờ có nắng để tránh bị kéo xuống bởi ban đêm = 0
+        avg_radiation = (sum(daylight_values) / len(daylight_values)) if daylight_values else 0
         max_radiation = max(values) if values else 0
-        sunshine_hours = len([v for v in values if v > 100])
+        sunshine_hours = len(daylight_values)
 
         # Ước tính sản lượng điện mặt trời (giả sử panel 5kW, hiệu suất 15%)
         # kWh = (W/m² * m² * hiệu suất * giờ) / 1000
@@ -228,8 +234,11 @@ def get_solar_radiation(request):
         # Trả về dữ liệu (giữ format gần giống CSV: Time + Radiation_Forecast)
         hourly_data = []
         for f in forecasts:
+            dt = f.forecast_time
+            if getattr(settings, 'USE_TZ', False):
+                dt = timezone.localtime(dt)
             hourly_data.append({
-                'Time': timezone.localtime(f.forecast_time).strftime('%Y-%m-%d %H:%M:%S'),
+                'Time': dt.strftime('%Y-%m-%d %H:%M:%S'),
                 'Radiation_Forecast': float(f.shortwave_radiation or 0),
             })
 
@@ -243,6 +252,7 @@ def get_solar_radiation(request):
                 'avg_radiation_w': round(avg_radiation, 2),
                 'max_radiation_w': round(max_radiation, 2),
                 'sunshine_hours': sunshine_hours,
+                'sunshine_threshold_w': 10.0,
                 'estimated_kwh': round(estimated_kwh, 2),
                 'rating': rating,
                 'rating_color': rating_color
@@ -603,143 +613,6 @@ def get_outfit_advice(request):
         return Response({
             'status': 'success',
             'advice': advice
-        })
-
-    except Location.DoesNotExist:
-        return Response({
-            'status': 'error',
-            'error': 'Không tìm thấy địa điểm'
-        }, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({
-            'status': 'error',
-            'error': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# API DỰ BÁO BỨC XẠ MẶT TRỜI
-@api_view(['GET'])
-def get_solar_radiation(request):
-    """
-    API dự báo bức xạ mặt trời và năng lượng điện mặt trời
-    GET /api/weather/solar/?location_id=X
-    """
-    location_id = request.GET.get('location_id')
-    if not location_id:
-        return Response({
-            'status': 'error',
-            'error': 'Thiếu location_id'
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        location = Location.objects.get(id=location_id)
-
-        # Lấy dữ liệu hourly forecast có shortwave_radiation
-        from .models import HourlyForecast
-        from django.utils import timezone
-        from datetime import timedelta
-
-        now = timezone.localtime()
-        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end = today_start + timedelta(days=1)
-
-        forecasts = HourlyForecast.objects.filter(
-            location=location,
-            forecast_time__gte=today_start,
-            forecast_time__lt=today_end,
-            shortwave_radiation__isnull=False
-        ).order_by('forecast_time')
-
-        if not forecasts.exists():
-            # Fallback: ước tính từ Open-Meteo
-            import requests
-            url = "https://api.open-meteo.com/v1/forecast"
-            params = {
-                'latitude': location.latitude,
-                'longitude': location.longitude,
-                'hourly': 'shortwave_radiation',
-                'timezone': 'Asia/Ho_Chi_Minh',
-                'forecast_days': 1
-            }
-
-            response = requests.get(url, params=params, timeout=10)
-            if response.ok:
-                data = response.json()
-                hourly_radiation = data['hourly']['shortwave_radiation']
-
-                # Tính toán
-                avg_radiation = sum([r for r in hourly_radiation if r > 0]) / len([r for r in hourly_radiation if r > 0]) if any(r > 0 for r in hourly_radiation) else 0
-                max_radiation = max(hourly_radiation)
-                sunshine_hours = sum(1 for r in hourly_radiation if r > 100)
-
-                # Ước tính kWh (giả sử hệ thống 1kW)
-                # kWh = (tổng bức xạ W/m² * diện tích m² * hiệu suất) / 1000
-                # Đơn giản: kWh ≈ (avg_radiation * sunshine_hours) / 1000
-                estimated_kwh = (avg_radiation * sunshine_hours) / 1000
-
-                # Đánh giá
-                if avg_radiation >= 600:
-                    rating = "Xuất sắc"
-                    rating_color = "rating-excellent"
-                elif avg_radiation >= 400:
-                    rating = "Tốt"
-                    rating_color = "rating-good"
-                elif avg_radiation >= 200:
-                    rating = "Trung bình"
-                    rating_color = "rating-medium"
-                else:
-                    rating = "Thấp"
-                    rating_color = "rating-low"
-
-                return Response({
-                    'status': 'success',
-                    'summary': {
-                        'avg_radiation_w': avg_radiation,
-                        'max_radiation_w': max_radiation,
-                        'sunshine_hours': sunshine_hours,
-                        'estimated_kwh': estimated_kwh,
-                        'rating': rating,
-                        'rating_color': rating_color
-                    },
-                    'hourly': hourly_radiation
-                })
-            else:
-                return Response({
-                    'status': 'error',
-                    'error': 'Không có dữ liệu bức xạ mặt trời'
-                }, status=status.HTTP_404_NOT_FOUND)
-
-        # Có dữ liệu từ database
-        radiation_values = [f.shortwave_radiation for f in forecasts]
-        avg_radiation = sum([r for r in radiation_values if r > 0]) / len([r for r in radiation_values if r > 0]) if any(r > 0 for r in radiation_values) else 0
-        max_radiation = max(radiation_values)
-        sunshine_hours = sum(1 for r in radiation_values if r > 100)
-        estimated_kwh = (avg_radiation * sunshine_hours) / 1000
-
-        if avg_radiation >= 600:
-            rating = "Xuất sắc"
-            rating_color = "rating-excellent"
-        elif avg_radiation >= 400:
-            rating = "Tốt"
-            rating_color = "rating-good"
-        elif avg_radiation >= 200:
-            rating = "Trung bình"
-            rating_color = "rating-medium"
-        else:
-            rating = "Thấp"
-            rating_color = "rating-low"
-
-        return Response({
-            'status': 'success',
-            'summary': {
-                'avg_radiation_w': avg_radiation,
-                'max_radiation_w': max_radiation,
-                'sunshine_hours': sunshine_hours,
-                'estimated_kwh': estimated_kwh,
-                'rating': rating,
-                'rating_color': rating_color
-            },
-            'hourly': radiation_values
         })
 
     except Location.DoesNotExist:

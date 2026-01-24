@@ -4,6 +4,7 @@ import django
 from pathlib import Path
 from datetime import datetime
 from django.utils import timezone as tz
+from django.conf import settings
 import pytz
 import numpy as np
 import pandas as pd
@@ -100,7 +101,7 @@ def predict_hourly_temperature(province_name: str, steps: int = 24, force: bool 
     preds = scaler.inverse_transform(np.array(preds).reshape(-1, 1)).ravel()
     
     # Bắt đầu dự báo từ giờ tiếp theo (hiện tại + 1h)
-    now = tz.localtime()  # Lấy thời gian VN hiện tại
+    now = tz.localtime(tz.now()) if getattr(settings, 'USE_TZ', False) else tz.now()
     next_hour = now.replace(minute=0, second=0, microsecond=0) + pd.Timedelta(hours=1)
     times = pd.date_range(start=next_hour, periods=steps, freq="h")
 
@@ -116,7 +117,7 @@ def predict_hourly_temperature(province_name: str, steps: int = 24, force: bool 
     HourlyForecast.objects.bulk_create(forecasts)
     
     # Hiển thị thời gian VN (không phải UTC)
-    vn_time = tz.localtime(tz.now()).strftime('%Y-%m-%d %H:%M:%S')
+    vn_time = (tz.localtime(tz.now()) if getattr(settings, 'USE_TZ', False) else tz.now()).strftime('%Y-%m-%d %H:%M:%S')
     return f"✅ {province_name}: Saved {steps} hourly forecasts (VN time: {vn_time})"
 
 
