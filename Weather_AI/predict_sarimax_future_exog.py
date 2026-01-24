@@ -1,4 +1,4 @@
-import os
+
 import json
 import numpy as np
 import pandas as pd
@@ -6,14 +6,11 @@ import joblib
 from pathlib import Path
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 import warnings
-
-# Tắt các cảnh báo không cần thiết
 warnings.filterwarnings("ignore")
 
 BASE_DIR = Path(__file__).resolve().parent
-# Thư mục chứa dữ liệu lịch sử (cần để khôi phục trạng thái model)
 DATA_DIR = BASE_DIR / "data"
-MODEL_DIR = BASE_DIR / "models_sarimax_future"
+MODEL_DIR = BASE_DIR / "models_sarimax_future_exog"
 FUTURE_DATA_DIR = BASE_DIR / "data_future"
 RESULT_DIR = BASE_DIR / "predictions_sarimax_24h"
 RESULT_DIR.mkdir(parents=True, exist_ok=True)
@@ -59,7 +56,6 @@ PROVINCE_COORDINATES = {
 }
 
 
-# --- CÁC HÀM XỬ LÝ FEATURE (COPY TỪ TRAIN) ---
 def calculate_solar_elevation(times, lat, lon):
     lat_rad = np.radians(lat)
     doy = times.dt.dayofyear
@@ -77,15 +73,11 @@ def calculate_solar_elevation(times, lat, lon):
 def create_features(df, province_name):
     df = df.copy()
     time_col = df.columns[0]
-    # Đảm bảo cột time là datetime
     if not np.issubdtype(df[time_col].dtype, np.datetime64):
         df[time_col] = pd.to_datetime(df[time_col])
 
-    # Nếu là dữ liệu lịch sử thì sort, dữ liệu tương lai thì giữ nguyên
-    # Ở đây ta cứ sort nhẹ để đảm bảo đúng thứ tự
     df = df.sort_values(by=time_col).reset_index(drop=True)
 
-    # Temporal features
     df['hour'] = df[time_col].dt.hour
     df['month'] = df[time_col].dt.month
     df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
@@ -94,7 +86,6 @@ def create_features(df, province_name):
     df['month_cos'] = np.cos(2 * np.pi * df['month'] / 12)
     df['wet_season'] = df['month'].isin(WET_MONTHS).astype(np.float32)
 
-    # Solar elevation
     if province_name in PROVINCE_COORDINATES:
         lat, lon = PROVINCE_COORDINATES[province_name]
         df['solar_elevation'] = calculate_solar_elevation(df[time_col], lat, lon)
@@ -104,48 +95,46 @@ def create_features(df, province_name):
     return df
 
 
-# -------------------------------------------------------------
 
 def predict_province(province_name):
     print(f"Predicting for: {province_name}...")
 
-    # Định nghĩa các đường dẫn file
     model_file = MODEL_DIR / f"{province_name}_model.pkl"
     scaler_file = MODEL_DIR / f"{province_name}_scaler.pkl"
     metadata_file = MODEL_DIR / f"{province_name}_metadata.json"
     future_file = FUTURE_DATA_DIR / f"{province_name}.csv"
     history_file = DATA_DIR / f"{province_name}.csv"
 
-    # Kiểm tra file tồn tại
     if not (
             model_file.exists() and scaler_file.exists() and metadata_file.exists() and future_file.exists() and history_file.exists()):
         print(f"[X] Missing required files for {province_name}")
         return
 
     try:
-        # 1. Load Metadata & Scaler & Model cũ
         with open(metadata_file, "r", encoding="utf-8") as f:
             metadata = json.load(f)
 
         scaler = joblib.load(scaler_file)
         saved_model = joblib.load(model_file)
 
-        # Lấy các thông số cấu hình từ metadata
         order = tuple(metadata['order'])
         seasonal_order = tuple(metadata['seasonal_order'])
         exog_cols = metadata['exog_cols']
 
-        # 2. LOAD & TÁI TẠO DỮ LIỆU LỊCH SỬ (Model Re-hydration)
-        # -----------------------------------------------------------
+
         df_hist = pd.read_csv(history_file)
         df_hist_processed = create_features(df_hist, province_name)
+        
+        time_col_hist = df_hist_processed.columns[0]
+        cutoff = df_hist_processed[time_col_hist].max() - pd.Timedelta(days=7)
+        df_hist_processed = df_hist_processed[df_hist_processed[time_col_hist] >= cutoff].reset_index(drop=True)
+        
         df_hist_processed = df_hist_processed.ffill().bfill()
 
         y_hist = df_hist_processed[TARGET_COLUMN].values.astype('float32')
         X_hist = df_hist_processed[exog_cols].values.astype('float32')
         X_hist_scaled = scaler.transform(X_hist)
 
-        # Khởi tạo model mới và nạp params cũ
         model_rebuilt = SARIMAX(
             y_hist,
             exog=X_hist_scaled,
@@ -156,11 +145,9 @@ def predict_province(province_name):
         )
         results_rebuilt = model_rebuilt.filter(saved_model.params)
 
-        # 3. XỬ LÝ DỮ LIỆU TƯƠNG LAI
-        # ---------------------------
+        # xử lý dữ liệu tương lai
         df_future = pd.read_csv(future_file)
 
-        # === [LOGIC MỚI] CẮT LẤY 1 NGÀY ĐẦU TIÊN ===
         time_col = df_future.columns[0]
         df_future[time_col] = pd.to_datetime(df_future[time_col])
 
@@ -168,29 +155,23 @@ def predict_province(province_name):
             print(f"[X] Data future trống cho {province_name}")
             return
 
-        # Lấy ngày đầu tiên trong dữ liệu
         first_date = df_future[time_col].dt.date.iloc[0]
-        # Lọc chỉ lấy các dòng thuộc ngày đó
         df_future_1day = df_future[df_future[time_col].dt.date == first_date].copy()
 
-        # Tạo feature cho 1 ngày này
         df_future_processed = create_features(df_future_1day, province_name)
 
-        # Kiểm tra cột thiếu
+        # kiểm tra cột thiếu
         missing_cols = [col for col in exog_cols if col not in df_future_processed.columns]
         if missing_cols:
             print(f"[X] Missing columns in future data: {missing_cols}")
             return
 
-        # Scale dữ liệu tương lai
         X_future = df_future_processed[exog_cols].values.astype('float32')
         X_future_scaled = scaler.transform(X_future)
 
-        # 4. DỰ BÁO (FORECAST)
-        # --------------------
+        # dự báo
         y_pred = results_rebuilt.forecast(steps=len(df_future_1day), exog=X_future_scaled)
 
-        # 5. HẬU XỬ LÝ
         y_pred = np.maximum(y_pred, 0)
         y_pred = np.minimum(y_pred, 1200)
 
@@ -199,7 +180,6 @@ def predict_province(province_name):
             night_mask = elev <= 0
             y_pred[night_mask] = 0
 
-        # === [LOGIC MỚI] CHỈ LƯU CỘT TIME VÀ PREDICT ===
         df_result = pd.DataFrame()
         df_result['time'] = df_future_1day[time_col]
         df_result['predicted_radiation'] = y_pred
@@ -231,5 +211,4 @@ if __name__ == "__main__":
     elif args.province:
         predict_province(args.province)
     else:
-        # Nếu chạy trực tiếp không tham số, thử với 1 tỉnh mặc định
         predict_province("An_Giang")

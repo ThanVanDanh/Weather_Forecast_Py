@@ -1,0 +1,48 @@
+{
+  "province": "Da_Nang",
+  "order": [
+    1,
+    1,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    1,
+    24
+  ],
+  "exog_cols": [
+    "cloudcover",
+    "temperature_2m",
+    "relative_humidity_2m",
+    "wind_speed_10m",
+    "precipitation",
+    "rain",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "wet_season",
+    "solar_elevation"
+  ],
+  "metrics": {
+    "mae_all": 54.28297559254307,
+    "rmse_all": 87.19503746368585,
+    "mae_daylight": 82.61914409756656,
+    "rmse_daylight": 108.3154347647273,
+    "mape_daylight": 26.93153601111135,
+    "accuracy_daylight": 73.06846398888865,
+    "n_daylight_samples": 11
+  },
+  "train_samples": 152,
+  "test_samples": 17,
+  "training_time": 3.9978020191192627,
+  "coordinates": [
+    16.07,
+    108.22
+  ],
+  "data_range": {
+    "start": "2022-01-01 00:00:00",
+    "end": "2026-01-22 23:00:00"
+  }
+}

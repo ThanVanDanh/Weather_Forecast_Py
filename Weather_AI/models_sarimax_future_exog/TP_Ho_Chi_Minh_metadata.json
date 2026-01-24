@@ -1,0 +1,48 @@
+{
+  "province": "TP_Ho_Chi_Minh",
+  "order": [
+    1,
+    1,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    1,
+    24
+  ],
+  "exog_cols": [
+    "cloudcover",
+    "temperature_2m",
+    "relative_humidity_2m",
+    "wind_speed_10m",
+    "precipitation",
+    "rain",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "wet_season",
+    "solar_elevation"
+  ],
+  "metrics": {
+    "mae_all": 28.10881938701932,
+    "rmse_all": 41.73349633345201,
+    "mae_daylight": 40.077266325393495,
+    "rmse_daylight": 50.6679387380963,
+    "mape_daylight": 21.703120409825047,
+    "accuracy_daylight": 78.29687959017495,
+    "n_daylight_samples": 11
+  },
+  "train_samples": 152,
+  "test_samples": 17,
+  "training_time": 4.0994873046875,
+  "coordinates": [
+    10.82,
+    106.63
+  ],
+  "data_range": {
+    "start": "2022-01-01 00:00:00",
+    "end": "2026-01-24 18:00:00"
+  }
+}

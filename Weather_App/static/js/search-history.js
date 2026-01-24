@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const temp = item.temperature !== null ? `${item.temperature}°C` : '--';
 
             html += `
-                <div class="history-item" data-location-id="${item.locationId}" data-city="${item.cityName}" style="cursor: pointer;">
+                <div class="history-item" data-location-id="${item.locationId}" data-city="${item.cityName}" data-slug="${item.slug}" style="cursor: pointer;">
                     <div class="history-info">
                         <i class="fa-solid fa-location-dot"></i>
                         <div>
@@ -80,8 +80,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Thêm event click cho các item
         historyContainer.querySelectorAll('.history-item').forEach(item => {
             item.addEventListener('click', function () {
-                const cityName = this.dataset.city;
-                window.location.href = `/?search=${encodeURIComponent(cityName)}`;
+                const slug = this.dataset.slug;
+                if (slug) {
+                    window.location.href = `/tinh/${slug}/`;
+                } else {
+                    const cityName = this.dataset.city;
+                    window.location.href = `/?search=${encodeURIComponent(cityName)}`;
+                }
             });
         });
 

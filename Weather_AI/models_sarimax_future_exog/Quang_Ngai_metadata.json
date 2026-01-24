@@ -1,0 +1,48 @@
+{
+  "province": "Quang_Ngai",
+  "order": [
+    1,
+    1,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    1,
+    24
+  ],
+  "exog_cols": [
+    "cloudcover",
+    "temperature_2m",
+    "relative_humidity_2m",
+    "wind_speed_10m",
+    "precipitation",
+    "rain",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "wet_season",
+    "solar_elevation"
+  ],
+  "metrics": {
+    "mae_all": 62.593197546648206,
+    "rmse_all": 99.19421483512238,
+    "mae_daylight": 96.73494166300178,
+    "rmse_daylight": 123.31458970117446,
+    "mape_daylight": 20.964832523867507,
+    "accuracy_daylight": 79.0351674761325,
+    "n_daylight_samples": 11
+  },
+  "train_samples": 152,
+  "test_samples": 17,
+  "training_time": 4.518487215042114,
+  "coordinates": [
+    15.12047,
+    108.79232
+  ],
+  "data_range": {
+    "start": "2022-01-01 00:00:00",
+    "end": "2026-01-24 17:00:00"
+  }
+}

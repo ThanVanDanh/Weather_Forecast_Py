@@ -1,0 +1,43 @@
+{
+  "province": "Lai_Chau",
+  "order": [
+    1,
+    1,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    1,
+    24
+  ],
+  "exog_cols": [
+    "cloudcover",
+    "temperature_2m",
+    "relative_humidity_2m",
+    "wind_speed_10m",
+    "precipitation",
+    "rain",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "wet_season",
+    "solar_elevation"
+  ],
+  "metrics": {
+    "mae_all": 27.42989327796707,
+    "rmse_all": 42.56729492875104
+  },
+  "train_samples": 152,
+  "test_samples": 17,
+  "training_time": 4.006813287734985,
+  "coordinates": [
+    22.39922,
+    103.44532
+  ],
+  "data_range": {
+    "start": "2022-01-01 00:00:00",
+    "end": "2026-01-24 16:00:00"
+  }
+}

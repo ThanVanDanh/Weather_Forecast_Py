@@ -14,7 +14,7 @@ def save_alerts_to_db(location_obj, alerts_data):
     Lưu cảnh báo vào database WeatherAlert model
     Luôn lưu kể cả khi không có alerts (lưu marker để biết đã check)
     """
-    from .models import WeatherAlert
+    from Weather_App.models import WeatherAlert
     
     saved_alerts = []
     now = timezone.now()
@@ -71,7 +71,7 @@ def get_alerts_from_db(location_obj):
     Lấy cảnh báo từ database WeatherAlert
     Trả về list rỗng nếu có marker "Không có cảnh báo"
     """
-    from .models import WeatherAlert
+    from Weather_App.models import WeatherAlert
     
     now = timezone.now()
     alerts = []
@@ -299,7 +299,7 @@ def get_weather_alerts(lat: float, lon: float, location_obj=None) -> Dict:
         # db_alerts = [] → có trong DB nhưng rỗng (đã check, không có alerts)
         # db_alerts = [...] → có alerts
         if db_alerts is not None:  # Có trong DB (dù rỗng hay không)
-            from .models import WeatherAlert
+            from Weather_App.models import WeatherAlert
             latest_check = WeatherAlert.objects.filter(
                 location=location_obj,
                 end_time__gte=timezone.now()

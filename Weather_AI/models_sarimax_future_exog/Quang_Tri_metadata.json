@@ -1,0 +1,43 @@
+{
+  "province": "Quang_Tri",
+  "order": [
+    1,
+    1,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    1,
+    24
+  ],
+  "exog_cols": [
+    "cloudcover",
+    "temperature_2m",
+    "relative_humidity_2m",
+    "wind_speed_10m",
+    "precipitation",
+    "rain",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "wet_season",
+    "solar_elevation"
+  ],
+  "metrics": {
+    "mae_all": 53.22808369538769,
+    "rmse_all": 76.63622425557
+  },
+  "train_samples": 152,
+  "test_samples": 17,
+  "training_time": 4.305245637893677,
+  "coordinates": [
+    17.46594,
+    106.5984
+  ],
+  "data_range": {
+    "start": "2022-01-01 00:00:00",
+    "end": "2026-01-24 15:00:00"
+  }
+}

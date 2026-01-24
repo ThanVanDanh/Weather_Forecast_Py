@@ -6,7 +6,6 @@
             <div class="search-bar" style="position: relative;">
                 <input type="text" id="search-province-input" placeholder="Nhập tên tỉnh thành phố" autocomplete="off">
                 <button id="search-province-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
-                <!-- Dropdown gợi ý -->
                 <div id="search-suggestions" class="search-suggestions" style="display: none;"></div>
             </div>
         </div>
@@ -85,6 +84,7 @@
                             <a href="{% url 'Weather_App:province_detail' slug='bac-ninh' %}">Bắc Ninh</a>
                             <a href="{% url 'Weather_App:province_detail' slug='hung-yen' %}">Hưng Yên</a>
                             <a href="{% url 'Weather_App:province_detail' slug='ninh-binh' %}">Ninh Bình</a>
+							<a href="{% url 'Weather_App:province_detail' slug='ninh-binh' %}">Quảng Ninh</a>
                         </div>
 
                     </div>

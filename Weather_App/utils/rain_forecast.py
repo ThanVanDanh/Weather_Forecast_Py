@@ -17,7 +17,7 @@ def get_rain_forecast_minutely(lat: float, lon: float, location_obj=None) -> Dic
     """
     # Kiểm tra cache nếu có location_obj
     if location_obj:
-        from .models import RainForecastCache
+        from Weather_App.models import RainForecastCache
         try:
             cache = RainForecastCache.objects.get(location=location_obj)
             if not cache.is_stale(minutes=10):
@@ -109,7 +109,7 @@ def get_rain_forecast_minutely(lat: float, lon: float, location_obj=None) -> Dic
         
         # Lưu vào cache nếu có location_obj
         if location_obj:
-            from .models import RainForecastCache
+            from Weather_App.models import RainForecastCache
             try:
                 cache, created = RainForecastCache.objects.update_or_create(
                     location=location_obj,
@@ -128,7 +128,7 @@ def get_rain_forecast_minutely(lat: float, lon: float, location_obj=None) -> Dic
         
         # Vẫn lưu cache kể cả khi dùng hourly estimate
         if location_obj and result.get('status') == 'success':
-            from .models import RainForecastCache
+            from Weather_App.models import RainForecastCache
             try:
                 cache, created = RainForecastCache.objects.update_or_create(
                     location=location_obj,

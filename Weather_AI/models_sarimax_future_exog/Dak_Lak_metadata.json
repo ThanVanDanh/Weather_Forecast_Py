@@ -1,0 +1,43 @@
+{
+  "province": "Dak_Lak",
+  "order": [
+    1,
+    1,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    1,
+    24
+  ],
+  "exog_cols": [
+    "cloudcover",
+    "temperature_2m",
+    "relative_humidity_2m",
+    "wind_speed_10m",
+    "precipitation",
+    "rain",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "wet_season",
+    "solar_elevation"
+  ],
+  "metrics": {
+    "mae_all": 14.357851222172012,
+    "rmse_all": 29.663046020433956
+  },
+  "train_samples": 152,
+  "test_samples": 17,
+  "training_time": 3.9234471321105957,
+  "coordinates": [
+    12.67,
+    108.04
+  ],
+  "data_range": {
+    "start": "2022-01-01 00:00:00",
+    "end": "2026-01-20 08:00:00"
+  }
+}

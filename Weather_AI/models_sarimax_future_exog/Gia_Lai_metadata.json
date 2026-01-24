@@ -1,0 +1,43 @@
+{
+  "province": "Gia_Lai",
+  "order": [
+    1,
+    1,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    1,
+    24
+  ],
+  "exog_cols": [
+    "cloudcover",
+    "temperature_2m",
+    "relative_humidity_2m",
+    "wind_speed_10m",
+    "precipitation",
+    "rain",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "wet_season",
+    "solar_elevation"
+  ],
+  "metrics": {
+    "mae_all": 12.980906422723413,
+    "rmse_all": 30.23754382303179
+  },
+  "train_samples": 152,
+  "test_samples": 17,
+  "training_time": 10.712019920349121,
+  "coordinates": [
+    13.78297,
+    109.21966
+  ],
+  "data_range": {
+    "start": "2022-01-01 00:00:00",
+    "end": "2026-01-24 09:00:00"
+  }
+}

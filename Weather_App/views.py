@@ -1,12 +1,11 @@
 from django.contrib.auth import logout
 
-# View cho admin logout chuyển về /login/
 def admin_logout_to_login(request):
     logout(request)
     return redirect('/login/')
 from django.contrib.auth.views import LoginView
-from django.shortcuts import redirect
-# Custom LoginView: nếu user là admin thì chuyển hướng sang /admin/
+
+
 class CustomLoginView(LoginView):
     def form_valid(self, form):
         user = form.get_user()
@@ -31,15 +30,12 @@ from django.contrib.auth.decorators import login_required
 from .forms import UserUpdateForm, ProfileUpdateForm
 from django.shortcuts import redirect
 
-from .models import Location, CurrentWeatherCache, HourlyForecast, DailyForecast, WeatherAlert, SolarForecast
-from .outfit_advisor import DBOutfitAdvisor
+from .models import Location, CurrentWeatherCache
+from Weather_App.utils.outfit_advisor import DBOutfitAdvisor
 from .serializers import (
     LocationSerializer, FeaturedCitySerializer, HourlyForecastSerializer, DailyForecastSerializer
 )
-from .services import MeteoAPIService, ForecastService, get_province_name, is_solar_supported
-import subprocess
-import pandas as pd
-from pathlib import Path
+from .services import ForecastService, get_province_name, is_solar_supported
 
 from .services import MeteoAPIService
 from django.contrib.auth.views import (
@@ -50,12 +46,10 @@ from django.contrib.auth.views import (
     PasswordResetCompleteView
 )
 def weather_dashboard(request):
-    # Django sẽ tìm 'weather/dashboard.html' bên trong thư mục 'templates'
     return render(request, 'index.html')
 
 @login_required(login_url='Weather_App:login_page')
 def customer_care(request):
-    """Trang chăm sóc khách hàng"""
     return render(request, 'customer_care.html')
 
 @api_view(['GET'])
@@ -105,7 +99,6 @@ def get_location_search(request):
         "Bạc Liêu": "Cà Mau", "Cà Mau": "Cà Mau"
     }
 
-    # Normalize query logic
     target_city_name = city_query
     
     # Check mapping
@@ -600,7 +593,7 @@ def get_ai_forecast(request):
             {"error": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-from math import radians, sin, cos, asin, sqrt
+
 
 # 1. VIEW ĐĂNG NHẬP
 class CustomLoginView(LoginView):
@@ -704,7 +697,7 @@ def get_weather_alerts(request):
     API lấy cảnh báo thời tiết cực đoan - Đọc từ database WeatherAlert
     GET /api/weather/alerts/?location_id=X
     """
-    from .weather_alerts import get_weather_alerts as fetch_alerts
+    from Weather_App.utils.weather_alerts import get_weather_alerts as fetch_alerts
 
     location_id = request.GET.get('location_id')
     if not location_id:
@@ -752,7 +745,7 @@ def get_outfit_advice(request):
         location = Location.objects.get(id=location_id)
 
         # Sử dụng DBOutfitAdvisor để lấy gợi ý
-        from .outfit_advisor import DBOutfitAdvisor
+        from Weather_App.utils.outfit_advisor import DBOutfitAdvisor
         advisor = DBOutfitAdvisor(location_id=location_id)
         advice = advisor.get_advice()
 
@@ -792,7 +785,7 @@ def get_rain_forecast(request):
         location = Location.objects.get(id=location_id)
 
         # Gọi rain forecast service (với cache 10 phút)
-        from .rain_forecast import get_rain_forecast_minutely
+        from Weather_App.utils.rain_forecast import get_rain_forecast_minutely
         result = get_rain_forecast_minutely(
             location.latitude,
             location.longitude,
@@ -837,6 +830,7 @@ def search_history_api(request):
     if request.method == 'GET':
         # Lấy lịch sử tìm kiếm của user (10 mục gần nhất, trong 30 ngày)
         thirty_days_ago = timezone.now() - timedelta(days=30)
+        from django.utils.text import slugify
 
         history = SearchHistory.objects.filter(
             user=user,
@@ -848,6 +842,7 @@ def search_history_api(request):
             history_data.append({
                 'locationId': item.location.id,
                 'cityName': item.location.city_name_vn or item.location.city_name,
+                'slug': slugify(item.location.city_name_vn or item.location.city_name),
                 'temperature': item.temperature,
                 'weatherCode': item.weather_code,
                 'isDay': item.is_day,
@@ -899,6 +894,7 @@ def search_history_api(request):
                 'item': {
                     'locationId': location.id,
                     'cityName': location.city_name_vn or location.city_name,
+                    'slug': slugify(location.city_name_vn or location.city_name),
                     'temperature': temperature,
                     'timestamp': history_item.searched_at.isoformat()
                 }

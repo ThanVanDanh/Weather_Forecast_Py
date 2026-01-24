@@ -37,7 +37,7 @@ class RainForecastCache(models.Model):
     last_updated = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lần cuối")
 
     class Meta:
-        verbose_name = "bộ nhớ đệm dự báo mưa minutely"
+        verbose_name = "bộ nhớ đệm dự báo mưa"
         verbose_name_plural = "Bộ nhớ đệm dự báo mưa"
 
     def is_stale(self, minutes=15):
@@ -56,8 +56,8 @@ class HourlyForecast(models.Model):
     class Meta:
         unique_together = ('location', 'forecast_time')
         ordering = ['forecast_time']
-        verbose_name = "dự báo theo Giờ (24h)"
-        verbose_name_plural = "Dự báo theo Giờ (24h)"
+        verbose_name = "dự báo theo nhiệt độ theo giờ (24h)"
+        verbose_name_plural = "Dự báo theo nhiệt độ theo giờ (24h)"
 
     def __str__(self):
         return f"{self.location.city_name} - {self.forecast_time.strftime('%H:%M')}"
@@ -75,8 +75,8 @@ class DailyForecast(models.Model):
     class Meta:
         unique_together = ('location', 'forecast_date')
         ordering = ['forecast_date']
-        verbose_name = "dự báo theo Ngày"
-        verbose_name_plural = "Dự báo theo Ngày (5 ngày)"
+        verbose_name = "dự báo nhiệt độ theo ngày"
+        verbose_name_plural = "Dự báo nhiệt độ theo ngày (5 ngày)"
 
     def __str__(self):
         return f"{self.location.city_name} - {self.forecast_date.strftime('%d/%m/%Y')}"

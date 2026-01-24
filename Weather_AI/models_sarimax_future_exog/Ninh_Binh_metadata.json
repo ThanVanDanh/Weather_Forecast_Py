@@ -1,0 +1,43 @@
+{
+  "province": "Ninh_Binh",
+  "order": [
+    1,
+    1,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    1,
+    24
+  ],
+  "exog_cols": [
+    "cloudcover",
+    "temperature_2m",
+    "relative_humidity_2m",
+    "wind_speed_10m",
+    "precipitation",
+    "rain",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "wet_season",
+    "solar_elevation"
+  ],
+  "metrics": {
+    "mae_all": 41.60978336308219,
+    "rmse_all": 61.31033294099874
+  },
+  "train_samples": 152,
+  "test_samples": 17,
+  "training_time": 3.7737691402435303,
+  "coordinates": [
+    20.25809,
+    105.97965
+  ],
+  "data_range": {
+    "start": "2022-01-01 00:00:00",
+    "end": "2026-01-24 17:00:00"
+  }
+}
