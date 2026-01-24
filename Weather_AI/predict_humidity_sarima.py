@@ -1,19 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-predict_humidity_sarima.py
-==========================
-Production-ready SARIMA prediction script for 24h humidity forecasting.
 
-Uses trained SARIMA model to predict relative humidity for the next 24 hours.
-
-Author: Senior Python Developer (10+ years Time Series experience)
-Usage:
-    python predict_humidity_sarima.py
-    python predict_humidity_sarima.py --province An_Giang --hours 24
-
-Python: 3.10+
-"""
 
 import argparse
 import json
@@ -35,9 +20,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
+
 
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
@@ -52,28 +35,16 @@ TARGET_COL = "relative_humidity_2m"
 FORECAST_HORIZON = 24
 
 
-# ============================================================================
-# DATA LOADING
-# ============================================================================
+
 
 def load_latest_data(filepath: Path, n_samples: int = 72) -> pd.Series:
-    """
-    Load latest data from CSV for model state update.
 
-    Args:
-        filepath: Path to data file
-        n_samples: Number of recent samples to load
-
-    Returns:
-        Series with target variable
-    """
     logger.info(f"Loading latest data from {filepath}")
 
     df = pd.read_csv(filepath, parse_dates=[TIME_COL])
     df = df.sort_values(TIME_COL).reset_index(drop=True)
     df = df.set_index(TIME_COL)
 
-    # Get last n samples
     recent_data = df[TARGET_COL].tail(n_samples)
 
     logger.info(f"Loaded {len(recent_data)} recent samples")
@@ -83,31 +54,22 @@ def load_latest_data(filepath: Path, n_samples: int = 72) -> pd.Series:
 
 
 def load_model_artifacts(province: str) -> Tuple:
-    """
-    Load trained model and metadata.
 
-    Args:
-        province: Province name
-
-    Returns:
-        Tuple of (model_data, metadata, params)
-    """
     logger.info(f"Loading model artifacts for {province}")
 
-    # Province-specific directory
+
     province_dir = ARTIFACTS_DIR / province
 
-    # Load lightweight model
+
     model_path = province_dir / f"{province}_humidity_sarima.pkl"
     with open(model_path, 'rb') as f:
         model_data = pickle.load(f)
 
-    # Load metadata
     metadata_path = province_dir / f"{province}_metadata.json"
     with open(metadata_path, 'r', encoding='utf-8') as f:
         metadata = json.load(f)
 
-    # Load parameters
+
     params_path = province_dir / f"{province}_best_params.json"
     with open(params_path, 'r', encoding='utf-8') as f:
         params = json.load(f)
@@ -119,21 +81,10 @@ def load_model_artifacts(province: str) -> Tuple:
     return model_data, metadata, params
 
 
-# ============================================================================
-# PREDICTION
-# ============================================================================
+
 
 def rebuild_model_for_forecast(model_data: dict, recent_data: pd.Series) -> Any:
-    """
-    Rebuild SARIMA model from saved parameters for forecasting.
 
-    Args:
-        model_data: Dictionary with model parameters
-        recent_data: Recent data series for model fitting
-
-    Returns:
-        Fitted SARIMA model ready for forecasting
-    """
     from statsmodels.tsa.statespace.sarimax import SARIMAX
 
     order = tuple(model_data['order'])
@@ -141,7 +92,7 @@ def rebuild_model_for_forecast(model_data: dict, recent_data: pd.Series) -> Any:
 
     logger.info(f"Rebuilding SARIMA{order}x{seasonal_order} with recent data...")
 
-    # Fit model on recent data using saved parameters as initialization
+
     model = SARIMAX(
         recent_data,
         order=order,
@@ -151,7 +102,7 @@ def rebuild_model_for_forecast(model_data: dict, recent_data: pd.Series) -> Any:
         initialization='approximate_diffuse'
     )
 
-    # Use saved params as start values if available
+
     try:
         start_params = model_data.get('params', None)
         if start_params:
@@ -159,7 +110,7 @@ def rebuild_model_for_forecast(model_data: dict, recent_data: pd.Series) -> Any:
         else:
             model_fit = model.fit(disp=False, maxiter=100)
     except Exception:
-        # Fallback to standard fit
+
         model_fit = model.fit(disp=False, maxiter=200)
 
     logger.info("Model rebuilt successfully")
@@ -168,27 +119,15 @@ def rebuild_model_for_forecast(model_data: dict, recent_data: pd.Series) -> Any:
 
 def forecast_next_hours(model, n_hours: int = 24,
                         confidence: float = 0.95) -> Tuple[pd.Series, pd.DataFrame]:
-    """
-    Generate forecast for next n hours.
 
-    Args:
-        model: Fitted SARIMA model
-        n_hours: Number of hours to forecast
-        confidence: Confidence level for intervals
-
-    Returns:
-        Tuple of (predictions Series, confidence intervals DataFrame)
-    """
     logger.info(f"Generating {n_hours}-hour forecast...")
 
-    # Generate forecast
     forecast = model.get_forecast(steps=n_hours)
 
-    # Get predictions and confidence intervals
     predictions = forecast.predicted_mean
     conf_int = forecast.conf_int(alpha=1 - confidence)
 
-    # Clip to valid range (0-100%)
+
     predictions = predictions.clip(0, 100)
     conf_int = conf_int.clip(0, 100)
 
@@ -198,18 +137,8 @@ def forecast_next_hours(model, n_hours: int = 24,
 def create_forecast_dataframe(predictions: pd.Series,
                               conf_int: pd.DataFrame,
                               last_timestamp: pd.Timestamp) -> pd.DataFrame:
-    """
-    Create a structured forecast DataFrame.
 
-    Args:
-        predictions: Predicted values
-        conf_int: Confidence intervals
-        last_timestamp: Last timestamp in training data
 
-    Returns:
-        DataFrame with forecasts
-    """
-    # Create future timestamps
     future_timestamps = pd.date_range(
         start=last_timestamp + timedelta(hours=1),
         periods=len(predictions),
@@ -229,29 +158,22 @@ def create_forecast_dataframe(predictions: pd.Series,
     return forecast_df
 
 
-# ============================================================================
-# VISUALIZATION
-# ============================================================================
 
 def plot_forecast(forecast_df: pd.DataFrame,
                   historical_data: pd.Series = None,
                   province: str = PROVINCE,
                   save_path: Path = None):
-    """
-    Plot forecast with confidence intervals.
-    """
+
     fig, ax = plt.subplots(figsize=(14, 6))
 
-    # Plot historical data if available
+
     if historical_data is not None:
         ax.plot(historical_data.index, historical_data.values,
                 'b-', linewidth=1, alpha=0.7, label='Historical')
 
-    # Plot forecast
     ax.plot(forecast_df['timestamp'], forecast_df['predicted_humidity'],
             'r-', linewidth=2, marker='o', markersize=4, label='Forecast')
 
-    # Plot confidence intervals
     ax.fill_between(
         forecast_df['timestamp'],
         forecast_df['lower_bound'],
@@ -279,25 +201,21 @@ def plot_forecast(forecast_df: pd.DataFrame,
 def plot_hourly_forecast_bars(forecast_df: pd.DataFrame,
                               province: str = PROVINCE,
                               save_path: Path = None):
-    """
-    Plot forecast as bar chart by hour.
-    """
+
     fig, ax = plt.subplots(figsize=(14, 6))
 
     x = range(len(forecast_df))
 
-    # Create bars
+
     bars = ax.bar(x, forecast_df['predicted_humidity'],
                   color='steelblue', alpha=0.7, edgecolor='black')
 
-    # Add error bars for confidence intervals
     yerr_lower = forecast_df['predicted_humidity'] - forecast_df['lower_bound']
     yerr_upper = forecast_df['upper_bound'] - forecast_df['predicted_humidity']
     ax.errorbar(x, forecast_df['predicted_humidity'],
                 yerr=[yerr_lower, yerr_upper],
                 fmt='none', color='red', capsize=3, capthick=1)
 
-    # Labels
     ax.set_xticks(x)
     ax.set_xticklabels([f"{t.strftime('%H:%M')}\n{t.strftime('%d/%m')}"
                         for t in forecast_df['timestamp']],
@@ -309,7 +227,6 @@ def plot_hourly_forecast_bars(forecast_df: pd.DataFrame,
     ax.set_ylim(0, 100)
     ax.grid(True, alpha=0.3, axis='y')
 
-    # Add value labels on bars
     for bar, val in zip(bars, forecast_df['predicted_humidity']):
         ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1,
                 f'{val:.0f}', ha='center', va='bottom', fontsize=7)
@@ -322,12 +239,10 @@ def plot_hourly_forecast_bars(forecast_df: pd.DataFrame,
     plt.close()
 
 
-# ============================================================================
-# MAIN
-# ============================================================================
+
 
 def main():
-    """Main prediction pipeline."""
+
     parser = argparse.ArgumentParser(
         description="Predict humidity for the next 24 hours using trained SARIMA model"
     )
@@ -354,10 +269,10 @@ def main():
     logger.info(f"Confidence Level: {args.confidence * 100}%")
     logger.info("=" * 60)
 
-    # Create output directory
+
     PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Load model data
+
     try:
         model_data, metadata, params = load_model_artifacts(args.province)
     except FileNotFoundError as e:
@@ -365,39 +280,35 @@ def main():
         logger.error(f"Run: python train_humidity_sarima.py --province {args.province}")
         return
 
-    # Load latest data for forecasting (need enough history for seasonal pattern)
     data_file = DATA_DIR / f"{args.province}.csv"
     if not data_file.exists():
         logger.error(f"Data file not found: {data_file}")
         return
 
-    # Load more data for proper model fitting (at least 7 days for seasonal pattern)
+
     recent_data = load_latest_data(data_file, n_samples=24 * 30)  # Last 30 days
     last_timestamp = recent_data.index.max()
 
-    # Rebuild model for forecasting using recent data
+
     model = rebuild_model_for_forecast(model_data, recent_data)
 
-    # Generate forecast
     predictions, conf_int = forecast_next_hours(
         model,
         n_hours=args.hours,
         confidence=args.confidence
     )
 
-    # Create forecast dataframe
+
     forecast_df = create_forecast_dataframe(predictions, conf_int, last_timestamp)
 
-    # Save predictions to CSV
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file = PREDICTIONS_DIR / f"{args.province}_humidity_forecast_{timestamp}.csv"
     forecast_df.to_csv(output_file, index=False)
     logger.info(f"Saved forecast to: {output_file}")
 
-    # Get last 48 hours for visualization
     display_data = recent_data.tail(48)
 
-    # Generate visualizations
     plot_forecast(
         forecast_df,
         historical_data=display_data,
@@ -411,7 +322,7 @@ def main():
         save_path=PREDICTIONS_DIR / f"{args.province}_forecast_bars_{timestamp}.png"
     )
 
-    # Print summary
+
     logger.info("\n" + "=" * 60)
     logger.info("FORECAST SUMMARY")
     logger.info("=" * 60)

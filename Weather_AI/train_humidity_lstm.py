@@ -22,7 +22,7 @@ PREDICT_HORIZON = 24
 
 BATCH_SIZE = 32
 EPOCHS = 50
-MAX_WORKERS = 4  # nếu TF hay crash thì để 1
+MAX_WORKERS = 4
 
 def process_humidity_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
@@ -51,7 +51,7 @@ def train_one_province(file_path):
     model_file = MODEL_DIR / f"{province_name}.keras"
 
     if model_file.exists():
-        return f"⏩ {province_name}: Đã xong từ trước."
+        return f" {province_name}: Đã xong từ trước."
 
     scaler_y_file = MODEL_DIR / f"scaler_Y_{province_name}.pkl"
     scaler_time_file = MODEL_DIR / f"scaler_TIME_{province_name}.pkl"
@@ -59,27 +59,26 @@ def train_one_province(file_path):
     try:
         raw_df = pd.read_csv(file_path)
         if TARGET_COLUMN not in raw_df.columns:
-            return f"⚠️ {province_name}: Thiếu cột {TARGET_COLUMN}."
+            return f" {province_name}: Thiếu cột {TARGET_COLUMN}."
 
         df = process_humidity_features(raw_df).ffill().bfill()
         values = df.values.astype("float32")
 
-        # Tách humidity và time-features
         y_raw = values[:, [0]]          # (N,1)
         time_raw = values[:, 1:]        # (N,4)
 
         n = len(values)
         if n < SEQ_LENGTH + PREDICT_HORIZON + 10:
-            return f"⚠️ {province_name}: Không đủ data."
+            return f" {province_name}: Không đủ data."
 
-        # split theo thời gian: 80/10/10
+
         n_train = int(n * 0.8)
         n_val = int(n * 0.9)
 
         y_train_raw, y_val_raw, y_test_raw = y_raw[:n_train], y_raw[n_train:n_val], y_raw[n_val:]
         t_train_raw, t_val_raw, t_test_raw = time_raw[:n_train], time_raw[n_train:n_val], time_raw[n_val:]
 
-        # scaler: humidity (y) riêng; time features riêng
+
         scaler_y = MinMaxScaler()
         scaler_t = MinMaxScaler()
 
@@ -94,7 +93,7 @@ def train_one_province(file_path):
         joblib.dump(scaler_y, scaler_y_file)
         joblib.dump(scaler_t, scaler_time_file)
 
-        # X = [humidity_scaled, time_scaled]
+
         X_train_all = np.concatenate([y_train, t_train], axis=1)
         X_val_all   = np.concatenate([y_val,   t_val], axis=1)
         X_test_all  = np.concatenate([y_test,  t_test], axis=1)
@@ -104,7 +103,7 @@ def train_one_province(file_path):
         X_test,  Y_test  = create_dataset(X_test_all,  y_test,  SEQ_LENGTH, PREDICT_HORIZON)
 
         if len(X_train) == 0 or len(X_val) == 0:
-            return f"⚠️ {province_name}: Không đủ data sau khi tạo sequence."
+            return f" {province_name}: Không đủ data sau khi tạo sequence."
 
         model = Sequential([
             Input(shape=(X_train.shape[1], X_train.shape[2])),
@@ -126,34 +125,30 @@ def train_one_province(file_path):
             verbose=1
         )
 
-        # bạn có thể evaluate trên test nếu muốn:
+
         test_loss = model.evaluate(X_test, Y_test, verbose=0)
-        return f"✅ {province_name}: Hoàn tất! (test_loss={test_loss:.5f})"
+        return f"{province_name}: Hoàn tất! (test_loss={test_loss:.5f})"
 
     except Exception as e:
-        return f"❌ {province_name}: Lỗi {str(e)}"
+        return f"{province_name}: Lỗi {str(e)}"
 
 def main():
     import tensorflow as tf
-
-    # nếu máy bạn có GPU và muốn dùng GPU, bỏ dòng này
     tf.config.set_visible_devices([], "GPU")
-
-    # giảm rủi ro treo CPU khi chạy nhiều process
     tf.config.threading.set_intra_op_parallelism_threads(1)
     tf.config.threading.set_inter_op_parallelism_threads(1)
 
     all_files = glob.glob(os.path.join(DATA_DIR, "*.csv"))
-    print(f"🌧️  Bắt đầu train humidity với {MAX_WORKERS} process...")
-    print(f"📊 Features: humidity lịch sử + time features (sin/cos hour, month)")
+    print(f" Bắt đầu train humidity với {MAX_WORKERS} process...")
+    print(f" Features: humidity lịch sử + time features (sin/cos hour, month)")
     start = time.time()
 
     with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
         for res in executor.map(train_one_province, all_files):
             print(res)
 
-    print(f"\n🏁 TỔNG THỜI GIAN: {(time.time() - start)/60:.1f} phút.")
-    print(f"💾 Models lưu tại: {MODEL_DIR}")
+    print(f"\nTỔNG THỜI GIAN: {(time.time() - start)/60:.1f} phút.")
+    print(f"  Models lưu tại: {MODEL_DIR}")
 
 if __name__ == "__main__":
     main()

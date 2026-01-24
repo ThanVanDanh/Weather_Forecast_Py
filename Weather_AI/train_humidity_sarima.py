@@ -1,21 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-train_humidity_sarima.py
-========================
-Production-ready SARIMA training script for hourly humidity forecasting.
-
-Author: Senior Python Developer (10+ years Time Series experience)
-Target: Forecast relative humidity (24h ahead) for 34 provinces of Vietnam
-Model: SARIMA (Seasonal ARIMA) - No exogenous variables
-
-Usage:
-    python train_humidity_sarima.py                    # Train all 34 provinces
-    python train_humidity_sarima.py --province An_Giang  # Train specific province
-    python train_humidity_sarima.py --all              # Train all provinces
-
-Python: 3.10+
-"""
 
 import argparse
 import json
@@ -37,11 +19,10 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from statsmodels.tsa.stattools import adfuller, kpss
 
-# Suppress warnings for cleaner output
+
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -49,54 +30,47 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Set matplotlib style
+
 plt.style.use('seaborn-v0_8-whitegrid')
 plt.rcParams['figure.figsize'] = (14, 6)
 plt.rcParams['font.size'] = 10
 plt.rcParams['axes.titlesize'] = 12
 plt.rcParams['axes.labelsize'] = 10
 
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
 
-# Paths
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 ARTIFACTS_DIR = BASE_DIR / "artifacts_humidity"
 PLOTS_DIR = ARTIFACTS_DIR / "plots"
 
-# Province configuration
+
 DEFAULT_PROVINCE = "An_Giang"
 
 
-# Auto-detect all provinces from data folder
+
 def get_all_provinces() -> List[str]:
     """Get list of all provinces from CSV files in data folder."""
     csv_files = list(DATA_DIR.glob("*.csv"))
     provinces = [f.stem for f in csv_files if f.stem != "__pycache__"]
     return sorted(provinces)
 
-
-# Column configuration
 TIME_COL = "time"
 TARGET_COL = "relative_humidity_2m"
 
-# Seasonality configuration
-SEASONAL_PERIOD = 24  # Hourly data with daily seasonality
 
-# Train/Validation/Test split
-VALIDATION_DAYS = 7  # 7 days for validation
-TEST_DAYS = 7  # 7 days for final test
+SEASONAL_PERIOD = 24
 
-# Forecast horizon
-FORECAST_HORIZON = 24  # Predict 24 hours ahead
 
-# Season configuration (Vietnam climate)
-DRY_SEASON_MONTHS = [11, 12, 1, 2, 3, 4]  # November to April
-WET_SEASON_MONTHS = [5, 6, 7, 8, 9, 10]  # May to October
+VALIDATION_DAYS = 7
+TEST_DAYS = 7
 
-# Grid search parameters (simplified for faster training)
+
+FORECAST_HORIZON = 24
+
+
+DRY_SEASON_MONTHS = [11, 12, 1, 2, 3, 4]
+WET_SEASON_MONTHS = [5, 6, 7, 8, 9, 10]
+
 SARIMA_PARAM_GRID = {
     'p': [0, 1, 2],
     'd': [0, 1],
@@ -107,35 +81,20 @@ SARIMA_PARAM_GRID = {
     's': [SEASONAL_PERIOD]
 }
 
-# Maximum iterations for grid search
+
 MAX_GRID_SEARCH_ITER = 50
 
 
-# ============================================================================
-# DATA LOADING AND PREPROCESSING
-# ============================================================================
-
 def load_data(filepath: Path) -> pd.DataFrame:
-    """
-    Load and prepare data from CSV file.
 
-    Args:
-        filepath: Path to CSV file
-
-    Returns:
-        DataFrame with datetime index
-    """
     logger.info(f"Loading data from {filepath}")
 
     df = pd.read_csv(filepath, parse_dates=[TIME_COL])
     df = df.sort_values(TIME_COL).reset_index(drop=True)
-
-    # Set time as index
     df = df.set_index(TIME_COL)
     df.index = pd.DatetimeIndex(df.index)
     df = df.sort_index()
 
-    # Ensure complete hourly index
     full_idx = pd.date_range(start=df.index.min(), end=df.index.max(), freq='H')
     df = df.reindex(full_idx)
     df.index.name = TIME_COL
@@ -146,16 +105,7 @@ def load_data(filepath: Path) -> pd.DataFrame:
 
 
 def handle_missing_values(df: pd.DataFrame, target_col: str) -> pd.DataFrame:
-    """
-    Handle missing values using interpolation.
 
-    Args:
-        df: Input DataFrame
-        target_col: Target column name
-
-    Returns:
-        DataFrame with missing values handled
-    """
     logger.info("Handling missing values...")
 
     missing_before = df[target_col].isna().sum()
@@ -163,10 +113,9 @@ def handle_missing_values(df: pd.DataFrame, target_col: str) -> pd.DataFrame:
 
     logger.info(f"  Missing values before: {missing_before} ({missing_pct:.2f}%)")
 
-    # Interpolation with time-based method
     df[target_col] = df[target_col].interpolate(method='time', limit=6)
 
-    # Forward/backward fill for remaining NaN
+
     df[target_col] = df[target_col].ffill().bfill()
 
     missing_after = df[target_col].isna().sum()
@@ -177,18 +126,7 @@ def handle_missing_values(df: pd.DataFrame, target_col: str) -> pd.DataFrame:
 
 def handle_outliers(df: pd.DataFrame, target_col: str,
                     method: str = 'iqr', threshold: float = 1.5) -> pd.DataFrame:
-    """
-    Handle outliers using IQR method.
 
-    Args:
-        df: Input DataFrame
-        target_col: Target column name
-        method: Outlier detection method ('iqr' or 'zscore')
-        threshold: IQR multiplier or z-score threshold
-
-    Returns:
-        DataFrame with outliers handled
-    """
     logger.info(f"Handling outliers using {method} method...")
 
     series = df[target_col].copy()
@@ -207,7 +145,6 @@ def handle_outliers(df: pd.DataFrame, target_col: str,
     else:
         raise ValueError(f"Unknown method: {method}")
 
-    # For humidity, also apply physical constraints (0-100%)
     lower_bound = max(lower_bound, 0)
     upper_bound = min(upper_bound, 100)
 
@@ -217,27 +154,19 @@ def handle_outliers(df: pd.DataFrame, target_col: str,
     logger.info(f"  Found {n_outliers} outliers ({n_outliers / len(df) * 100:.2f}%)")
     logger.info(f"  Bounds: [{lower_bound:.1f}, {upper_bound:.1f}]")
 
-    # Clip outliers
+
     df[target_col] = series.clip(lower=lower_bound, upper=upper_bound)
 
     return df
 
 
 def add_temporal_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Add temporal features for analysis.
 
-    Args:
-        df: Input DataFrame with datetime index
-
-    Returns:
-        DataFrame with temporal features added
-    """
     logger.info("Adding temporal features...")
 
     df = df.copy()
 
-    # Basic temporal features
+
     df['hour'] = df.index.hour
     df['day_of_week'] = df.index.dayofweek
     df['day_of_month'] = df.index.day
@@ -246,16 +175,15 @@ def add_temporal_features(df: pd.DataFrame) -> pd.DataFrame:
     df['week_of_year'] = df.index.isocalendar().week.astype(int)
     df['year'] = df.index.year
 
-    # Season features (Vietnam climate)
+
     df['is_dry_season'] = df['month'].isin(DRY_SEASON_MONTHS).astype(int)
     df['is_wet_season'] = df['month'].isin(WET_SEASON_MONTHS).astype(int)
 
-    # Season name
+
     df['season'] = df['month'].apply(
         lambda m: 'Dry' if m in DRY_SEASON_MONTHS else 'Wet'
     )
 
-    # Time of day categories
     df['time_of_day'] = pd.cut(
         df['hour'],
         bins=[-1, 5, 11, 17, 23],
@@ -266,31 +194,23 @@ def add_temporal_features(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def prepare_data(filepath: Path) -> Tuple[pd.DataFrame, pd.Series]:
-    """
-    Complete data preparation pipeline.
 
-    Args:
-        filepath: Path to data file
 
-    Returns:
-        Tuple of (processed DataFrame, target Series)
-    """
-    # Load data
     df = load_data(filepath)
 
-    # Handle missing values
+
     df = handle_missing_values(df, TARGET_COL)
 
-    # Handle outliers
+
     df = handle_outliers(df, TARGET_COL)
 
-    # Add temporal features
+
     df = add_temporal_features(df)
 
-    # Drop rows where target is NaN
+
     df = df.dropna(subset=[TARGET_COL])
 
-    # Extract target series
+
     target = df[TARGET_COL].copy()
 
     logger.info(f"Prepared data: {len(df)} samples")
@@ -300,22 +220,17 @@ def prepare_data(filepath: Path) -> Tuple[pd.DataFrame, pd.Series]:
     return df, target
 
 
-# ============================================================================
-# EXPLORATORY DATA ANALYSIS
-# ============================================================================
 
 def plot_time_series_with_seasons(df: pd.DataFrame, target_col: str,
                                   province: str = "Province",
                                   save_path: Optional[Path] = None):
-    """
-    Plot time series with seasonal highlighting.
-    """
+
     fig, ax = plt.subplots(figsize=(16, 6))
 
-    # Plot time series
+
     ax.plot(df.index, df[target_col], linewidth=0.5, alpha=0.7, label='Humidity')
 
-    # Highlight wet season
+
     wet_mask = df['is_wet_season'] == 1
     ax.fill_between(df.index, df[target_col].min(), df[target_col].max(),
                     where=wet_mask, alpha=0.2, color='blue', label='Wet Season')
@@ -335,10 +250,8 @@ def plot_time_series_with_seasons(df: pd.DataFrame, target_col: str,
 
 def plot_seasonal_decomposition(series: pd.Series, period: int = 24,
                                 save_path: Optional[Path] = None):
-    """
-    Plot seasonal decomposition.
-    """
-    # Use subset for decomposition (last 30 days)
+
+
     subset = series.tail(30 * 24)
 
     decomposition = seasonal_decompose(subset, model='additive', period=period)
@@ -369,17 +282,12 @@ def plot_seasonal_decomposition(series: pd.Series, period: int = 24,
 
 
 def test_stationarity(series: pd.Series) -> Dict[str, Any]:
-    """
-    Perform stationarity tests (ADF and KPSS).
 
-    Returns:
-        Dictionary with test results
-    """
     logger.info("Performing stationarity tests...")
 
     results = {}
 
-    # Augmented Dickey-Fuller Test
+
     adf_result = adfuller(series.dropna(), autolag='AIC')
     results['adf'] = {
         'statistic': adf_result[0],
@@ -391,7 +299,7 @@ def test_stationarity(series: pd.Series) -> Dict[str, Any]:
     logger.info(f"  ADF Test: statistic={adf_result[0]:.4f}, p-value={adf_result[1]:.4f}")
     logger.info(f"    -> {'Stationary' if results['adf']['is_stationary'] else 'Non-stationary'}")
 
-    # KPSS Test
+
     try:
         kpss_result = kpss(series.dropna(), regression='c', nlags='auto')
         results['kpss'] = {
@@ -411,19 +319,17 @@ def test_stationarity(series: pd.Series) -> Dict[str, Any]:
 
 def plot_acf_pacf(series: pd.Series, lags: int = 72,
                   save_path: Optional[Path] = None):
-    """
-    Plot ACF and PACF for parameter selection.
-    """
+
     fig, axes = plt.subplots(2, 1, figsize=(14, 8))
 
-    # ACF
+
     plot_acf(series.dropna(), lags=lags, ax=axes[0], alpha=0.05)
     axes[0].set_title('Autocorrelation Function (ACF)')
     axes[0].axvline(x=24, color='red', linestyle='--', alpha=0.5, label='24h lag')
     axes[0].axvline(x=48, color='red', linestyle='--', alpha=0.5)
     axes[0].legend()
 
-    # PACF
+
     plot_pacf(series.dropna(), lags=lags, ax=axes[1], alpha=0.05, method='ywm')
     axes[1].set_title('Partial Autocorrelation Function (PACF)')
     axes[1].axvline(x=24, color='red', linestyle='--', alpha=0.5, label='24h lag')
@@ -438,12 +344,10 @@ def plot_acf_pacf(series: pd.Series, lags: int = 72,
 
 def plot_hourly_pattern(df: pd.DataFrame, target_col: str,
                         save_path: Optional[Path] = None):
-    """
-    Plot hourly humidity pattern.
-    """
+
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
-    # Overall hourly pattern
+
     hourly_stats = df.groupby('hour')[target_col].agg(['mean', 'std'])
     axes[0].errorbar(hourly_stats.index, hourly_stats['mean'],
                      yerr=hourly_stats['std'], capsize=3, marker='o')
@@ -453,7 +357,7 @@ def plot_hourly_pattern(df: pd.DataFrame, target_col: str,
     axes[0].set_xticks(range(0, 24, 2))
     axes[0].grid(True, alpha=0.3)
 
-    # By season
+
     for season in ['Dry', 'Wet']:
         season_data = df[df['season'] == season]
         hourly_mean = season_data.groupby('hour')[target_col].mean()
@@ -476,12 +380,10 @@ def plot_hourly_pattern(df: pd.DataFrame, target_col: str,
 
 def plot_monthly_pattern(df: pd.DataFrame, target_col: str,
                          save_path: Optional[Path] = None):
-    """
-    Plot monthly humidity pattern.
-    """
+
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
-    # Monthly boxplot
+
     month_order = list(range(1, 13))
     df_plot = df.copy()
     df_plot['month'] = pd.Categorical(df_plot['month'], categories=month_order, ordered=True)
@@ -489,7 +391,7 @@ def plot_monthly_pattern(df: pd.DataFrame, target_col: str,
     monthly_data = [df[df['month'] == m][target_col].dropna().values for m in month_order]
     bp = axes[0].boxplot(monthly_data, patch_artist=True)
 
-    # Color by season
+
     colors = ['lightcoral' if m in DRY_SEASON_MONTHS else 'lightblue' for m in month_order]
     for patch, color in zip(bp['boxes'], colors):
         patch.set_facecolor(color)
@@ -501,7 +403,7 @@ def plot_monthly_pattern(df: pd.DataFrame, target_col: str,
     axes[0].set_title('Monthly Humidity Distribution\n(Red=Dry, Blue=Wet)')
     axes[0].grid(True, alpha=0.3, axis='y')
 
-    # Season comparison
+
     season_data = [
         df[df['season'] == 'Dry'][target_col].dropna().values,
         df[df['season'] == 'Wet'][target_col].dropna().values
@@ -522,12 +424,7 @@ def plot_monthly_pattern(df: pd.DataFrame, target_col: str,
 
 
 def run_eda(df: pd.DataFrame, target: pd.Series) -> Dict[str, Any]:
-    """
-    Run complete EDA pipeline.
 
-    Returns:
-        Dictionary with EDA results
-    """
     logger.info("\n" + "=" * 60)
     logger.info("EXPLORATORY DATA ANALYSIS")
     logger.info("=" * 60)
@@ -536,46 +433,46 @@ def run_eda(df: pd.DataFrame, target: pd.Series) -> Dict[str, Any]:
 
     results = {}
 
-    # 1. Time series plot with seasons
+
     logger.info("\n[1] Time series visualization...")
     plot_time_series_with_seasons(
         df, TARGET_COL,
         save_path=PLOTS_DIR / "01_timeseries_seasonal.png"
     )
 
-    # 2. Seasonal decomposition
+
     logger.info("\n[2] Seasonal decomposition...")
     decomposition = plot_seasonal_decomposition(
         target, period=SEASONAL_PERIOD,
         save_path=PLOTS_DIR / "02_seasonal_decomposition.png"
     )
 
-    # 3. Stationarity tests
+
     logger.info("\n[3] Stationarity tests...")
     results['stationarity'] = test_stationarity(target)
 
-    # 4. ACF/PACF plots
+
     logger.info("\n[4] ACF/PACF analysis...")
     plot_acf_pacf(
         target, lags=72,
         save_path=PLOTS_DIR / "03_acf_pacf.png"
     )
 
-    # 5. Hourly pattern
+
     logger.info("\n[5] Hourly pattern analysis...")
     plot_hourly_pattern(
         df, TARGET_COL,
         save_path=PLOTS_DIR / "04_hourly_pattern.png"
     )
 
-    # 6. Monthly/Seasonal pattern
+
     logger.info("\n[6] Monthly/Seasonal pattern...")
     plot_monthly_pattern(
         df, TARGET_COL,
         save_path=PLOTS_DIR / "05_monthly_seasonal_pattern.png"
     )
 
-    # Summary statistics
+
     results['statistics'] = {
         'mean': float(target.mean()),
         'std': float(target.std()),
@@ -586,7 +483,7 @@ def run_eda(df: pd.DataFrame, target: pd.Series) -> Dict[str, Any]:
         'kurtosis': float(target.kurtosis())
     }
 
-    # Seasonal statistics
+
     dry_humidity = df[df['season'] == 'Dry'][TARGET_COL]
     wet_humidity = df[df['season'] == 'Wet'][TARGET_COL]
 
@@ -607,26 +504,14 @@ def run_eda(df: pd.DataFrame, target: pd.Series) -> Dict[str, Any]:
     return results
 
 
-# ============================================================================
-# MODEL TRAINING
-# ============================================================================
+
 
 def train_test_split_temporal(
         series: pd.Series,
         validation_days: int = VALIDATION_DAYS,
         test_days: int = TEST_DAYS
 ) -> Tuple[pd.Series, pd.Series, pd.Series]:
-    """
-    Split time series into train/validation/test sets.
 
-    Args:
-        series: Target time series
-        validation_days: Number of days for validation
-        test_days: Number of days for test
-
-    Returns:
-        Tuple of (train, validation, test) series
-    """
     test_size = test_days * 24
     val_size = validation_days * 24
 
@@ -642,15 +527,15 @@ def train_test_split_temporal(
 
 
 def calculate_mape(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Calculate Mean Absolute Percentage Error."""
+
     y_true, y_pred = np.array(y_true), np.array(y_pred)
-    # Avoid division by zero
+
     mask = y_true != 0
     return np.mean(np.abs((y_true[mask] - y_pred[mask]) / y_true[mask])) * 100
 
 
 def calculate_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Calculate accuracy as 100 - MAPE."""
+
     mape = calculate_mape(y_true, y_pred)
     return max(0, 100 - mape)
 
@@ -658,17 +543,7 @@ def calculate_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 def fit_sarima(train: pd.Series, order: Tuple, seasonal_order: Tuple,
                enforce_stationarity: bool = False,
                enforce_invertibility: bool = False) -> Any:
-    """
-    Fit SARIMA model.
 
-    Args:
-        train: Training data
-        order: (p, d, q) tuple
-        seasonal_order: (P, D, Q, s) tuple
-
-    Returns:
-        Fitted model results
-    """
     model = SARIMAX(
         train,
         order=order,
@@ -688,18 +563,7 @@ def grid_search_sarima(
         param_grid: Dict,
         max_iterations: int = MAX_GRID_SEARCH_ITER
 ) -> Tuple[Tuple, Tuple, Dict]:
-    """
-    Grid search for best SARIMA parameters.
 
-    Args:
-        train: Training data
-        validation: Validation data
-        param_grid: Parameter grid dictionary
-        max_iterations: Maximum number of iterations
-
-    Returns:
-        Tuple of (best_order, best_seasonal_order, results_dict)
-    """
     logger.info("\n" + "=" * 60)
     logger.info("GRID SEARCH FOR SARIMA PARAMETERS")
     logger.info("=" * 60)
@@ -709,7 +573,7 @@ def grid_search_sarima(
     best_order = None
     best_seasonal_order = None
 
-    # Generate all combinations
+
     from itertools import product
 
     param_combinations = list(product(
@@ -717,7 +581,7 @@ def grid_search_sarima(
         param_grid['P'], param_grid['D'], param_grid['Q'], param_grid['s']
     ))
 
-    # Limit iterations
+
     if len(param_combinations) > max_iterations:
         np.random.seed(42)
         indices = np.random.choice(len(param_combinations), max_iterations, replace=False)
@@ -730,14 +594,14 @@ def grid_search_sarima(
         seasonal_order = (P, D, Q, s)
 
         try:
-            # Fit model on training data
+
             model_fit = fit_sarima(train, order, seasonal_order)
 
-            # Forecast on validation period
+
             forecast = model_fit.get_forecast(steps=len(validation))
             y_pred = forecast.predicted_mean
 
-            # Calculate metrics
+
             mape = calculate_mape(validation.values, y_pred.values)
             mae = mean_absolute_error(validation.values, y_pred.values)
             rmse = np.sqrt(mean_squared_error(validation.values, y_pred.values))
@@ -784,26 +648,15 @@ def grid_search_sarima(
 
 def train_final_model(train: pd.Series, validation: pd.Series,
                       order: Tuple, seasonal_order: Tuple) -> Any:
-    """
-    Train final model on combined train + validation data.
 
-    Args:
-        train: Training data
-        validation: Validation data
-        order: Best (p, d, q) order
-        seasonal_order: Best (P, D, Q, s) seasonal order
-
-    Returns:
-        Fitted model results
-    """
     logger.info("\nTraining final model on train + validation data...")
 
-    # Combine train and validation
+
     full_train = pd.concat([train, validation])
 
     logger.info(f"Training on {len(full_train)} samples ({len(full_train) // 24} days)")
 
-    # Fit final model
+
     model_fit = fit_sarima(full_train, order, seasonal_order)
 
     logger.info(f"Final model AIC: {model_fit.aic:.2f}")
@@ -812,37 +665,25 @@ def train_final_model(train: pd.Series, validation: pd.Series,
     return model_fit
 
 
-# ============================================================================
-# MODEL EVALUATION
-# ============================================================================
+
 
 def evaluate_model(model_fit: Any, test: pd.Series,
                    forecast_horizon: int = FORECAST_HORIZON) -> Dict[str, float]:
-    """
-    Evaluate model on test set.
 
-    Args:
-        model_fit: Fitted SARIMA model
-        test: Test data series
-        forecast_horizon: Number of steps to forecast
-
-    Returns:
-        Dictionary with evaluation metrics
-    """
     logger.info("\n" + "=" * 60)
     logger.info("MODEL EVALUATION ON TEST SET")
     logger.info("=" * 60)
 
-    # Generate forecast
+
     forecast = model_fit.get_forecast(steps=len(test))
     y_pred = forecast.predicted_mean
     conf_int = forecast.conf_int(alpha=0.05)
 
-    # Calculate metrics
+
     y_true = test.values
     y_hat = y_pred.values
 
-    # Clip predictions to valid range
+
     y_hat = np.clip(y_hat, 0, 100)
 
     metrics = {
@@ -866,18 +707,16 @@ def evaluate_model(model_fit: Any, test: pd.Series,
 def plot_forecast_vs_actual(test: pd.Series, y_pred: pd.Series,
                             conf_int: pd.DataFrame,
                             save_path: Optional[Path] = None):
-    """
-    Plot actual vs forecast comparison.
-    """
+
     fig, ax = plt.subplots(figsize=(14, 6))
 
-    # Plot actual
+
     ax.plot(test.index, test.values, 'b-', linewidth=1.5, label='Actual', marker='o', markersize=3)
 
-    # Plot forecast
+
     ax.plot(test.index, y_pred.values, 'r--', linewidth=1.5, label='Forecast', marker='s', markersize=3)
 
-    # Plot confidence interval
+
     ax.fill_between(test.index,
                     conf_int.iloc[:, 0].values,
                     conf_int.iloc[:, 1].values,
@@ -889,7 +728,7 @@ def plot_forecast_vs_actual(test: pd.Series, y_pred: pd.Series,
     ax.legend(loc='upper right')
     ax.grid(True, alpha=0.3)
 
-    # Rotate x-axis labels
+
     plt.xticks(rotation=45)
 
     plt.tight_layout()
@@ -901,14 +740,12 @@ def plot_forecast_vs_actual(test: pd.Series, y_pred: pd.Series,
 
 def plot_residual_analysis(test: pd.Series, y_pred: pd.Series,
                            save_path: Optional[Path] = None):
-    """
-    Plot residual analysis.
-    """
+
     residuals = test.values - y_pred.values
 
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 
-    # Residuals over time
+
     axes[0, 0].plot(test.index, residuals, linewidth=0.8)
     axes[0, 0].axhline(y=0, color='r', linestyle='--')
     axes[0, 0].set_xlabel('Date')
@@ -916,7 +753,7 @@ def plot_residual_analysis(test: pd.Series, y_pred: pd.Series,
     axes[0, 0].set_title('Residuals Over Time')
     axes[0, 0].tick_params(axis='x', rotation=45)
 
-    # Residual distribution
+
     axes[0, 1].hist(residuals, bins=30, edgecolor='black', alpha=0.7)
     axes[0, 1].axvline(x=0, color='r', linestyle='--')
     axes[0, 1].axvline(x=residuals.mean(), color='g', linestyle='--', label=f'Mean: {residuals.mean():.2f}')
@@ -925,11 +762,11 @@ def plot_residual_analysis(test: pd.Series, y_pred: pd.Series,
     axes[0, 1].set_title('Residual Distribution')
     axes[0, 1].legend()
 
-    # Q-Q plot
+
     stats.probplot(residuals, dist="norm", plot=axes[1, 0])
     axes[1, 0].set_title('Q-Q Plot')
 
-    # ACF of residuals
+
     plot_acf(residuals, lags=48, ax=axes[1, 1], alpha=0.05)
     axes[1, 1].set_title('ACF of Residuals')
 
@@ -939,7 +776,7 @@ def plot_residual_analysis(test: pd.Series, y_pred: pd.Series,
         logger.info(f"Saved: {save_path}")
     plt.close()
 
-    # Ljung-Box test for residual autocorrelation
+
     lb_test = acorr_ljungbox(residuals, lags=[24, 48], return_df=True)
     logger.info(f"\nLjung-Box Test for Residuals:")
     logger.info(f"  Lag 24: statistic={lb_test['lb_stat'].iloc[0]:.2f}, p-value={lb_test['lb_pvalue'].iloc[0]:.4f}")
@@ -948,15 +785,13 @@ def plot_residual_analysis(test: pd.Series, y_pred: pd.Series,
 
 def plot_error_distribution(test: pd.Series, y_pred: pd.Series,
                             save_path: Optional[Path] = None):
-    """
-    Plot error distribution analysis.
-    """
+
     errors = np.abs(test.values - y_pred.values)
     pct_errors = errors / test.values * 100
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
-    # Absolute error distribution
+
     axes[0].hist(errors, bins=30, edgecolor='black', alpha=0.7, color='steelblue')
     axes[0].axvline(x=errors.mean(), color='r', linestyle='--',
                     label=f'Mean: {errors.mean():.2f}%')
@@ -967,7 +802,7 @@ def plot_error_distribution(test: pd.Series, y_pred: pd.Series,
     axes[0].set_title('Absolute Error Distribution')
     axes[0].legend()
 
-    # Error by hour
+
     test_df = pd.DataFrame({'error': errors, 'hour': test.index.hour})
     hourly_error = test_df.groupby('hour')['error'].mean()
     axes[1].bar(hourly_error.index, hourly_error.values, color='steelblue', alpha=0.7)
@@ -985,9 +820,7 @@ def plot_error_distribution(test: pd.Series, y_pred: pd.Series,
     plt.close()
 
 
-# ============================================================================
-# MODEL PERSISTENCE
-# ============================================================================
+
 
 def save_model_artifacts(
         model_fit: Any,
@@ -999,13 +832,7 @@ def save_model_artifacts(
         training_info: Dict[str, Any],
         province: str
 ):
-    """
-    Save all model artifacts with reduced file size.
 
-    Instead of saving full model object (heavy), we save:
-    1. Model parameters for reconstruction (lightweight)
-    2. Only essential model state for forecasting
-    """
     logger.info("\n" + "=" * 60)
     logger.info("SAVING MODEL ARTIFACTS")
     logger.info("=" * 60)
@@ -1015,11 +842,10 @@ def save_model_artifacts(
     plots_dir = province_dir / "plots"
     plots_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1. Save lightweight model (only essential state for forecasting)
-    # This significantly reduces file size from ~100MB to ~1-5MB
+
     model_path = province_dir / f"{province}_humidity_sarima.pkl"
 
-    # Extract only essential components for forecasting
+
     lightweight_model = {
         'params': model_fit.params.tolist(),
         'order': order,
@@ -1028,7 +854,7 @@ def save_model_artifacts(
         'loglikelihood': float(model_fit.llf),
         'aic': float(model_fit.aic),
         'bic': float(model_fit.bic),
-        # State space representation for forecasting
+
         'specification': {
             'k_ar': model_fit.specification.k_ar,
             'k_diff': model_fit.specification.k_diff,
@@ -1038,7 +864,7 @@ def save_model_artifacts(
             'k_seasonal_ma': model_fit.specification.k_seasonal_ma,
             'seasonal_periods': model_fit.specification.seasonal_periods,
         },
-        # Store last observations for forecasting (minimal data)
+
         'forecast_state': {
             'predicted_state': model_fit.predicted_state[:, -1].tolist() if hasattr(model_fit,
                                                                                     'predicted_state') else None,
@@ -1050,11 +876,11 @@ def save_model_artifacts(
     with open(model_path, 'wb') as f:
         pickle.dump(lightweight_model, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-    # Check file size
+
     file_size_mb = model_path.stat().st_size / (1024 * 1024)
     logger.info(f"Saved lightweight model: {model_path} ({file_size_mb:.2f} MB)")
 
-    # 2. Save best parameters
+
     params_path = province_dir / f"{province}_best_params.json"
     params = {
         'order': list(order),
@@ -1071,7 +897,7 @@ def save_model_artifacts(
         json.dump(params, f, indent=2)
     logger.info(f"Saved parameters: {params_path}")
 
-    # 3. Save metadata
+
     metadata_path = province_dir / f"{province}_metadata.json"
     metadata = {
         'province': province,
@@ -1108,7 +934,7 @@ def save_model_artifacts(
         json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
     logger.info(f"Saved metadata: {metadata_path}")
 
-    # 4. Save model summary as text
+
     summary_path = province_dir / f"{province}_model_summary.txt"
     with open(summary_path, 'w', encoding='utf-8') as f:
         f.write(str(model_fit.summary()))
@@ -1117,32 +943,20 @@ def save_model_artifacts(
     logger.info(f"\nAll artifacts saved to: {province_dir}")
 
 
-# ============================================================================
-# SINGLE PROVINCE TRAINING
-# ============================================================================
 
 def train_province(province: str, skip_eda_plots: bool = False) -> Optional[Dict[str, Any]]:
-    """
-    Train SARIMA model for a single province.
 
-    Args:
-        province: Province name
-        skip_eda_plots: If True, skip saving EDA plots (faster for batch training)
-
-    Returns:
-        Dictionary with training results or None if failed
-    """
     province_start_time = datetime.now()
 
     logger.info("\n" + "#" * 60)
     logger.info(f"# TRAINING: {province}")
     logger.info("#" * 60)
 
-    # Create province-specific plots directory
+
     province_plots_dir = ARTIFACTS_DIR / province / "plots"
     province_plots_dir.mkdir(parents=True, exist_ok=True)
 
-    # ===== STEP 1: Data Preparation =====
+
     logger.info("\n[STEP 1] DATA PREPARATION")
     logger.info("-" * 40)
 
@@ -1157,11 +971,11 @@ def train_province(province: str, skip_eda_plots: bool = False) -> Optional[Dict
         logger.error(f"Failed to prepare data for {province}: {e}")
         return None
 
-    # ===== STEP 2: EDA (simplified for batch) =====
+
     logger.info("\n[STEP 2] EXPLORATORY DATA ANALYSIS")
     logger.info("-" * 40)
 
-    # Temporarily override PLOTS_DIR for this province
+
     global PLOTS_DIR
     original_plots_dir = PLOTS_DIR
     PLOTS_DIR = province_plots_dir
@@ -1174,13 +988,13 @@ def train_province(province: str, skip_eda_plots: bool = False) -> Optional[Dict
     finally:
         PLOTS_DIR = original_plots_dir
 
-    # ===== STEP 3: Train/Validation/Test Split =====
+
     logger.info("\n[STEP 3] DATA SPLITTING")
     logger.info("-" * 40)
 
     train, validation, test = train_test_split_temporal(target)
 
-    # ===== STEP 4: Grid Search =====
+
     logger.info("\n[STEP 4] HYPERPARAMETER TUNING")
     logger.info("-" * 40)
 
@@ -1192,7 +1006,7 @@ def train_province(province: str, skip_eda_plots: bool = False) -> Optional[Dict
         logger.error(f"Grid search failed for {province}: {e}")
         return None
 
-    # ===== STEP 5: Train Final Model =====
+
     logger.info("\n[STEP 5] FINAL MODEL TRAINING")
     logger.info("-" * 40)
 
@@ -1202,7 +1016,7 @@ def train_province(province: str, skip_eda_plots: bool = False) -> Optional[Dict
         logger.error(f"Final model training failed for {province}: {e}")
         return None
 
-    # ===== STEP 6: Model Evaluation =====
+
     logger.info("\n[STEP 6] MODEL EVALUATION")
     logger.info("-" * 40)
 
@@ -1212,7 +1026,7 @@ def train_province(province: str, skip_eda_plots: bool = False) -> Optional[Dict
         logger.error(f"Model evaluation failed for {province}: {e}")
         return None
 
-    # Evaluation plots (save to province-specific directory)
+
     try:
         plot_forecast_vs_actual(
             test, y_pred, conf_int,
@@ -1231,7 +1045,7 @@ def train_province(province: str, skip_eda_plots: bool = False) -> Optional[Dict
     except Exception as e:
         logger.warning(f"Failed to save some plots for {province}: {e}")
 
-    # ===== STEP 7: Save Artifacts =====
+
     logger.info("\n[STEP 7] SAVING ARTIFACTS")
     logger.info("-" * 40)
 
@@ -1264,7 +1078,7 @@ def train_province(province: str, skip_eda_plots: bool = False) -> Optional[Dict
         logger.error(f"Failed to save artifacts for {province}: {e}")
         return None
 
-    # ===== Summary =====
+
     result = {
         'province': province,
         'order': best_order,
@@ -1280,13 +1094,8 @@ def train_province(province: str, skip_eda_plots: bool = False) -> Optional[Dict
 
     return result
 
-
-# ============================================================================
-# MAIN PIPELINE
-# ============================================================================
-
 def main():
-    """Main training pipeline - supports training single or all provinces."""
+
     parser = argparse.ArgumentParser(
         description="Train SARIMA model for humidity forecasting (34 provinces of Vietnam)"
     )
@@ -1309,7 +1118,7 @@ def main():
 
     args = parser.parse_args()
 
-    # List provinces if requested
+
     if args.list_provinces:
         provinces = get_all_provinces()
         print(f"\nAvailable provinces ({len(provinces)}):")
@@ -1317,11 +1126,11 @@ def main():
             print(f"  {i:2d}. {p}")
         return
 
-    # Determine which provinces to train
+
     if args.province:
         provinces_to_train = [args.province]
     else:
-        # Default: train all provinces
+
         provinces_to_train = get_all_provinces()
 
     total_start_time = datetime.now()
@@ -1341,12 +1150,12 @@ def main():
         for i, p in enumerate(provinces_to_train, 1):
             logger.info(f"  {i:2d}. {p}")
 
-    # Track results
+
     results = []
     successful = []
     failed = []
 
-    # Train each province
+
     for idx, province in enumerate(provinces_to_train, 1):
         logger.info(f"\n{'=' * 70}")
         logger.info(f"[{idx}/{len(provinces_to_train)}] Starting: {province}")
@@ -1360,7 +1169,7 @@ def main():
         else:
             failed.append(province)
 
-        # Progress update
+
         elapsed = datetime.now() - total_start_time
         avg_time = elapsed / idx
         remaining = avg_time * (len(provinces_to_train) - idx)
@@ -1368,7 +1177,7 @@ def main():
         logger.info(f"\n📊 Progress: {idx}/{len(provinces_to_train)} provinces")
         logger.info(f"   Elapsed: {elapsed} | Estimated remaining: {remaining}")
 
-    # ===== Final Summary =====
+
     total_duration = datetime.now() - total_start_time
 
     logger.info("\n" + "=" * 70)
@@ -1396,7 +1205,7 @@ def main():
                 f"{r['metrics']['accuracy']:.2f}%"
             )
 
-        # Statistics
+
         accuracies = [r['metrics']['accuracy'] for r in results]
         mapes = [r['metrics']['mape'] for r in results]
 
@@ -1408,7 +1217,7 @@ def main():
         logger.info(f"Max Accuracy: {np.max(accuracies):.2f}%")
         logger.info(f"Average MAPE: {np.mean(mapes):.2f}%")
 
-        # Count provinces meeting target
+
         target_met = sum(1 for a in accuracies if a >= 90)
         logger.info(f"\nProvinces with ≥90% accuracy: {target_met}/{len(results)}")
 
@@ -1417,7 +1226,7 @@ def main():
         for p in failed:
             logger.info(f"  - {p}")
 
-    # Save summary to file
+
     summary_path = ARTIFACTS_DIR / "training_summary.json"
     summary = {
         'total_provinces': len(provinces_to_train),
