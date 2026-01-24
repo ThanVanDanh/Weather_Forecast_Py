@@ -1,8 +1,3 @@
-"""
-Hệ thống dự báo mưa minutely (phút) - 60 phút tới
-Sử dụng OpenWeatherMap One Call API 3.0
-Với caching để tránh spam API khi F5 liên tục
-"""
 import requests
 from typing import Dict, List, Optional
 from django.utils import timezone
@@ -11,17 +6,13 @@ OPENWEATHER_API_KEY = "9d9dfae9131f26975dfab658ed2b4d36"
 
 
 def get_rain_forecast_minutely(lat: float, lon: float, location_obj=None) -> Dict:
-    """
-    Lấy dự báo mưa cho 60 phút tới (với cache 10 phút)
-    Trả về thông tin: khi nào mưa bắt đầu, khi nào kết thúc, cường độ
-    """
     # Kiểm tra cache nếu có location_obj
     if location_obj:
         from Weather_App.models import RainForecastCache
         try:
             cache = RainForecastCache.objects.get(location=location_obj)
-            if not cache.is_stale(minutes=10):
-                # Cache còn mới (< 10 phút)
+            if not cache.is_stale(minutes=15):
+                #cache còn mới < 15 phút
                 cached_age = (timezone.now() - cache.last_updated).total_seconds()
                 print(f"[RainForecast] Sử dụng cache ({cached_age:.0f}s tuổi)")
                 result = cache.data
@@ -33,9 +24,9 @@ def get_rain_forecast_minutely(lat: float, lon: float, location_obj=None) -> Dic
         except RainForecastCache.DoesNotExist:
             print(f"[RainForecast] Chưa có cache, fetch từ API")
     
-    # Fetch từ API
+    #fetch API
     try:
-        # Gọi One Call API 3.0 - Minutely precipitation
+        #call API 3.0 - Minutely precipitation
         url = "https://api.openweathermap.org/data/3.0/onecall"
         params = {
             'lat': lat,
@@ -47,7 +38,7 @@ def get_rain_forecast_minutely(lat: float, lon: float, location_obj=None) -> Dic
         
         response = requests.get(url, params=params, timeout=10)
         
-        # Nếu API 3.0 không khả dụng, thử API 2.5
+        #nếu API 3.0 không khả dụng, thử API 2.5
         if response.status_code == 401 or response.status_code == 403:
             # Fallback sang API 2.5 (miễn phí)
             url = "https://api.openweathermap.org/data/2.5/onecall"
@@ -56,14 +47,12 @@ def get_rain_forecast_minutely(lat: float, lon: float, location_obj=None) -> Dic
         response.raise_for_status()
         data = response.json()
         
-        # Phân tích dữ liệu minutely
         minutely = data.get('minutely', [])
-        
         if not minutely:
-            # Không có dữ liệu minutely - ước tính từ hourly
+            #không có dữ liệu minutely - ước tính từ hourly
             return estimate_from_hourly(lat, lon)
         
-        # Phân tích khi nào mưa bắt đầu
+        #phân tích khi nào mưa bắt đầu
         rain_start = None
         rain_end = None
         max_precipitation = 0
@@ -74,16 +63,16 @@ def get_rain_forecast_minutely(lat: float, lon: float, location_obj=None) -> Dic
             total_precipitation += precipitation
             max_precipitation = max(max_precipitation, precipitation)
             
-            # Ngưỡng mưa: > 0.1 mm
+            #ngưỡng mưa: > 0.1 mm
             if precipitation > 0.1:
                 if rain_start is None:
                     rain_start = i  # Phút thứ i
                 rain_end = i
         
-        # Tạo thông báo
+        #tạo thông báo
         message = create_rain_message(rain_start, rain_end, max_precipitation, total_precipitation)
         
-        # Tạo timeline cho visualization
+        #tạo timeline cho visualization
         timeline = []
         for i, minute_data in enumerate(minutely):
             precipitation = minute_data.get('precipitation', 0)
@@ -107,7 +96,7 @@ def get_rain_forecast_minutely(lat: float, lon: float, location_obj=None) -> Dic
             'source': 'api'
         }
         
-        # Lưu vào cache nếu có location_obj
+        #lưu vào cache nếu có location_obj
         if location_obj:
             from Weather_App.models import RainForecastCache
             try:
@@ -122,11 +111,11 @@ def get_rain_forecast_minutely(lat: float, lon: float, location_obj=None) -> Dic
         return result
         
     except requests.exceptions.RequestException as e:
-        # Fallback: ước tính từ hourly data
+        #ước tính từ hourly data
         print(f"[RainForecast] API minutely lỗi, fallback sang hourly: {e}")
         result = estimate_from_hourly(lat, lon)
         
-        # Vẫn lưu cache kể cả khi dùng hourly estimate
+        #lưu cache kể cả khi dùng hourly estimate
         if location_obj and result.get('status') == 'success':
             from Weather_App.models import RainForecastCache
             try:
@@ -148,9 +137,6 @@ def get_rain_forecast_minutely(lat: float, lon: float, location_obj=None) -> Dic
 
 
 def estimate_from_hourly(lat: float, lon: float, location_obj=None) -> Dict:
-    """
-    Ước tính dự báo mưa từ hourly data (khi minutely không khả dụng)
-    """
     try:
         url = "https://api.openweathermap.org/data/2.5/forecast"
         params = {
@@ -231,14 +217,11 @@ def estimate_from_hourly(lat: float, lon: float, location_obj=None) -> Dict:
 
 def create_rain_message(rain_start: Optional[int], rain_end: Optional[int], 
                         max_precip: float, total_precip: float) -> str:
-    """
-    Tạo thông báo dự báo mưa dễ hiểu cho người dùng
-    """
     if rain_start is None:
         return "🌤️ Không có mưa trong 1 giờ tới. Trời quang đãng!"
     
     if rain_start == 0:
-        # Đang mưa hoặc sắp mưa ngay
+        #đang mưa hoặc sắp mưa ngay
         duration = rain_end - rain_start if rain_end else 60
         intensity = get_rain_level(max_precip)
         return f"🌧️ Đang có mưa hoặc mưa sẽ bắt đầu ngay. Kéo dài khoảng {duration} phút. Cường độ: {intensity}"
@@ -258,10 +241,7 @@ def create_rain_message(rain_start: Optional[int], rain_end: Optional[int],
 
 
 def get_rain_intensity(precipitation: float) -> str:
-    """
-    Phân loại cường độ mưa
-    precipitation: mm/h
-    """
+    #cường độ mưa
     if precipitation < 0.1:
         return "no_rain"
     elif precipitation < 2.5:
@@ -275,9 +255,7 @@ def get_rain_intensity(precipitation: float) -> str:
 
 
 def get_rain_icon(rain_start: Optional[int], max_precip: float) -> str:
-    """
-    Lấy icon phù hợp với tình trạng mưa
-    """
+    #icon cho tình trạng mưa
     if rain_start is None:
         return "fa-sun"
     elif rain_start == 0 or rain_start <= 5:
@@ -291,9 +269,7 @@ def get_rain_icon(rain_start: Optional[int], max_precip: float) -> str:
 
 
 def get_rain_color(max_precip: float) -> str:
-    """
-    Lấy màu cảnh báo theo cường độ mưa
-    """
+    #màu cảnh báo theo cường độ
     if max_precip < 0.1:
         return "#4CAF50"  # Xanh lá - Không mưa
     elif max_precip < 2.5:
@@ -307,9 +283,7 @@ def get_rain_color(max_precip: float) -> str:
 
 
 def get_rain_level(precipitation: float) -> str:
-    """
-    Mô tả cường độ mưa bằng tiếng Việt
-    """
+    #mô tả cường độ
     if precipitation < 0.1:
         return "Không mưa"
     elif precipitation < 2.5:

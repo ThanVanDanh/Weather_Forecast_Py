@@ -123,10 +123,6 @@ def get_location_search(request):
 # API LẤY TẤT CẢ TỈNH/THÀNH PHỐ (34 tỉnh)
 @api_view(['GET'])
 def get_all_locations(request):
-    """
-    API lấy danh sách tất cả 34 tỉnh/thành phố
-    GET /api/weather/locations/
-    """
     locations = Location.objects.filter(country_code='VN').order_by('city_name')
     serializer = LocationSerializer(locations, many=True)
     return Response(serializer.data)
@@ -177,10 +173,6 @@ def get_current_weather(request):
 
 @api_view(['GET'])
 def get_outfit_advice(request):
-    """
-    API trả về lời khuyên trang phục dựa trên dữ liệu DB (Daily/Hourly)
-    URL: /api/weather/outfit/?location_id=1
-    """
     location_id = request.query_params.get('location_id')
 
     if not location_id:
@@ -191,7 +183,6 @@ def get_outfit_advice(request):
 
     try:
         # Đảm bảo có dữ liệu HourlyForecast để tư vấn theo độ ẩm & bức xạ
-        # (Tránh race condition khi frontend gọi outfit song song với forecast)
         ForecastService.get_or_predict_hourly(location)
 
         # Gọi Class Advisor trong utils
@@ -211,12 +202,6 @@ def get_outfit_advice(request):
 
 @api_view(['GET'])
 def get_solar_radiation(request):
-    """
-    API trả về dự báo bức xạ mặt trời cho tỉnh/thành
-    URL: /api/weather/solar/?location_id=1
-
-    Nếu chưa có dữ liệu, sẽ tự động chạy predict_solar_lstm_34.py
-    """
     location_id = request.query_params.get('location_id')
 
     if not location_id:
@@ -312,10 +297,6 @@ def get_solar_radiation(request):
 
 @api_view(['GET'])
 def get_all_locations(request):
-    """
-    API trả về tất cả các tỉnh/thành phố (34 tỉnh)
-    GET /api/weather/locations/
-    """
     locations = Location.objects.filter(country_code='VN').order_by('city_name_vn')
     serializer = LocationSerializer(locations, many=True)
     return Response(serializer.data)

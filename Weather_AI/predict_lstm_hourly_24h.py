@@ -60,7 +60,6 @@ def load_recent_series(province: str) -> pd.Series:
 
 
 def predict_hourly_temperature(province_name: str, steps: int = 24, force: bool = False):
-    """Dự báo nhiệt độ theo giờ và lưu vào DB"""
     location_name = get_location_name(province_name)
     location = Location.objects.filter(city_name__icontains=location_name).first()
     if not location:
@@ -71,7 +70,7 @@ def predict_hourly_temperature(province_name: str, steps: int = 24, force: bool 
         if latest:
             hours_since_update = (tz.now() - latest.updated_at).total_seconds() / 3600
             if hours_since_update < 1:
-                return f"⏭️ {province_name}: Dự báo mới (<1h), bỏ qua"
+                return f"{province_name}: Dự báo mới (<1h), bỏ qua"
     
     check_and_update_province(province_name)
     
@@ -100,12 +99,12 @@ def predict_hourly_temperature(province_name: str, steps: int = 24, force: bool 
 
     preds = scaler.inverse_transform(np.array(preds).reshape(-1, 1)).ravel()
     
-    # Bắt đầu dự báo từ giờ tiếp theo (hiện tại + 1h)
+    #dự báo từ giờ tiếp theo
     now = tz.localtime(tz.now()) if getattr(settings, 'USE_TZ', False) else tz.now()
     next_hour = now.replace(minute=0, second=0, microsecond=0) + pd.Timedelta(hours=1)
     times = pd.date_range(start=next_hour, periods=steps, freq="h")
 
-    # Dùng bulk_create thay vì update_or_create để nhanh hơn
+    #bulk_create
     forecasts = [
         HourlyForecast(
             location=location,
@@ -115,10 +114,6 @@ def predict_hourly_temperature(province_name: str, steps: int = 24, force: bool 
         for time, temp in zip(times, preds)
     ]
     HourlyForecast.objects.bulk_create(forecasts)
-    
-    # Hiển thị thời gian VN (không phải UTC)
-    vn_time = (tz.localtime(tz.now()) if getattr(settings, 'USE_TZ', False) else tz.now()).strftime('%Y-%m-%d %H:%M:%S')
-    return f"✅ {province_name}: Saved {steps} hourly forecasts (VN time: {vn_time})"
 
 
 if __name__ == "__main__":
