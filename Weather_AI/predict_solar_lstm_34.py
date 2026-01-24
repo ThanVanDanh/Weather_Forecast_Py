@@ -8,6 +8,12 @@ import requests
 import time
 from pathlib import Path
 from tensorflow.keras.models import load_model
+from datetime import datetime as py_datetime
+
+try:
+    from zoneinfo import ZoneInfo
+except Exception:  # pragma: no cover
+    ZoneInfo = None
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
@@ -110,7 +116,7 @@ def fetch_weather_forecast(lat, lon, start_date, end_date):
         "start_date": start_date.strftime("%Y-%m-%d"),
         "end_date": end_date.strftime("%Y-%m-%d"),
         "hourly": ",".join(fields),
-        "timezone": "Asia/Bangkok"
+        "timezone": "Asia/Ho_Chi_Minh"
     }
     try:
         response = requests.get(url, params=params, timeout=30)
@@ -299,13 +305,20 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('province', nargs='?', help='Ten tinh (vd: Ha_Noi)')
     parser.add_argument('--date', dest='date', help='YYYY-MM-DD (predict 00-23h of that day)')
+    parser.add_argument(
+        '--rolling',
+        action='store_true',
+        help='Predict next 24h starting from last past timestamp (old behavior)'
+    )
     args = parser.parse_args()
 
     if not args.province:
-        print("Cach dung: python predict_solar_lstm_34.py <Ten_Tinh> [--date YYYY-MM-DD]")
+        print("Cach dung: python predict_solar_lstm_34.py <Ten_Tinh> [--date YYYY-MM-DD] [--rolling]")
         raise SystemExit(1)
 
-    if args.date:
+    if args.rolling:
+        predict_dual(args.province)
+    elif args.date:
         try:
             target_date = pd.to_datetime(args.date).date()
         except Exception:
@@ -313,4 +326,9 @@ if __name__ == "__main__":
             raise SystemExit(1)
         predict_for_date(args.province, target_date)
     else:
-        predict_dual(args.province)
+        # Default: forecast 00:00..23:00 of today in Vietnam time
+        if ZoneInfo is not None:
+            today_vn = py_datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date()
+        else:
+            today_vn = py_datetime.now().date()
+        predict_for_date(args.province, today_vn)

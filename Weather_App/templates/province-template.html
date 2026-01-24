@@ -11,6 +11,7 @@
         const LON = {{ longitude|default:"null" }};
         {% endlocalize %}
     </script>
+    <link rel="icon" type="logo/png" href="{% static 'image/logo.png' %}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giao diện Thời tiết</title>
@@ -39,6 +40,11 @@
 <body>
 {% include 'header.html' %}
 {% include 'breadcrumb.html' with current_page=city_name %}
+<div class="global-video-bg">
+        <video id="global-bg-video" autoplay muted playsinline loop>
+            <source src="{% static 'video/nhieumay.mp4' %}" type="video/mp4">
+        </video>
+    </div>
 	<main class="container-province">
 			<div class="content-province-wrapper">
 				<section class="weather-forecast">
@@ -128,19 +134,14 @@
 					</div>
 						<div class="card chart-card">
 							<h3>Nhiệt độ và độ ẩm {{ city_name }} trong 12h tới</h3>
-							<div id="hourlyChart12h-loader" style="text-align:center;padding:20px;">
-        <i class="fa-solid fa-spinner fa-spin"></i> Đang tải biểu đồ...
-    </div>
-    <canvas id="hourlyChart12h" style="display:none;"></canvas>
+							<div id="hourlyChart12h-loader" style="text-align:center;padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải biểu đồ...</div>
+                            <canvas id="hourlyChart12h" style="display:none;"></canvas>
 						</div>
 						<div class="card chart-card">
 							<h3>Nhiệt độ min/max {{ city_name }} 5 ngày tới</h3>
 							<canvas id="dailyWeatherChart"></canvas>
 						</div>
-						<div class="card chart-card">
-							<h3>Lượng mưa Hà Giang những ngày tới</h3>
-							<canvas id="dailyRainChart"></canvas>
-						</div>
+
 					</section>
 					<aside class="weather-sidebar-column">
 						<div class="card sunrise-sunset-card">

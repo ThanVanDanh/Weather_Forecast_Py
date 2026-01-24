@@ -12,7 +12,7 @@
     position: relative;
     overflow: hidden;
     /* Background gradient xanh đậm hợp với theme thời tiết */
-    background: linear-gradient(135deg, #212529 0%, #0b0f16 100%);
+    /*background: linear-gradient(135deg, #212529 0%, #0b0f16 100%);*/
     min-height: calc(100vh - 130px); /* Trừ đi chiều cao header/footer ước lượng */
 }
 

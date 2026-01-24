@@ -1,5 +1,8 @@
 from django.contrib import admin
 from .models import UserProfile
+from django.utils import timezone
+from django.conf import settings
+
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'phone', 'address', 'latitude', 'longitude')
@@ -39,6 +42,18 @@ class WeatherAlertAdmin(admin.ModelAdmin):
 
 @admin.register(SolarForecast)
 class SolarForecastAdmin(admin.ModelAdmin):
-    list_display = ('location', 'forecast_time', 'shortwave_radiation', 'created_at')
+    list_display = ('location', 'forecast_time_local', 'forecast_time', 'shortwave_radiation', 'created_at')
     list_filter = ('location', 'forecast_time')
     ordering = ('-forecast_time',)
+
+    @admin.display(description='forecast_time (local)')
+    def forecast_time_local(self, obj):
+        dt = obj.forecast_time
+        if dt is None:
+            return None
+        if not getattr(settings, 'USE_TZ', False):
+            return dt
+        try:
+            return timezone.localtime(dt)
+        except Exception:
+            return dt

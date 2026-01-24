@@ -10,6 +10,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Weather_Project_Python.settings
 django.setup()
 
 from django.utils import timezone
+from django.conf import settings
 from Weather_App.models import Location
 from predict_lstm_hourly_24h import predict_hourly_temperature
 from predict_daily_5days_sarima import predict_daily_temperature
@@ -28,7 +29,8 @@ PROVINCES = [
 def predict_all_hourly():
     """Dự báo 24h cho tất cả 34 tỉnh"""
     print(f"\n{'='*60}")
-    print(f"🕐 BẮT ĐẦU DỰ BÁO 24H CHO 34 TỈNH - {timezone.localtime().strftime('%Y-%m-%d %H:%M:%S')}")
+    now_str = (timezone.localtime(timezone.now()) if getattr(settings, 'USE_TZ', False) else timezone.now()).strftime('%Y-%m-%d %H:%M:%S')
+    print(f"🕐 BẮT ĐẦU DỰ BÁO 24H CHO 34 TỈNH - {now_str}")
     print(f"{'='*60}\n")
     
     success = 0
@@ -56,7 +58,8 @@ def predict_all_hourly():
 def predict_all_daily():
     """Dự báo 5 ngày cho tất cả 34 tỉnh"""
     print(f"\n{'='*60}")
-    print(f"📅 BẮT ĐẦU DỰ BÁO 5 NGÀY CHO 34 TỈNH - {timezone.localtime().strftime('%Y-%m-%d %H:%M:%S')}")
+    now_str = (timezone.localtime(timezone.now()) if getattr(settings, 'USE_TZ', False) else timezone.now()).strftime('%Y-%m-%d %H:%M:%S')
+    print(f"📅 BẮT ĐẦU DỰ BÁO 5 NGÀY CHO 34 TỈNH - {now_str}")
     print(f"{'='*60}\n")
     
     success = 0

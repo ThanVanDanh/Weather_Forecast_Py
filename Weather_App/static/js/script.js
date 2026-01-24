@@ -136,6 +136,7 @@ function updateCurrentWeatherDOM(data) {
     // 1. Lấy is_day và icon ngay từ đầu
     const isDay = current.is_day;
     const icon = getWeatherIcon(current.weathercode, isDay);
+    updateBackgroundVideo(current.weathercode, isDay);
 
     const now = new Date();
     const currentHourIndex = now.getHours();
@@ -302,7 +303,74 @@ async function loadFeaturedCities() {
         console.error("Lỗi tải thành phố nổi bật:", error);
     }
 }
+function getWeatherVideoName(code, isDay) {
 
+    if (!isDay && (code >= 0 && code <= 2)) {
+        return "troidem.mp4";
+    }
+
+    switch (code) {
+        case 0: // Quang đãng
+        case 1: // Nắng nhẹ
+            return "troisang.mp4";
+
+        // --- NHÓM CÓ MÂY ---
+        case 2: // Mây rải rác
+            // return "mayrairac.mp4";
+        case 3: // Nhiều mây
+            return "nhieumay.mp4"; // Video mây trôi (hoặc troimoc.mp4 như bạn đang dùng)
+
+        // --- NHÓM SƯƠNG MÙ ---
+        case 45:
+        case 48:
+            return "amu.mp4";
+
+        // --- NHÓM MƯA (Gộp nhiều code mưa lại) ---
+        case 51: case 53: case 55: // Mưa phùn
+        case 61: case 63: case 65: // Mưa thường
+        case 80: case 81: case 82: // Mưa rào
+            return "rain6.mp4"; // Video mưa rơi (rain5.mp4)
+
+        // --- NHÓM MƯA LẠNH / TUYẾT ---
+        case 56: case 57: // Mưa phùn lạnh
+        case 66: case 67: // Mưa lạnh
+        case 71: case 73: case 75: case 77: // Tuyết
+        case 85: case 86: // Mưa tuyết
+            return "tuyet.mp4"; // Hoặc dùng chung video mưa nếu ở VN ít tuyết
+
+        // --- NHÓM GIÔNG BÃO ---
+        case 95: // Có giông
+        case 96: case 99: // Giông mưa đá
+            return "giong.mp4"; // Video sấm chớp, mưa to
+
+        default:
+            return "nhieumay.mp4";
+    }
+}
+function updateBackgroundVideo(code, isDay) {
+    const videoElement = document.getElementById('global-bg-video');
+
+    // Nếu không tìm thấy thẻ video (ví dụ đang ở trang khác không có video bg) thì thoát
+    if (!videoElement) return;
+
+    const fileName = getWeatherVideoName(code, isDay);
+    const newSrc = `/static/video/${fileName}`; // Đường dẫn tới thư mục static
+
+    // Kiểm tra xem source hiện tại có trùng với cái mới không (tránh reload lại video nếu không cần thiết)
+    const currentSrc = videoElement.querySelector('source').getAttribute('src');
+
+    if (currentSrc && currentSrc.includes(fileName)) {
+        console.log(`[Video] Giữ nguyên video: ${fileName}`);
+        return;
+    }
+
+    console.log(`[Video] Đổi background sang: ${fileName}`);
+
+    // Cập nhật source và reload video
+    videoElement.querySelector('source').src = newSrc;
+    videoElement.load(); // Bắt buộc gọi load() để trình duyệt nhận file mới
+    videoElement.play().catch(e => console.log("Autoplay bị chặn hoặc lỗi:", e));
+}
 
 // =======================================================
 // HÀM TIỆN ÍCH

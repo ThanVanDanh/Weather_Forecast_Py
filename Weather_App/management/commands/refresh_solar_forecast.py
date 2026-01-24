@@ -1,8 +1,9 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.conf import settings
 
 from Weather_App.models import Location
-from Weather_App.services import ForecastService, SOLAR_LOCATION_TO_PROVINCE
+from Weather_App.services import ForecastService, get_province_name, is_solar_supported
 
 
 class Command(BaseCommand):
@@ -26,13 +27,15 @@ class Command(BaseCommand):
             except ValueError:
                 raise SystemExit('Invalid --date format, expected YYYY-MM-DD')
         else:
-            target_date = timezone.localdate()
+            target_date = timezone.localdate() if getattr(settings, 'USE_TZ', False) else timezone.now().date()
 
         if not refresh_all and not location_id:
             raise SystemExit('Provide --location-id or --all')
 
         if refresh_all:
-            locations = Location.objects.filter(id__in=SOLAR_LOCATION_TO_PROVINCE.keys()).order_by('id')
+            # Refresh for all VN locations that have a trained solar model
+            all_vn = Location.objects.filter(country_code='VN').order_by('id')
+            locations = [loc for loc in all_vn if is_solar_supported(get_province_name(loc))]
         else:
             locations = Location.objects.filter(id=location_id)
 
