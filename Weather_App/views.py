@@ -67,9 +67,56 @@ def get_location_search(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    # 1. Mapping logic (xử lý tên cũ -> tên mới)
+    PROVINCE_MAPPING = {
+        "Hà Giang": "Tuyên Quang", "Tuyên Quang": "Tuyên Quang",
+        "Cao Bằng": "Cao Bằng",
+        "Lai Châu": "Lai Châu",
+        "Lào Cai": "Lào Cai", "Yên Bái": "Lào Cai",
+        "Bắc Kạn": "Thái Nguyên", "Thái Nguyên": "Thái Nguyên",
+        "Điện Biên": "Điện Biên",
+        "Lạng Sơn": "Lạng Sơn",
+        "Sơn La": "Sơn La",
+        "Hòa Bình": "Phú Thọ", "Vĩnh Phúc": "Phú Thọ", "Phú Thọ": "Phú Thọ",
+        "Bắc Giang": "Bắc Ninh", "Bắc Ninh": "Bắc Ninh",
+        "Quảng Ninh": "Quảng Ninh",
+        "Hà Nội": "Hà Nội", "Thành phố Hà Nội": "Hà Nội", "Ha Noi": "Hà Nội",
+        "Hải Dương": "TP. Hải Phòng", "Hải Phòng": "TP. Hải Phòng", "Thành phố Hải Phòng": "TP. Hải Phòng", "Hai Phong": "TP. Hải Phòng",
+        "Thái Bình": "Hưng Yên", "Hưng Yên": "Hưng Yên",
+        "Hà Nam": "Ninh Bình", "Nam Định": "Ninh Bình", "Ninh Bình": "Ninh Bình",
+        "Thanh Hóa": "Thanh Hóa",
+        "Nghệ An": "Nghệ An",
+        "Hà Tĩnh": "Hà Tĩnh",
+        "Quảng Bình": "Quảng Trị", "Quảng Trị": "Quảng Trị",
+        "Thừa Thiên Huế": "Huế", "Huế": "Huế",
+        "Quảng Nam": "Đà Nẵng", "Đà Nẵng": "Đà Nẵng", "Thành phố Đà Nẵng": "Đà Nẵng", "Da Nang": "Đà Nẵng",
+        "Kon Tum": "Quảng Ngãi", "Quảng Ngãi": "Quảng Ngãi",
+        "Bình Định": "Gia Lai", "Gia Lai": "Gia Lai",
+        "Phú Yên": "Đắk Lắk", "Đắk Lắk": "Đắk Lắk", "Dak Lak": "Đắk Lắk",
+        "Ninh Thuận": "Khánh Hoà", "Khánh Hòa": "Khánh Hoà", "Khanh Hoa": "Khánh Hoà",
+        "Đắk Nông": "Lâm Đồng", "Bình Thuận": "Lâm Đồng", "Lâm Đồng": "Lâm Đồng", "Lam Dong": "Lâm Đồng",
+        "Bình Phước": "Đồng Nai", "Đồng Nai": "Đồng Nai",
+        "Long An": "Tây Ninh", "Tây Ninh": "Tây Ninh",
+        "Bình Dương": "TP. Hồ Chí Minh", "Bà Rịa - Vũng Tàu": "TP. Hồ Chí Minh", "Hồ Chí Minh": "TP. Hồ Chí Minh", "Thành phố Hồ Chí Minh": "TP. Hồ Chí Minh", "Ho Chi Minh": "TP. Hồ Chí Minh", "TPHCM": "TP. Hồ Chí Minh",
+        "Tiền Giang": "Đồng Tháp", "Đồng Tháp": "Đồng Tháp",
+        "Kiên Giang": "An Giang", "An Giang": "An Giang",
+        "Bến Tre": "Vĩnh Long", "Trà Vinh": "Vĩnh Long", "Vĩnh Long": "Vĩnh Long",
+        "Sóc Trăng": "Cần Thơ", "Hậu Giang": "Cần Thơ", "Cần Thơ": "Cần Thơ", "Thành phố Cần Thơ": "Cần Thơ", "Can Tho": "Cần Thơ",
+        "Bạc Liêu": "Cà Mau", "Cà Mau": "Cà Mau"
+    }
+
+    # Normalize query logic
+    target_city_name = city_query
+    
+    # Check mapping
+    for key, value in PROVINCE_MAPPING.items():
+        if key.lower() in city_query.lower():
+            target_city_name = value
+            break
+            
     locations = Location.objects.filter(
         Q(country_code='VN') &
-        Q(city_name__icontains=city_query)
+        (Q(city_name__icontains=target_city_name) | Q(city_name_vn__icontains=target_city_name))
     )
 
     if not locations.exists():
@@ -319,8 +366,6 @@ def province_view(request, slug):
     return render(request, 'province-template.html', context)
 
 
-
-
 @api_view(['POST'])
 def locate_user(request):
     print("DEBUG: Processing User Location Request...")
@@ -336,51 +381,152 @@ def locate_user(request):
             lat = float(lat)
             lon = float(lon)
 
-            # Gọi BigDataCloud Reverse Geocoding API (Free, chính xác hơn Nominatim)
+            # --- LOGIC KẾT HỢP: API + DB (HYBRID) ---
+
+            # STEP 1: Gọi API BigDataCloud để lấy tên tỉnh (Reverse Geocoding)
             url = f"https://api.bigdatacloud.net/data/reverse-geocode-client?latitude={lat}&longitude={lon}&localityLanguage=vi"
             headers = {"User-Agent": "WeatherApp/1.0"}
 
-            resp = requests.get(url, headers=headers, timeout=10)
+            detected_province_api = ""
+            try:
+                resp = requests.get(url, headers=headers, timeout=5)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    # Lấy tên tỉnh (thường nằm trong principalSubdivision hoặc city)
+                    detected_province_api = data.get("principalSubdivision") or data.get("city") or ""
+                    print(f"DEBUG: API Detected Name: {detected_province_api}")
+            except Exception:
+                pass
 
-            if resp.status_code == 200:
-                data = resp.json()
+            # STEP 2: Logic "Ép" Tỉnh (Mapping) theo danh sách 34 tỉnh sau gộp
+            # Dictionary ánh xạ: Tên cũ/Thành phần -> Tên mới (Thống nhất)
+            PROVINCE_MAPPING = {
+                "Hà Giang": "Tuyên Quang", "Tuyên Quang": "Tuyên Quang",
+                "Cao Bằng": "Cao Bằng",
+                "Lai Châu": "Lai Châu",
+                "Lào Cai": "Lào Cai", "Yên Bái": "Lào Cai",
+                "Bắc Kạn": "Thái Nguyên", "Thái Nguyên": "Thái Nguyên",
+                "Điện Biên": "Điện Biên",
+                "Lạng Sơn": "Lạng Sơn",
+                "Sơn La": "Sơn La",
+                "Hòa Bình": "Phú Thọ", "Vĩnh Phúc": "Phú Thọ", "Phú Thọ": "Phú Thọ",
+                "Bắc Giang": "Bắc Ninh", "Bắc Ninh": "Bắc Ninh",
+                "Quảng Ninh": "Quảng Ninh",
+                "Hà Nội": "Hà Nội", "Thành phố Hà Nội": "Hà Nội", "Ha Noi": "Hà Nội",
+                "Hải Dương": "TP. Hải Phòng", "Hải Phòng": "TP. Hải Phòng", "Thành phố Hải Phòng": "TP. Hải Phòng",
+                "Hai Phong": "TP. Hải Phòng",
+                "Thái Bình": "Hưng Yên", "Hưng Yên": "Hưng Yên",
+                "Hà Nam": "Ninh Bình", "Nam Định": "Ninh Bình", "Ninh Bình": "Ninh Bình",
+                "Thanh Hóa": "Thanh Hóa",
+                "Nghệ An": "Nghệ An",
+                "Hà Tĩnh": "Hà Tĩnh",
+                "Quảng Bình": "Quảng Trị", "Quảng Trị": "Quảng Trị",
+                "Thừa Thiên Huế": "Huế", "Huế": "Huế",
+                "Quảng Nam": "Đà Nẵng", "Đà Nẵng": "Đà Nẵng", "Thành phố Đà Nẵng": "Đà Nẵng", "Da Nang": "Đà Nẵng",
+                "Kon Tum": "Quảng Ngãi", "Quảng Ngãi": "Quảng Ngãi",
+                "Bình Định": "Gia Lai", "Gia Lai": "Gia Lai",
+                "Phú Yên": "Đắk Lắk", "Đắk Lắk": "Đắk Lắk", "Dak Lak": "Đắk Lắk",
+                "Ninh Thuận": "Khánh Hoà", "Khánh Hòa": "Khánh Hoà", "Khanh Hoa": "Khánh Hoà",
+                "Đắk Nông": "Lâm Đồng", "Bình Thuận": "Lâm Đồng", "Lâm Đồng": "Lâm Đồng", "Lam Dong": "Lâm Đồng",
+                "Bình Phước": "Đồng Nai", "Đồng Nai": "Đồng Nai",
+                "Long An": "Tây Ninh", "Tây Ninh": "Tây Ninh",
+                "Bình Dương": "TP. Hồ Chí Minh", "Bà Rịa - Vũng Tàu": "TP. Hồ Chí Minh",
+                "Hồ Chí Minh": "TP. Hồ Chí Minh", "Thành phố Hồ Chí Minh": "TP. Hồ Chí Minh",
+                "Ho Chi Minh": "TP. Hồ Chí Minh",
+                "Tiền Giang": "Đồng Tháp", "Đồng Tháp": "Đồng Tháp",
+                "Kiên Giang": "An Giang", "An Giang": "An Giang",
+                "Bến Tre": "Vĩnh Long", "Trà Vinh": "Vĩnh Long", "Vĩnh Long": "Vĩnh Long",
+                "Sóc Trăng": "Cần Thơ", "Hậu Giang": "Cần Thơ", "Cần Thơ": "Cần Thơ", "Thành phố Cần Thơ": "Cần Thơ",
+                "Can Tho": "Cần Thơ",
+                "Bạc Liêu": "Cà Mau", "Cà Mau": "Cà Mau"
+            }
 
-                # BigDataCloud trả về: city, locality, principalSubdivision (tỉnh/TP)
+            target_city_name = ""
+            if detected_province_api:
+                # Debug logging
+                print(f"DEBUG: Checking mapping for api_prov='{detected_province_api}'")
 
-                province = data.get("principalSubdivision") or ""
-                city = data.get("city") or ""
+                # Tìm xem tên trả về có chứa key nào trong mapping không
+                for key, value in PROVINCE_MAPPING.items():
+                    if key.lower() in detected_province_api.lower():
+                        target_city_name = value
+                        print(f"DEBUG: Mapped '{detected_province_api}' -> '{target_city_name}' (Key hit: {key})")
+                        break
 
-                display_name = province or city or data.get("countryName", "Việt Nam")
+                if not target_city_name:
+                    print(f"DEBUG: No mapping found for '{detected_province_api}'")
+
+            # 3. Tìm trong DB ưu tiên theo tên đã Map (nếu có)
+            final_location = None
+
+            if target_city_name:
+                # Tìm theo tên đã được ép (Map)
+                # Ưu tiên tìm city_name_vn (Tiếng Việt)
+                final_location = Location.objects.filter(city_name_vn__icontains=target_city_name).first()
+                # Nếu không thấy thì tìm không dấu
+                if not final_location:
+                    final_location = Location.objects.filter(city_name__icontains=target_city_name).first()
+
+            if not final_location:
+                # Nếu không map được (hoặc map sai), dùng thuật toán Khoảng Cách (Nearest Neighbor - Fallback)
+                print("DEBUG: Using Nearest Neighbor calculation (Fallback)")
+                all_locations = Location.objects.all()
+                min_distance = float('inf')
+
+                # Haversine formula
+                from math import radians, cos, sin, asin, sqrt
+                def haversine(lon1, lat1, lon2, lat2):
+                    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+                    dlon = lon2 - lon1
+                    dlat = lat2 - lat1
+                    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+                    c = 2 * asin(sqrt(a))
+                    r = 6371
+                    return c * r
+
+                for loc in all_locations:
+                    dist = haversine(lon, lat, loc.longitude, loc.latitude)
+                    if dist < min_distance:
+                        min_distance = dist
+                        final_location = loc
+
+                print(f"DEBUG: Nearest Neighbor logic selected: {final_location.city_name_vn} ({min_distance:.2f} km)")
+
+            if final_location:
+                # Gán thông tin location tìm được
+                display_name = final_location.city_name_vn or final_location.city_name
+
+                # Cập nhật tọa độ user THEO tọa độ location tìm được
+                # Để đảm bảo map đúng vào điểm thời tiết có sẵn
+                lat = final_location.latitude
+                lon = final_location.longitude
 
                 request.session["current_city"] = display_name
                 request.session.modified = True
 
                 if request.user.is_authenticated:
                     try:
-                        # Lấy hoặc tạo profile nếu chưa có
                         profile, created = UserProfile.objects.get_or_create(user=request.user)
-
-                        # Cập nhật thông tin
                         profile.latitude = lat
                         profile.longitude = lon
                         profile.address = display_name
                         profile.save()
-                        print(f"DEBUG: Đã lưu vị trí cho user {request.user.username}")
                     except Exception as e:
-                        print(f"ERROR: Không thể lưu vị trí vào profile: {e}")
+                        print(f"ERROR: Save profile failed: {e}")
 
                 return Response({
                     "ok": True,
                     "city": display_name,
-                    "province": province,
-                    "source": "GPS + BigDataCloud",
-                    "coordinates": {"lat": lat, "lon": lon}
+                    "province": display_name,
+                    "source": "Mapped Location" if target_city_name else "Nearest Neighbor",
+                    "coordinates": {"lat": lat, "lon": lon},
+                    "matched_location_id": final_location.id
                 })
             else:
                 return Response({
                     "ok": False,
-                    "error": "Không thể xác định địa điểm từ tọa độ"
-                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                    "error": "Không tìm thấy địa điểm nào trong hệ thống"
+                }, status=status.HTTP_404_NOT_FOUND)
 
         except (ValueError, TypeError) as e:
             print(f"DEBUG: Invalid coordinates: {e}")

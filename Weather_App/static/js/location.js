@@ -45,7 +45,22 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.disabled = false;
     }
   });
-
+  if (cityEl.innerText.trim().includes("Chưa xác định") || cityEl.innerText.trim() === "") {
+    console.log("Auto-locating user...");
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          console.log("Auto-GPS coordinates:", lat, lon);
+          await sendLocationToServer(lat, lon);
+        },
+        (error) => {
+          console.log("Auto-location failed (silent):", error.message);
+        }
+      );
+    }
+  }
   // Helper để lấy cookie CSRF
   function getCookie(name) {
     let cookieValue = null;
@@ -86,6 +101,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // Hiển thị tên thành phố
       cityEl.innerText = data.city;
       console.log("Location found:", data);
+
+      // Phát sự kiện để các trang khác (như Customer Care) bắt được
+      const event = new CustomEvent('weatherLocationUpdated', { detail: data });
+      document.dispatchEvent(event);
 
     } catch (err) {
       console.error(err);

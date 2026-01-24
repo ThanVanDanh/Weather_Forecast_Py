@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="UTF-8">
-        <link rel="icon" type="logo/png" href="{% static 'image/logo.png' %}">
+    <link rel="icon" type="logo/png" href="{% static 'image/logo.png' %}">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chăm Sóc Khách Hàng | Dự Báo Thời Tiết</title>
@@ -340,580 +340,594 @@
     {% include 'footer.html' %}
 
     <!-- Particles Effect Script -->
-<script type="module">
-    import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+    <script type="module">
+        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
 
-    // 1. KHỞI TẠO SCENE (SÂN KHẤU)
-    const scene = new THREE.Scene();
+        // 1. KHỞI TẠO SCENE (SÂN KHẤU)
+        const scene = new THREE.Scene();
 
-    // 2. KHỞI TẠO CAMERA
-    // Góc nhìn 75 độ, tỉ lệ khung hình theo màn hình, nhìn xa tối đa 1000 đơn vị
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 1; // Đặt camera lùi lại một chút
+        // 2. KHỞI TẠO CAMERA
+        // Góc nhìn 75 độ, tỉ lệ khung hình theo màn hình, nhìn xa tối đa 1000 đơn vị
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 1; // Đặt camera lùi lại một chút
 
-    // 3. KHỞI TẠO RENDERER (BỘ VẼ)
-    const renderer = new THREE.WebGLRenderer({ alpha: true }); // alpha: true để nền trong suốt, nhìn thấy màu CSS body
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    const container = document.getElementById('threejs-background');
-    if (container) {
-        container.appendChild(renderer.domElement);
-    } else {
-        document.body.appendChild(renderer.domElement); // Fallback
-    }
-    // 4. TẠO CÁC NGÔI SAO (PARTICLES)
-    // Thay vì tạo từng vật thể, ta dùng BufferGeometry để tối ưu hiệu năng (GPU thích điều này)
-    const geometry = new THREE.BufferGeometry();
-    const count = 3000; // Số lượng ngôi sao
-    const positions = new Float32Array(count * 3); // Mỗi điểm có 3 tọa độ x, y, z
-
-    for(let i = 0; i < count * 3; i++) {
-        // Tạo vị trí ngẫu nhiên cho sao trong không gian
-        positions[i] = (Math.random() - 0.5) * 5;
-    }
-
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-    // Tạo chất liệu (Material) cho sao
-    const material = new THREE.PointsMaterial({
-        size: 0.005,      // Kích thước sao
-        color: 0xffffff,  // Màu trắng
-        transparent: true,
-        opacity: 0.8,
-        sizeAttenuation: true // Sao ở xa thì nhỏ, ở gần thì to
-    });
-
-    // Kết hợp khung xương và chất liệu thành vật thể
-    const starsMesh = new THREE.Points(geometry, material);
-    scene.add(starsMesh);
-
-    // 5. XỬ LÝ KHI NGƯỜI DÙNG DI CHUỘT (TẠO CẢM GIÁC 3D)
-    {#let mouseX = 0;#}
-    {#let mouseY = 0;#}
-    {##}
-    {#document.addEventListener('mousemove', (event) => {#}
-    {#    mouseX = event.clientX / window.innerWidth - 0.5;#}
-    {#    mouseY = event.clientY / window.innerHeight - 0.5;#}
-
-    // 6. VÒNG LẶP ANIMATION (Chạy 60 lần/giây)
-    const clock = new THREE.Clock();
-
-    function animate() {
-        requestAnimationFrame(animate);
-
-        const elapsedTime = clock.getElapsedTime();
-
-        // Làm bầu trời tự xoay nhẹ
-        starsMesh.rotation.y = elapsedTime * 0.05;
-        starsMesh.rotation.x = elapsedTime * 0.02;
-
-        // Tương tác nhẹ theo chuột (Parallax effect)
-        {#starsMesh.rotation.y += mouseX * 0.5;#}
-        {#starsMesh.rotation.x += mouseY * 0.5;#}
-
-        renderer.render(scene, camera);
-    }
-
-    animate();
-
-    // 7. Xử lý khi thay đổi kích thước cửa sổ
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
+        // 3. KHỞI TẠO RENDERER (BỘ VẼ)
+        const renderer = new THREE.WebGLRenderer({ alpha: true }); // alpha: true để nền trong suốt, nhìn thấy màu CSS body
         renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-</script>
+        const container = document.getElementById('threejs-background');
+        if (container) {
+            container.appendChild(renderer.domElement);
+        } else {
+            document.body.appendChild(renderer.domElement); // Fallback
+        }
+        // 4. TẠO CÁC NGÔI SAO (PARTICLES)
+        // Thay vì tạo từng vật thể, ta dùng BufferGeometry để tối ưu hiệu năng (GPU thích điều này)
+        const geometry = new THREE.BufferGeometry();
+        const count = 3000; // Số lượng ngôi sao
+        const positions = new Float32Array(count * 3); // Mỗi điểm có 3 tọa độ x, y, z
+
+        for (let i = 0; i < count * 3; i++) {
+            // Tạo vị trí ngẫu nhiên cho sao trong không gian
+            positions[i] = (Math.random() - 0.5) * 5;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        // Tạo chất liệu (Material) cho sao
+        const material = new THREE.PointsMaterial({
+            size: 0.005,      // Kích thước sao
+            color: 0xffffff,  // Màu trắng
+            transparent: true,
+            opacity: 0.8,
+            sizeAttenuation: true // Sao ở xa thì nhỏ, ở gần thì to
+        });
+
+        // Kết hợp khung xương và chất liệu thành vật thể
+        const starsMesh = new THREE.Points(geometry, material);
+        scene.add(starsMesh);
+
+        // 5. XỬ LÝ KHI NGƯỜI DÙNG DI CHUỘT (TẠO CẢM GIÁC 3D)
+        // let mouseX = 0;
+        // let mouseY = 0;
+
+        // document.addEventListener('mousemove', (event) => {
+        //    mouseX = event.clientX / window.innerWidth - 0.5;
+        //    mouseY = event.clientY / window.innerHeight - 0.5;
+        // });
+
+        // 6. VÒNG LẶP ANIMATION (Chạy 60 lần/giây)
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const elapsedTime = clock.getElapsedTime();
+
+            // Làm bầu trời tự xoay nhẹ
+            starsMesh.rotation.y = elapsedTime * 0.05;
+            starsMesh.rotation.x = elapsedTime * 0.02;
+
+            // Tương tác nhẹ theo chuột (Parallax effect)
+            // starsMesh.rotation.y += mouseX * 0.5;
+            // starsMesh.rotation.x += mouseY * 0.5;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // 7. Xử lý khi thay đổi kích thước cửa sổ
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 
     <!-- Script cho Gợi ý trang phục -->
     <script>
-            document.addEventListener('DOMContentLoaded', async function () {
-                const locationSelect = document.getElementById('outfit-location-select');
-                const weatherCondition = document.getElementById('outfit-weather-condition');
-                const weatherIcon = document.getElementById('outfit-weather-icon');
-                const weatherText = document.getElementById('outfit-weather-text');
-                const adviceText = document.getElementById('outfit-advice-text');
-                const outfitItemsContainer = document.getElementById('outfit-items-container');
+        document.addEventListener('DOMContentLoaded', async function () {
+            const locationSelect = document.getElementById('outfit-location-select');
+            const weatherCondition = document.getElementById('outfit-weather-condition');
+            const weatherIcon = document.getElementById('outfit-weather-icon');
+            const weatherText = document.getElementById('outfit-weather-text');
+            const adviceText = document.getElementById('outfit-advice-text');
+            const outfitItemsContainer = document.getElementById('outfit-items-container');
 
-                // Biến lưu danh sách cities để tìm kiếm
-                let citiesList = [];
+            // Biến lưu danh sách cities để tìm kiếm
+            let citiesList = [];
 
-                // Lấy tên thành phố đã định vị từ header
-                function getCurrentCityName() {
-                    const cityEl = document.getElementById('current-city');
-                    if (cityEl) {
-                        const cityName = cityEl.innerText.trim();
-                        console.log('[Outfit] Current city from header:', cityName);
-                        if (cityName && cityName !== 'Chưa xác định') {
-                            return cityName;
-                        }
-                    }
-                    return null;
-                }
-
-                // Tìm location ID từ API search (chính xác hơn)
-                async function searchLocationByName(cityName) {
-                    if (!cityName) return null;
-
-                    try {
-                        // Chuẩn hóa tên để tìm kiếm
-                        let searchQuery = cityName
-                            .replace(/^(thành phố|tỉnh|tp\.?)\s*/i, '')
-                            .trim();
-
-                        console.log('[Outfit] Searching for:', searchQuery);
-
-                        const response = await fetch(`/api/weather/search/?city=${encodeURIComponent(searchQuery)}`);
-                        if (!response.ok) return null;
-
-                        const locations = await response.json();
-                        if (locations && locations.length > 0) {
-                            console.log('[Outfit] Found location:', locations[0]);
-                            return locations[0];
-                        }
-                    } catch (error) {
-                        console.error('[Outfit] Search error:', error);
-                    }
-                    return null;
-                }
-
-                // Load danh sách tất cả tỉnh/thành phố (34 tỉnh)
-                async function loadLocations() {
-                    try {
-                        const response = await fetch('/api/weather/locations/');
-                        if (!response.ok) throw new Error('Không thể tải danh sách địa điểm');
-
-                        citiesList = await response.json();
-                        citiesList.forEach(city => {
-                            const option = document.createElement('option');
-                            option.value = city.id;
-                            option.textContent = city.city_name_vn || city.city_name;
-                            locationSelect.appendChild(option);
-                        });
-
-                        return citiesList;
-                    } catch (error) {
-                        console.error('Lỗi tải danh sách địa điểm:', error);
-                        return [];
+            // Lấy tên thành phố đã định vị từ header
+            function getCurrentCityName() {
+                const cityEl = document.getElementById('current-city');
+                if (cityEl) {
+                    const cityName = cityEl.innerText.trim();
+                    console.log('[Outfit] Current city from header:', cityName);
+                    if (cityName && cityName !== 'Chưa xác định') {
+                        return cityName;
                     }
                 }
+                return null;
+            }
 
-                // Lấy icon thời tiết
-                function getWeatherIconClass(code, isDay = 1) {
-                    if (code === 0) return isDay ? "fa-sun" : "fa-moon";
-                    if (code === 1 || code === 2) return isDay ? "fa-cloud-sun" : "fa-cloud-moon";
-                    if (code === 3) return "fa-cloud";
-                    if (code >= 45 && code <= 48) return "fa-smog";
-                    if (code >= 51 && code <= 67) return "fa-cloud-rain";
-                    if (code >= 71 && code <= 77) return "fa-snowflake";
-                    if (code >= 80 && code <= 82) return "fa-cloud-showers-heavy";
-                    if (code >= 85 && code <= 86) return "fa-snowflake";
-                    if (code >= 95 && code <= 99) return "fa-bolt";
-                    return "fa-cloud";
+            // Tìm location ID từ API search (chính xác hơn)
+            async function searchLocationByName(cityName) {
+                if (!cityName) return null;
+
+                try {
+                    // Chuẩn hóa tên để tìm kiếm
+                    let searchQuery = cityName
+                        .replace(/^(thành phố|tỉnh|tp\.?)\s*/i, '')
+                        .trim();
+
+                    console.log('[Outfit] Searching for:', searchQuery);
+
+                    const response = await fetch(`/api/weather/search/?city=${encodeURIComponent(searchQuery)}`);
+                    if (!response.ok) return null;
+
+                    const locations = await response.json();
+                    if (locations && locations.length > 0) {
+                        console.log('[Outfit] Found location:', locations[0]);
+                        return locations[0];
+                    }
+                } catch (error) {
+                    console.error('[Outfit] Search error:', error);
+                }
+                return null;
+            }
+
+            // Load danh sách tất cả tỉnh/thành phố (34 tỉnh)
+            async function loadLocations() {
+                try {
+                    const response = await fetch('/api/weather/locations/');
+                    if (!response.ok) throw new Error('Không thể tải danh sách địa điểm');
+
+                    citiesList = await response.json();
+                    citiesList.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city.id;
+                        option.textContent = city.city_name_vn || city.city_name;
+                        locationSelect.appendChild(option);
+                    });
+
+                    return citiesList;
+                } catch (error) {
+                    console.error('Lỗi tải danh sách địa điểm:', error);
+                    return [];
+                }
+            }
+
+            // Lấy icon thời tiết
+            function getWeatherIconClass(code, isDay = 1) {
+                if (code === 0) return isDay ? "fa-sun" : "fa-moon";
+                if (code === 1 || code === 2) return isDay ? "fa-cloud-sun" : "fa-cloud-moon";
+                if (code === 3) return "fa-cloud";
+                if (code >= 45 && code <= 48) return "fa-smog";
+                if (code >= 51 && code <= 67) return "fa-cloud-rain";
+                if (code >= 71 && code <= 77) return "fa-snowflake";
+                if (code >= 80 && code <= 82) return "fa-cloud-showers-heavy";
+                if (code >= 85 && code <= 86) return "fa-snowflake";
+                if (code >= 95 && code <= 99) return "fa-bolt";
+                return "fa-cloud";
+            }
+
+            // Lấy mô tả thời tiết
+            function getWeatherDescription(code, temp, isDay = 1) {
+                let desc = "";
+                if (code === 0) desc = isDay ? "Trời nắng" : "Trời quang";
+                else if (code === 1 || code === 2) desc = "Ít mây";
+                else if (code === 3) desc = "Nhiều mây";
+                else if (code >= 45 && code <= 48) desc = "Sương mù";
+                else if (code >= 51 && code <= 67) desc = "Có mưa";
+                else if (code >= 71 && code <= 86) desc = "Có tuyết";
+                else if (code >= 95) desc = "Có giông";
+                else desc = "Có mây";
+
+                return `${desc} ${Math.round(temp)}°C`;
+            }
+
+            // Tạo outfit items dựa trên thời tiết
+            function generateOutfitItems(temp, weatherCode) {
+                const items = [];
+
+                if (temp >= 30) {
+                    items.push({ icon: 'fa-shirt', text: 'Áo thun nhẹ' });
+                    items.push({ icon: 'fa-hat-cowboy', text: 'Mũ/Nón' });
+                    items.push({ icon: 'fa-glasses', text: 'Kính râm' });
+                    items.push({ icon: 'fa-bottle-water', text: 'Mang nước' });
+                } else if (temp >= 20) {
+                    items.push({ icon: 'fa-shirt', text: 'Áo sơ mi' });
+                    items.push({ icon: 'fa-vest', text: 'Áo khoác nhẹ' });
+                } else if (temp >= 15) {
+                    items.push({ icon: 'fa-vest', text: 'Áo khoác' });
+                    items.push({ icon: 'fa-mitten', text: 'Khăn quàng' });
+                } else {
+                    items.push({ icon: 'fa-jacket', text: 'Áo ấm dày' });
+                    items.push({ icon: 'fa-mitten', text: 'Găng tay' });
+                    items.push({ icon: 'fa-socks', text: 'Vớ ấm' });
                 }
 
-                // Lấy mô tả thời tiết
-                function getWeatherDescription(code, temp, isDay = 1) {
-                    let desc = "";
-                    if (code === 0) desc = isDay ? "Trời nắng" : "Trời quang";
-                    else if (code === 1 || code === 2) desc = "Ít mây";
-                    else if (code === 3) desc = "Nhiều mây";
-                    else if (code >= 45 && code <= 48) desc = "Sương mù";
-                    else if (code >= 51 && code <= 67) desc = "Có mưa";
-                    else if (code >= 71 && code <= 86) desc = "Có tuyết";
-                    else if (code >= 95) desc = "Có giông";
-                    else desc = "Có mây";
-
-                    return `${desc} ${Math.round(temp)}°C`;
+                // Thêm ô/áo mưa nếu có mưa
+                if (weatherCode >= 51 && weatherCode <= 82) {
+                    items.push({ icon: 'fa-umbrella', text: 'Mang ô' });
                 }
 
-                // Tạo outfit items dựa trên thời tiết
-                function generateOutfitItems(temp, weatherCode) {
-                    const items = [];
+                return items;
+            }
 
-                    if (temp >= 30) {
-                        items.push({ icon: 'fa-shirt', text: 'Áo thun nhẹ' });
-                        items.push({ icon: 'fa-hat-cowboy', text: 'Mũ/Nón' });
-                        items.push({ icon: 'fa-glasses', text: 'Kính râm' });
-                        items.push({ icon: 'fa-bottle-water', text: 'Mang nước' });
-                    } else if (temp >= 20) {
-                        items.push({ icon: 'fa-shirt', text: 'Áo sơ mi' });
-                        items.push({ icon: 'fa-vest', text: 'Áo khoác nhẹ' });
-                    } else if (temp >= 15) {
-                        items.push({ icon: 'fa-vest', text: 'Áo khoác' });
-                        items.push({ icon: 'fa-mitten', text: 'Khăn quàng' });
-                    } else {
-                        items.push({ icon: 'fa-jacket', text: 'Áo ấm dày' });
-                        items.push({ icon: 'fa-mitten', text: 'Găng tay' });
-                        items.push({ icon: 'fa-socks', text: 'Vớ ấm' });
+            // Load gợi ý trang phục cho location
+            async function loadOutfitAdvice(locationId) {
+                try {
+                    adviceText.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i><span>Đang tải gợi ý...</span>';
+
+                    // Gọi song song 2 API
+                    const [outfitResp, currentResp] = await Promise.all([
+                        fetch(`/api/weather/outfit/?location_id=${locationId}`),
+                        fetch(`/api/weather/current/?location_id=${locationId}`)
+                    ]);
+
+                    let temp = 30;
+                    let weatherCode = 1;
+                    let isDay = 1;
+
+                    // Xử lý dữ liệu thời tiết hiện tại
+                    if (currentResp.ok) {
+                        const currentData = await currentResp.json();
+                        const current = currentData.current_weather;
+                        temp = current.temperature;
+                        weatherCode = current.weathercode;
+                        isDay = current.is_day;
+
+                        // Cập nhật weather condition
+                        const iconClass = getWeatherIconClass(weatherCode, isDay);
+                        weatherIcon.className = `fa-solid ${iconClass}`;
+                        weatherText.textContent = getWeatherDescription(weatherCode, temp, isDay);
                     }
 
-                    // Thêm ô/áo mưa nếu có mưa
-                    if (weatherCode >= 51 && weatherCode <= 82) {
-                        items.push({ icon: 'fa-umbrella', text: 'Mang ô' });
-                    }
-
-                    return items;
-                }
-
-                // Load gợi ý trang phục cho location
-                async function loadOutfitAdvice(locationId) {
-                    try {
-                        adviceText.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i><span>Đang tải gợi ý...</span>';
-
-                        // Gọi song song 2 API
-                        const [outfitResp, currentResp] = await Promise.all([
-                            fetch(`/api/weather/outfit/?location_id=${locationId}`),
-                            fetch(`/api/weather/current/?location_id=${locationId}`)
-                        ]);
-
-                        let temp = 30;
-                        let weatherCode = 1;
-                        let isDay = 1;
-
-                        // Xử lý dữ liệu thời tiết hiện tại
-                        if (currentResp.ok) {
-                            const currentData = await currentResp.json();
-                            const current = currentData.current_weather;
-                            temp = current.temperature;
-                            weatherCode = current.weathercode;
-                            isDay = current.is_day;
-
-                            // Cập nhật weather condition
-                            const iconClass = getWeatherIconClass(weatherCode, isDay);
-                            weatherIcon.className = `fa-solid ${iconClass}`;
-                            weatherText.textContent = getWeatherDescription(weatherCode, temp, isDay);
-                        }
-
-                        // Xử lý gợi ý trang phục
-                        if (outfitResp.ok) {
-                            const outfitData = await outfitResp.json();
-                            adviceText.innerHTML = `
+                    // Xử lý gợi ý trang phục
+                    if (outfitResp.ok) {
+                        const outfitData = await outfitResp.json();
+                        adviceText.innerHTML = `
                     <i class="fa-solid fa-lightbulb" style="color: #ffc107; margin-right: 8px;"></i>
                     <span>"${outfitData.advice}"</span>
                 `;
-                        } else {
-                            // Fallback nếu không có API outfit
-                            adviceText.innerHTML = `
+                    } else {
+                        // Fallback nếu không có API outfit
+                        adviceText.innerHTML = `
                     <i class="fa-solid fa-lightbulb" style="color: #ffc107; margin-right: 8px;"></i>
                     <span>"Hãy mặc trang phục phù hợp với nhiệt độ ${Math.round(temp)}°C"</span>
                 `;
-                        }
+                    }
 
-                        // Hiển thị outfit items
-                        const outfitItems = generateOutfitItems(temp, weatherCode);
-                        outfitItemsContainer.innerHTML = outfitItems.map(item => `
+                    // Hiển thị outfit items
+                    const outfitItems = generateOutfitItems(temp, weatherCode);
+                    outfitItemsContainer.innerHTML = outfitItems.map(item => `
                 <div class="outfit-item">
                     <i class="fa-solid ${item.icon}"></i>
                     <span>${item.text}</span>
                 </div>
             `).join('');
-                        outfitItemsContainer.style.display = 'flex';
+                    outfitItemsContainer.style.display = 'flex';
 
-                    } catch (error) {
-                        console.error('Lỗi tải gợi ý trang phục:', error);
-                        adviceText.innerHTML = `
+                } catch (error) {
+                    console.error('Lỗi tải gợi ý trang phục:', error);
+                    adviceText.innerHTML = `
                 <i class="fa-solid fa-exclamation-triangle" style="color: #ff6b6b; margin-right: 8px;"></i>
                 <span>Không thể tải gợi ý. Vui lòng thử lại sau.</span>
             `;
-                    }
                 }
+            }
 
-                // Event listener cho dropdown
-                locationSelect.addEventListener('change', function () {
-                    const locationId = this.value;
-                    if (locationId) {
-                        loadOutfitAdvice(locationId);
-                    } else {
-                        // Reset về trạng thái ban đầu
-                        weatherIcon.className = 'fa-solid fa-cloud';
-                        weatherText.textContent = 'Chọn địa điểm để xem gợi ý';
-                        adviceText.innerHTML = `
+            // Event listener cho dropdown
+            locationSelect.addEventListener('change', function () {
+                const locationId = this.value;
+                if (locationId) {
+                    loadOutfitAdvice(locationId);
+                } else {
+                    // Reset về trạng thái ban đầu
+                    weatherIcon.className = 'fa-solid fa-cloud';
+                    weatherText.textContent = 'Chọn địa điểm để xem gợi ý';
+                    adviceText.innerHTML = `
                 <i class="fa-solid fa-lightbulb" style="color: #ffc107; margin-right: 8px;"></i>
                 <span>Vui lòng chọn tỉnh/thành phố để nhận gợi ý trang phục</span>
             `;
-                        outfitItemsContainer.style.display = 'none';
-                    }
-                });
-
-                // Khởi tạo
-                await loadLocations();
-
-                // Lấy vị trí đã định vị từ current-city
-                const currentCityName = getCurrentCityName();
-                let defaultLocationId = null;
-
-                if (currentCityName) {
-                    // Tìm kiếm location từ API
-                    const foundLocation = await searchLocationByName(currentCityName);
-                    if (foundLocation) {
-                        defaultLocationId = foundLocation.id;
-                        console.log(`[Outfit] Đã tìm thấy vị trí định vị: ${foundLocation.city_name_vn || foundLocation.city_name} (ID: ${defaultLocationId})`);
-                    }
+                    outfitItemsContainer.style.display = 'none';
                 }
-
-                // Nếu không tìm thấy, mặc định TP.HCM (id=30)
-                if (!defaultLocationId) {
-                    defaultLocationId = 30;
-                    console.log('[Outfit] Không tìm thấy vị trí đã định vị, sử dụng mặc định TP.HCM');
-                }
-
-                locationSelect.value = defaultLocationId;
-                loadOutfitAdvice(defaultLocationId);
             });
 
-            // ============================================
-            // SCRIPT CHO NĂNG LƯỢNG MẶT TRỜI
-            // ============================================
-            document.addEventListener('DOMContentLoaded', async function () {
-                const solarLocationSelect = document.getElementById('solar-location-select');
-                const solarInfoContainer = document.getElementById('solar-info-container');
-                const solarLoading = document.getElementById('solar-loading');
-                const solarError = document.getElementById('solar-error');
-                const solarErrorText = document.getElementById('solar-error-text');
+            // Khởi tạo
+            await loadLocations();
 
-                // Elements hiển thị dữ liệu
-                const solarKwh = document.getElementById('solar-kwh');
-                const solarRadiation = document.getElementById('solar-radiation');
-                const solarSunshine = document.getElementById('solar-sunshine');
-                const solarRating = document.getElementById('solar-rating');
-
-                // Biến lưu danh sách cities
-                let solarCitiesList = [];
-
-                // Lấy tên thành phố đã định vị từ header
-                function getCurrentCityName() {
-                    const cityEl = document.getElementById('current-city');
-                    if (cityEl) {
-                        const cityName = cityEl.innerText.trim();
-                        if (cityName && cityName !== 'Chưa xác định') {
-                            return cityName;
-                        }
-                    }
-                    return null;
-                }
-
-                // Tìm location ID từ API search
-                async function searchLocationByName(cityName) {
-                    if (!cityName) return null;
-
-                    try {
-                        let searchQuery = cityName
-                            .replace(/^(thành phố|tỉnh|tp\.?)\s*/i, '')
-                            .trim();
-
-                        console.log('[Solar] Searching for:', searchQuery);
-
-                        const response = await fetch(`/api/weather/search/?city=${encodeURIComponent(searchQuery)}`);
-                        if (!response.ok) return null;
-
-                        const locations = await response.json();
-                        if (locations && locations.length > 0) {
-                            console.log('[Solar] Found location:', locations[0]);
-                            return locations[0];
-                        }
-                    } catch (error) {
-                        console.error('[Solar] Search error:', error);
-                    }
-                    return null;
-                }
-
-                // Load danh sách tất cả tỉnh/thành phố cho solar (34 tỉnh)
-                async function loadSolarLocations() {
-                    try {
-                        const response = await fetch('/api/weather/locations/');
-                        if (!response.ok) throw new Error('Không thể tải danh sách địa điểm');
-
-                        solarCitiesList = await response.json();
-                        solarCitiesList.forEach(city => {
-                            const option = document.createElement('option');
-                            option.value = city.id;
-                            option.textContent = city.city_name_vn || city.city_name;
-                            solarLocationSelect.appendChild(option);
-                        });
-
-                        return solarCitiesList;
-                    } catch (error) {
-                        console.error('Lỗi tải danh sách địa điểm:', error);
-                        return [];
+            // Lắng nghe sự kiện từ location.js
+            document.addEventListener('weatherLocationUpdated', async (e) => {
+                const data = e.detail;
+                console.log('[Outfit] Received location update:', data);
+                if (data && data.city) {
+                    const loc = await searchLocationByName(data.city);
+                    if (loc) {
+                        locationSelect.value = loc.id;
+                        loadOutfitAdvice(loc.id);
                     }
                 }
+            });
 
-                // Hiển thị loading
-                function showLoading() {
-                    solarInfoContainer.style.display = 'none';
-                    solarError.style.display = 'none';
-                    solarLoading.style.display = 'block';
+            // Lấy vị trí đã định vị từ current-city
+            const currentCityName = getCurrentCityName();
+            let defaultLocationId = null;
+
+            if (currentCityName) {
+                // Tìm kiếm location từ API
+                const foundLocation = await searchLocationByName(currentCityName);
+                if (foundLocation) {
+                    defaultLocationId = foundLocation.id;
+                    console.log(`[Outfit] Đã tìm thấy vị trí định vị: ${foundLocation.city_name_vn || foundLocation.city_name} (ID: ${defaultLocationId})`);
                 }
+            }
 
-                // Hiển thị lỗi
-                function showError(message) {
-                    solarInfoContainer.style.display = 'none';
-                    solarLoading.style.display = 'none';
-                    solarError.style.display = 'block';
-                    solarErrorText.textContent = message;
-                }
+            // Nếu không tìm thấy, mặc định TP.HCM (id=30)
+            if (!defaultLocationId) {
+                defaultLocationId = 30;
+                console.log('[Outfit] Không tìm thấy vị trí đã định vị, sử dụng mặc định TP.HCM');
+            }
 
-                // Hiển thị dữ liệu
-                function showData(data) {
-                    solarLoading.style.display = 'none';
-                    solarError.style.display = 'none';
-                    solarInfoContainer.style.display = 'block';
+            locationSelect.value = defaultLocationId;
+            loadOutfitAdvice(defaultLocationId);
+        });
 
-                    const summary = data.summary;
+        // ============================================
+        // SCRIPT CHO NĂNG LƯỢNG MẶT TRỜI
+        // ============================================
+        document.addEventListener('DOMContentLoaded', async function () {
+            const solarLocationSelect = document.getElementById('solar-location-select');
+            const solarInfoContainer = document.getElementById('solar-info-container');
+            const solarLoading = document.getElementById('solar-loading');
+            const solarError = document.getElementById('solar-error');
+            const solarErrorText = document.getElementById('solar-error-text');
 
-                    // Cập nhật các giá trị
-                    solarKwh.textContent = summary.estimated_kwh.toFixed(1);
-                    solarRadiation.textContent = `${summary.avg_radiation_w.toFixed(0)} W/m²`;
-                    solarSunshine.textContent = `${summary.sunshine_hours} giờ`;
+            // Elements hiển thị dữ liệu
+            const solarKwh = document.getElementById('solar-kwh');
+            const solarRadiation = document.getElementById('solar-radiation');
+            const solarSunshine = document.getElementById('solar-sunshine');
+            const solarRating = document.getElementById('solar-rating');
 
-                    // Cập nhật rating với màu sắc
-                    solarRating.textContent = summary.rating;
-                    solarRating.className = 'value ' + summary.rating_color;
-                }
+            // Biến lưu danh sách cities
+            let solarCitiesList = [];
 
-                // Load dữ liệu bức xạ mặt trời
-                async function loadSolarData(locationId) {
-                    showLoading();
-
-                    try {
-                        const response = await fetch(`/api/weather/solar/?location_id=${locationId}`);
-                        const data = await response.json();
-
-                        if (response.ok && data.status === 'success') {
-                            showData(data);
-                        } else {
-                            showError(data.error || 'Không thể tải dữ liệu bức xạ');
-                        }
-                    } catch (error) {
-                        console.error('Lỗi tải dữ liệu bức xạ:', error);
-                        showError('Lỗi kết nối. Vui lòng thử lại sau.');
+            // Lấy tên thành phố đã định vị từ header
+            function getCurrentCityName() {
+                const cityEl = document.getElementById('current-city');
+                if (cityEl) {
+                    const cityName = cityEl.innerText.trim();
+                    if (cityName && cityName !== 'Chưa xác định') {
+                        return cityName;
                     }
                 }
+                return null;
+            }
 
-                // Event listener cho dropdown solar
-                solarLocationSelect.addEventListener('change', function () {
-                    const locationId = this.value;
-                    if (locationId) {
-                        loadSolarData(locationId);
+            // Tìm location ID từ API search
+            async function searchLocationByName(cityName) {
+                if (!cityName) return null;
+
+                try {
+                    let searchQuery = cityName
+                        .replace(/^(thành phố|tỉnh|tp\.?)\s*/i, '')
+                        .trim();
+
+                    console.log('[Solar] Searching for:', searchQuery);
+
+                    const response = await fetch(`/api/weather/search/?city=${encodeURIComponent(searchQuery)}`);
+                    if (!response.ok) return null;
+
+                    const locations = await response.json();
+                    if (locations && locations.length > 0) {
+                        console.log('[Solar] Found location:', locations[0]);
+                        return locations[0];
+                    }
+                } catch (error) {
+                    console.error('[Solar] Search error:', error);
+                }
+                return null;
+            }
+
+            // Load danh sách tất cả tỉnh/thành phố cho solar (34 tỉnh)
+            async function loadSolarLocations() {
+                try {
+                    const response = await fetch('/api/weather/locations/');
+                    if (!response.ok) throw new Error('Không thể tải danh sách địa điểm');
+
+                    solarCitiesList = await response.json();
+                    solarCitiesList.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city.id;
+                        option.textContent = city.city_name_vn || city.city_name;
+                        solarLocationSelect.appendChild(option);
+                    });
+
+                    return solarCitiesList;
+                } catch (error) {
+                    console.error('Lỗi tải danh sách địa điểm:', error);
+                    return [];
+                }
+            }
+
+            // Hiển thị loading
+            function showLoading() {
+                solarInfoContainer.style.display = 'none';
+                solarError.style.display = 'none';
+                solarLoading.style.display = 'block';
+            }
+
+            // Hiển thị lỗi
+            function showError(message) {
+                solarInfoContainer.style.display = 'none';
+                solarLoading.style.display = 'none';
+                solarError.style.display = 'block';
+                solarErrorText.textContent = message;
+            }
+
+            // Hiển thị dữ liệu
+            function showData(data) {
+                solarLoading.style.display = 'none';
+                solarError.style.display = 'none';
+                solarInfoContainer.style.display = 'block';
+
+                const summary = data.summary;
+
+                // Cập nhật các giá trị
+                solarKwh.textContent = summary.estimated_kwh.toFixed(1);
+                solarRadiation.textContent = `${summary.avg_radiation_w.toFixed(0)} W/m²`;
+                solarSunshine.textContent = `${summary.sunshine_hours} giờ`;
+
+                // Cập nhật rating với màu sắc
+                solarRating.textContent = summary.rating;
+                solarRating.className = 'value ' + summary.rating_color;
+            }
+
+            // Load dữ liệu bức xạ mặt trời
+            async function loadSolarData(locationId) {
+                showLoading();
+
+                try {
+                    const response = await fetch(`/api/weather/solar/?location_id=${locationId}`);
+                    const data = await response.json();
+
+                    if (response.ok && data.status === 'success') {
+                        showData(data);
                     } else {
-                        // Reset về trạng thái ban đầu
-                        solarInfoContainer.style.display = 'block';
-                        solarLoading.style.display = 'none';
-                        solarError.style.display = 'none';
-                        solarKwh.textContent = '--';
-                        solarRadiation.textContent = '-- W/m²';
-                        solarSunshine.textContent = '-- giờ';
-                        solarRating.textContent = '--';
-                        solarRating.className = 'value';
+                        showError(data.error || 'Không thể tải dữ liệu bức xạ');
                     }
-                });
-
-                // Khởi tạo
-                await loadSolarLocations();
-
-                // Lấy vị trí đã định vị từ current-city
-                const currentCityName = getCurrentCityName();
-                let defaultLocationId = null;
-
-                if (currentCityName) {
-                    // Tìm kiếm location từ API
-                    const foundLocation = await searchLocationByName(currentCityName);
-                    if (foundLocation) {
-                        defaultLocationId = foundLocation.id;
-                        console.log(`[Solar] Đã tìm thấy vị trí định vị: ${foundLocation.city_name_vn || foundLocation.city_name} (ID: ${defaultLocationId})`);
-                    }
+                } catch (error) {
+                    console.error('Lỗi tải dữ liệu bức xạ:', error);
+                    showError('Lỗi kết nối. Vui lòng thử lại sau.');
                 }
+            }
 
-                // Nếu không tìm thấy, mặc định TP.HCM (id=30)
-                if (!defaultLocationId) {
-                    defaultLocationId = 30;
-                    console.log('[Solar] Không tìm thấy vị trí đã định vị, sử dụng mặc định TP.HCM');
+            // Event listener cho dropdown solar
+            solarLocationSelect.addEventListener('change', function () {
+                const locationId = this.value;
+                if (locationId) {
+                    loadSolarData(locationId);
+                } else {
+                    // Reset về trạng thái ban đầu
+                    solarInfoContainer.style.display = 'block';
+                    solarLoading.style.display = 'none';
+                    solarError.style.display = 'none';
+                    solarKwh.textContent = '--';
+                    solarRadiation.textContent = '-- W/m²';
+                    solarSunshine.textContent = '-- giờ';
+                    solarRating.textContent = '--';
+                    solarRating.className = 'value';
                 }
-
-                solarLocationSelect.value = defaultLocationId;
-                loadSolarData(defaultLocationId);
             });
 
-            // ============================================
-            // SCRIPT CHO CẢNH BÁO THỜI TIẾT CỰC ĐOAN
-            // ============================================
-            document.addEventListener('DOMContentLoaded', async function () {
-                const alertLocationSelect = document.getElementById('alert-location-select');
-                const alertContainer = document.getElementById('alert-container');
-                const alertLoading = document.getElementById('alert-loading');
+            // Khởi tạo
+            await loadSolarLocations();
 
-                let alertCitiesList = [];
+            // Lấy vị trí đã định vị từ current-city
+            const currentCityName = getCurrentCityName();
+            let defaultLocationId = null;
 
-                // Lấy tên thành phố đã định vị từ header
-                function getCurrentCityName() {
-                    const cityEl = document.getElementById('current-city');
-                    if (cityEl) {
-                        const cityName = cityEl.innerText.trim();
-                        if (cityName && cityName !== 'Chưa xác định') {
-                            return cityName;
-                        }
-                    }
-                    return null;
+            if (currentCityName) {
+                // Tìm kiếm location từ API
+                const foundLocation = await searchLocationByName(currentCityName);
+                if (foundLocation) {
+                    defaultLocationId = foundLocation.id;
+                    console.log(`[Solar] Đã tìm thấy vị trí định vị: ${foundLocation.city_name_vn || foundLocation.city_name} (ID: ${defaultLocationId})`);
                 }
+            }
 
-                // Tìm location ID từ API search
-                async function searchLocationByName(cityName) {
-                    if (!cityName) return null;
+            // Nếu không tìm thấy, mặc định TP.HCM (id=30)
+            if (!defaultLocationId) {
+                defaultLocationId = 30;
+                console.log('[Solar] Không tìm thấy vị trí đã định vị, sử dụng mặc định TP.HCM');
+            }
 
-                    try {
-                        let searchQuery = cityName
-                            .replace(/^(thành phố|tỉnh|tp\.?)\s*/i, '')
-                            .trim();
+            solarLocationSelect.value = defaultLocationId;
+            loadSolarData(defaultLocationId);
+        });
 
-                        console.log('[Alert] Searching for:', searchQuery);
+        // ============================================
+        // SCRIPT CHO CẢNH BÁO THỜI TIẾT CỰC ĐOAN
+        // ============================================
+        document.addEventListener('DOMContentLoaded', async function () {
+            const alertLocationSelect = document.getElementById('alert-location-select');
+            const alertContainer = document.getElementById('alert-container');
+            const alertLoading = document.getElementById('alert-loading');
 
-                        const response = await fetch(`/api/weather/search/?city=${encodeURIComponent(searchQuery)}`);
-                        if (!response.ok) return null;
+            let alertCitiesList = [];
 
-                        const locations = await response.json();
-                        if (locations && locations.length > 0) {
-                            console.log('[Alert] Found location:', locations[0]);
-                            return locations[0];
-                        }
-                    } catch (error) {
-                        console.error('[Alert] Search error:', error);
-                    }
-                    return null;
-                }
-
-                // Load danh sách tất cả tỉnh/thành phố
-                async function loadAlertLocations() {
-                    try {
-                        const response = await fetch('/api/weather/locations/');
-                        if (!response.ok) throw new Error('Không thể tải danh sách địa điểm');
-
-                        alertCitiesList = await response.json();
-                        alertCitiesList.forEach(city => {
-                            const option = document.createElement('option');
-                            option.value = city.id;
-                            option.textContent = city.city_name_vn || city.city_name;
-                            alertLocationSelect.appendChild(option);
-                        });
-
-                        return alertCitiesList;
-                    } catch (error) {
-                        console.error('Lỗi tải danh sách địa điểm:', error);
-                        return [];
+            // Lấy tên thành phố đã định vị từ header
+            function getCurrentCityName() {
+                const cityEl = document.getElementById('current-city');
+                if (cityEl) {
+                    const cityName = cityEl.innerText.trim();
+                    if (cityName && cityName !== 'Chưa xác định') {
+                        return cityName;
                     }
                 }
+                return null;
+            }
 
-                // Hiển thị loading
-                function showAlertLoading() {
-                    alertContainer.style.display = 'none';
-                    alertLoading.style.display = 'block';
+            // Tìm location ID từ API search
+            async function searchLocationByName(cityName) {
+                if (!cityName) return null;
+
+                try {
+                    let searchQuery = cityName
+                        .replace(/^(thành phố|tỉnh|tp\.?)\s*/i, '')
+                        .trim();
+
+                    console.log('[Alert] Searching for:', searchQuery);
+
+                    const response = await fetch(`/api/weather/search/?city=${encodeURIComponent(searchQuery)}`);
+                    if (!response.ok) return null;
+
+                    const locations = await response.json();
+                    if (locations && locations.length > 0) {
+                        console.log('[Alert] Found location:', locations[0]);
+                        return locations[0];
+                    }
+                } catch (error) {
+                    console.error('[Alert] Search error:', error);
                 }
+                return null;
+            }
 
-                // Hiển thị alerts
-                function showAlerts(data) {
-                    alertLoading.style.display = 'none';
-                    alertContainer.style.display = 'block';
+            // Load danh sách tất cả tỉnh/thành phố
+            async function loadAlertLocations() {
+                try {
+                    const response = await fetch('/api/weather/locations/');
+                    if (!response.ok) throw new Error('Không thể tải danh sách địa điểm');
 
-                    if (data.alert_count === 0) {
-                        alertContainer.innerHTML = `
+                    alertCitiesList = await response.json();
+                    alertCitiesList.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city.id;
+                        option.textContent = city.city_name_vn || city.city_name;
+                        alertLocationSelect.appendChild(option);
+                    });
+
+                    return alertCitiesList;
+                } catch (error) {
+                    console.error('Lỗi tải danh sách địa điểm:', error);
+                    return [];
+                }
+            }
+
+            // Hiển thị loading
+            function showAlertLoading() {
+                alertContainer.style.display = 'none';
+                alertLoading.style.display = 'block';
+            }
+
+            // Hiển thị alerts
+            function showAlerts(data) {
+                alertLoading.style.display = 'none';
+                alertContainer.style.display = 'block';
+
+                if (data.alert_count === 0) {
+                    alertContainer.innerHTML = `
                 <div class="alert-message safe">
                     <i class="fa-solid fa-circle-check"></i>
                     <p>Không có cảnh báo thời tiết nguy hiểm</p>
@@ -922,12 +936,12 @@
                     </small>
                 </div>
             `;
-                        return;
-                    }
+                    return;
+                }
 
-                    let html = '';
-                    data.alerts.forEach(alert => {
-                        html += `
+                let html = '';
+                data.alerts.forEach(alert => {
+                    html += `
                 <div class="alert-card" style="margin-bottom: 15px; padding: 15px; background: linear-gradient(135deg, ${alert.color}22, ${alert.color}11); border-left: 4px solid ${alert.color}; border-radius: 10px;">
                     <div class="alert-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                         <i class="fa-solid ${alert.icon}" style="font-size: 24px; color: ${alert.color};"></i>
@@ -949,201 +963,201 @@
                     </div>
                 </div>
             `;
-                    });
+                });
 
-                    alertContainer.innerHTML = html;
-                }
+                alertContainer.innerHTML = html;
+            }
 
-                // Load weather alerts
-                async function loadWeatherAlerts(locationId) {
-                    showAlertLoading();
+            // Load weather alerts
+            async function loadWeatherAlerts(locationId) {
+                showAlertLoading();
 
-                    try {
-                        const response = await fetch(`/api/weather/alerts/?location_id=${locationId}`);
-                        const data = await response.json();
+                try {
+                    const response = await fetch(`/api/weather/alerts/?location_id=${locationId}`);
+                    const data = await response.json();
 
-                        if (response.ok && data.status === 'success') {
-                            showAlerts(data);
-                        } else {
-                            alertContainer.innerHTML = `
+                    if (response.ok && data.status === 'success') {
+                        showAlerts(data);
+                    } else {
+                        alertContainer.innerHTML = `
                     <div class="alert-message" style="background: rgba(255,0,0,0.1); border-left-color: #ff6b6b;">
                         <i class="fa-solid fa-exclamation-triangle" style="color: #ff6b6b;"></i>
                         <p>Không thể tải cảnh báo: ${data.error || 'Lỗi không xác định'}</p>
                     </div>
                 `;
-                            alertLoading.style.display = 'none';
-                            alertContainer.style.display = 'block';
-                        }
-                    } catch (error) {
-                        console.error('Lỗi tải cảnh báo:', error);
-                        alertContainer.innerHTML = `
+                        alertLoading.style.display = 'none';
+                        alertContainer.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Lỗi tải cảnh báo:', error);
+                    alertContainer.innerHTML = `
                 <div class="alert-message" style="background: rgba(255,0,0,0.1); border-left-color: #ff6b6b;">
                     <i class="fa-solid fa-exclamation-triangle" style="color: #ff6b6b;"></i>
                     <p>Lỗi kết nối. Vui lòng thử lại sau.</p>
                 </div>
             `;
-                        alertLoading.style.display = 'none';
-                        alertContainer.style.display = 'block';
-                    }
+                    alertLoading.style.display = 'none';
+                    alertContainer.style.display = 'block';
                 }
+            }
 
-                // Event listener cho dropdown alert
-                alertLocationSelect.addEventListener('change', function () {
-                    const locationId = this.value;
-                    if (locationId) {
-                        loadWeatherAlerts(locationId);
-                    } else {
-                        alertContainer.innerHTML = `
+            // Event listener cho dropdown alert
+            alertLocationSelect.addEventListener('change', function () {
+                const locationId = this.value;
+                if (locationId) {
+                    loadWeatherAlerts(locationId);
+                } else {
+                    alertContainer.innerHTML = `
                 <div class="alert-message safe">
                     <i class="fa-solid fa-circle-check"></i>
                     <p>Chọn địa điểm để kiểm tra cảnh báo</p>
                 </div>
             `;
-                    }
-                });
-
-                // Khởi tạo
-                await loadAlertLocations();
-
-                // Lấy vị trí đã định vị từ current-city
-                const currentCityName = getCurrentCityName();
-                let defaultLocationId = null;
-
-                if (currentCityName) {
-                    const foundLocation = await searchLocationByName(currentCityName);
-                    if (foundLocation) {
-                        defaultLocationId = foundLocation.id;
-                        console.log(`[Alert] Đã tìm thấy vị trí định vị: ${foundLocation.city_name_vn || foundLocation.city_name} (ID: ${defaultLocationId})`);
-                    }
                 }
-
-                if (!defaultLocationId) {
-                    defaultLocationId = 30;
-                    console.log('[Alert] Không tìm thấy vị trí đã định vị, sử dụng mặc định TP.HCM');
-                }
-
-                alertLocationSelect.value = defaultLocationId;
-                loadWeatherAlerts(defaultLocationId);
             });
 
-            // ============================================
-            // SCRIPT CHO DỰ BÁO MƯA MINUTELY (60 PHÚT)
-            // ============================================
-            document.addEventListener('DOMContentLoaded', async function () {
-                const rainLocationSelect = document.getElementById('rain-location-select');
-                const rainForecastContainer = document.getElementById('rain-forecast-container');
-                const rainLoading = document.getElementById('rain-loading');
-                const rainNextUpdate = document.getElementById('rain-next-update');
-                const rainCountdown = document.getElementById('rain-countdown');
+            // Khởi tạo
+            await loadAlertLocations();
 
-                let rainCitiesList = [];
-                let currentRainLocationId = null;
-                let refreshInterval = null;
-                let countdownInterval = null;
-                let nextRefreshTime = null;
+            // Lấy vị trí đã định vị từ current-city
+            const currentCityName = getCurrentCityName();
+            let defaultLocationId = null;
 
-                // Lấy tên thành phố đã định vị từ header
-                function getCurrentCityName() {
-                    const cityEl = document.getElementById('current-city');
-                    if (cityEl) {
-                        const cityName = cityEl.innerText.trim();
-                        if (cityName && cityName !== 'Chưa xác định') {
-                            return cityName;
-                        }
-                    }
-                    return null;
+            if (currentCityName) {
+                const foundLocation = await searchLocationByName(currentCityName);
+                if (foundLocation) {
+                    defaultLocationId = foundLocation.id;
+                    console.log(`[Alert] Đã tìm thấy vị trí định vị: ${foundLocation.city_name_vn || foundLocation.city_name} (ID: ${defaultLocationId})`);
                 }
+            }
 
-                // Tìm location ID từ API search
-                async function searchLocationByName(cityName) {
-                    if (!cityName) return null;
+            if (!defaultLocationId) {
+                defaultLocationId = 30;
+                console.log('[Alert] Không tìm thấy vị trí đã định vị, sử dụng mặc định TP.HCM');
+            }
 
-                    try {
-                        let searchQuery = cityName
-                            .replace(/^(thành phố|tỉnh|tp\.?)\s*/i, '')
-                            .trim();
+            alertLocationSelect.value = defaultLocationId;
+            loadWeatherAlerts(defaultLocationId);
+        });
 
-                        const response = await fetch(`/api/weather/search/?city=${encodeURIComponent(searchQuery)}`);
-                        if (!response.ok) return null;
+        // ============================================
+        // SCRIPT CHO DỰ BÁO MƯA MINUTELY (60 PHÚT)
+        // ============================================
+        document.addEventListener('DOMContentLoaded', async function () {
+            const rainLocationSelect = document.getElementById('rain-location-select');
+            const rainForecastContainer = document.getElementById('rain-forecast-container');
+            const rainLoading = document.getElementById('rain-loading');
+            const rainNextUpdate = document.getElementById('rain-next-update');
+            const rainCountdown = document.getElementById('rain-countdown');
 
-                        const locations = await response.json();
-                        if (locations && locations.length > 0) {
-                            return locations[0];
-                        }
-                    } catch (error) {
-                        console.error('[Rain] Search error:', error);
-                    }
-                    return null;
-                }
+            let rainCitiesList = [];
+            let currentRainLocationId = null;
+            let refreshInterval = null;
+            let countdownInterval = null;
+            let nextRefreshTime = null;
 
-                // Load danh sách tất cả tỉnh/thành phố
-                async function loadRainLocations() {
-                    try {
-                        const response = await fetch('/api/weather/locations/');
-                        if (!response.ok) throw new Error('Không thể tải danh sách địa điểm');
-
-                        rainCitiesList = await response.json();
-                        rainCitiesList.forEach(city => {
-                            const option = document.createElement('option');
-                            option.value = city.id;
-                            option.textContent = city.city_name_vn || city.city_name;
-                            rainLocationSelect.appendChild(option);
-                        });
-
-                        return rainCitiesList;
-                    } catch (error) {
-                        console.error('Lỗi tải danh sách địa điểm:', error);
-                        return [];
+            // Lấy tên thành phố đã định vị từ header
+            function getCurrentCityName() {
+                const cityEl = document.getElementById('current-city');
+                if (cityEl) {
+                    const cityName = cityEl.innerText.trim();
+                    if (cityName && cityName !== 'Chưa xác định') {
+                        return cityName;
                     }
                 }
+                return null;
+            }
 
-                // Hiển thị loading
-                function showRainLoading() {
-                    rainForecastContainer.style.display = 'none';
-                    rainLoading.style.display = 'block';
-                    rainNextUpdate.style.display = 'none';
+            // Tìm location ID từ API search
+            async function searchLocationByName(cityName) {
+                if (!cityName) return null;
+
+                try {
+                    let searchQuery = cityName
+                        .replace(/^(thành phố|tỉnh|tp\.?)\s*/i, '')
+                        .trim();
+
+                    const response = await fetch(`/api/weather/search/?city=${encodeURIComponent(searchQuery)}`);
+                    if (!response.ok) return null;
+
+                    const locations = await response.json();
+                    if (locations && locations.length > 0) {
+                        return locations[0];
+                    }
+                } catch (error) {
+                    console.error('[Rain] Search error:', error);
                 }
+                return null;
+            }
 
-                // Hiển thị dự báo mưa
-                function showRainForecast(data) {
-                    rainLoading.style.display = 'none';
-                    rainForecastContainer.style.display = 'block';
-                    rainNextUpdate.style.display = 'block';
+            // Load danh sách tất cả tỉnh/thành phố
+            async function loadRainLocations() {
+                try {
+                    const response = await fetch('/api/weather/locations/');
+                    if (!response.ok) throw new Error('Không thể tải danh sách địa điểm');
 
-                    const icon = data.icon || 'fa-cloud-rain';
-                    const color = data.color || '#2196F3';
-                    const message = data.message || 'Đang cập nhật...';
+                    rainCitiesList = await response.json();
+                    rainCitiesList.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city.id;
+                        option.textContent = city.city_name_vn || city.city_name;
+                        rainLocationSelect.appendChild(option);
+                    });
 
-                    let html = `
+                    return rainCitiesList;
+                } catch (error) {
+                    console.error('Lỗi tải danh sách địa điểm:', error);
+                    return [];
+                }
+            }
+
+            // Hiển thị loading
+            function showRainLoading() {
+                rainForecastContainer.style.display = 'none';
+                rainLoading.style.display = 'block';
+                rainNextUpdate.style.display = 'none';
+            }
+
+            // Hiển thị dự báo mưa
+            function showRainForecast(data) {
+                rainLoading.style.display = 'none';
+                rainForecastContainer.style.display = 'block';
+                rainNextUpdate.style.display = 'block';
+
+                const icon = data.icon || 'fa-cloud-rain';
+                const color = data.color || '#2196F3';
+                const message = data.message || 'Đang cập nhật...';
+
+                let html = `
             <div style="text-align: center; padding: 30px; background: linear-gradient(135deg, ${color}22, ${color}11); border-radius: 15px; border-left: 5px solid ${color};">
                 <i class="fa-solid ${icon}" style="font-size: 64px; color: ${color}; margin-bottom: 20px;"></i>
                 <h3 style="color: #fff; font-size: 20px; margin-bottom: 10px;">${message}</h3>
         `;
 
-                    // Hiển thị timeline nếu có
-                    if (data.timeline && data.timeline.length > 0) {
-                        html += `
+                // Hiển thị timeline nếu có
+                if (data.timeline && data.timeline.length > 0) {
+                    html += `
                 <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px;">
                     <h4 style="color: #fff; font-size: 14px; margin-bottom: 10px;">Timeline 60 phút tới:</h4>
                     <div style="display: flex; gap: 2px; height: 60px; align-items: flex-end;">
             `;
 
-                        // Hiển thị bars cho mỗi 5 phút (12 bars)
-                        for (let i = 0; i < 60; i += 5) {
-                            const minute = data.timeline[i];
-                            const height = minute.precipitation > 0 ? Math.min((minute.precipitation / 10) * 100, 100) : 5;
-                            const barColor = minute.intensity === 'no_rain' ? '#ddd' :
-                                minute.intensity === 'light' ? '#81C784' :
-                                    minute.intensity === 'moderate' ? '#FFB74D' :
-                                        minute.intensity === 'heavy' ? '#FF7043' : '#E53935';
+                    // Hiển thị bars cho mỗi 5 phút (12 bars)
+                    for (let i = 0; i < 60; i += 5) {
+                        const minute = data.timeline[i];
+                        const height = minute.precipitation > 0 ? Math.min((minute.precipitation / 10) * 100, 100) : 5;
+                        const barColor = minute.intensity === 'no_rain' ? '#ddd' :
+                            minute.intensity === 'light' ? '#81C784' :
+                                minute.intensity === 'moderate' ? '#FFB74D' :
+                                    minute.intensity === 'heavy' ? '#FF7043' : '#E53935';
 
-                            html += `
+                        html += `
                     <div style="flex: 1; background: ${barColor}; height: ${height}%; border-radius: 3px 3px 0 0; opacity: 0.8;" 
                          title="${i}-${i + 5} phút: ${minute.precipitation.toFixed(1)}mm"></div>
                 `;
-                        }
+                    }
 
-                        html += `
+                    html += `
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 11px; color: rgba(255,255,255,0.7);">
                         <span>0p</span>
@@ -1154,122 +1168,169 @@
                     </div>
                 </div>
             `;
-                    }
-
-                    html += `</div>`;
-                    rainForecastContainer.innerHTML = html;
-
-                    // Bắt đầu countdown 15 phút
-                    startRefreshCountdown();
                 }
 
-                // Bắt đầu đếm ngược 15 phút
-                function startRefreshCountdown() {
-                    nextRefreshTime = Date.now() + 15 * 60 * 1000; // 15 phút
+                html += `</div>`;
+                rainForecastContainer.innerHTML = html;
 
-                    if (countdownInterval) {
+                // Bắt đầu countdown 15 phút
+                startRefreshCountdown();
+            }
+
+            // Bắt đầu đếm ngược 15 phút
+            function startRefreshCountdown() {
+                nextRefreshTime = Date.now() + 15 * 60 * 1000; // 15 phút
+
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                }
+
+                countdownInterval = setInterval(() => {
+                    const remaining = Math.max(0, nextRefreshTime - Date.now());
+                    const minutes = Math.floor(remaining / 60000);
+                    const seconds = Math.floor((remaining % 60000) / 1000);
+
+                    rainCountdown.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                    if (remaining === 0) {
                         clearInterval(countdownInterval);
-                    }
-
-                    countdownInterval = setInterval(() => {
-                        const remaining = Math.max(0, nextRefreshTime - Date.now());
-                        const minutes = Math.floor(remaining / 60000);
-                        const seconds = Math.floor((remaining % 60000) / 1000);
-
-                        rainCountdown.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-                        if (remaining === 0) {
-                            clearInterval(countdownInterval);
-                            // Auto refresh
-                            if (currentRainLocationId) {
-                                loadRainForecast(currentRainLocationId);
-                            }
+                        // Auto refresh
+                        if (currentRainLocationId) {
+                            loadRainForecast(currentRainLocationId);
                         }
-                    }, 1000);
-                }
+                    }
+                }, 1000);
+            }
 
-                // Load dự báo mưa
-                async function loadRainForecast(locationId) {
-                    showRainLoading();
-                    currentRainLocationId = locationId;
+            // Load dự báo mưa
+            async function loadRainForecast(locationId) {
+                showRainLoading();
+                currentRainLocationId = locationId;
 
-                    try {
-                        const response = await fetch(`/api/weather/rain-forecast/?location_id=${locationId}`);
-                        const data = await response.json();
+                try {
+                    const response = await fetch(`/api/weather/rain-forecast/?location_id=${locationId}`);
+                    const data = await response.json();
 
-                        if (response.ok && data.status === 'success') {
-                            showRainForecast(data);
-                        } else {
-                            rainForecastContainer.innerHTML = `
+                    if (response.ok && data.status === 'success') {
+                        showRainForecast(data);
+                    } else {
+                        rainForecastContainer.innerHTML = `
                     <div style="text-align: center; padding: 40px; background: rgba(255,0,0,0.1); border-radius: 10px; border-left: 4px solid #ff6b6b;">
                         <i class="fa-solid fa-exclamation-triangle" style="font-size: 48px; color: #ff6b6b;"></i>
                         <p style="margin-top: 15px; color: #fff;">Không thể tải dự báo: ${data.error || 'Lỗi không xác định'}</p>
                     </div>
                 `;
-                            rainLoading.style.display = 'none';
-                            rainForecastContainer.style.display = 'block';
-                        }
-                    } catch (error) {
-                        console.error('Lỗi tải dự báo mưa:', error);
-                        rainForecastContainer.innerHTML = `
+                        rainLoading.style.display = 'none';
+                        rainForecastContainer.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Lỗi tải dự báo mưa:', error);
+                    rainForecastContainer.innerHTML = `
                 <div style="text-align: center; padding: 40px; background: rgba(255,0,0,0.1); border-radius: 10px; border-left: 4px solid #ff6b6b;">
                     <i class="fa-solid fa-exclamation-triangle" style="font-size: 48px; color: #ff6b6b;"></i>
                     <p style="margin-top: 15px; color: #fff;">Lỗi kết nối. Vui lòng thử lại sau.</p>
                 </div>
             `;
-                        rainLoading.style.display = 'none';
-                        rainForecastContainer.style.display = 'block';
-                    }
+                    rainLoading.style.display = 'none';
+                    rainForecastContainer.style.display = 'block';
                 }
+            }
 
-                // Event listener cho dropdown
-                rainLocationSelect.addEventListener('change', function () {
-                    const locationId = this.value;
-                    if (locationId) {
-                        // Dừng countdown cũ nếu có
-                        if (countdownInterval) {
-                            clearInterval(countdownInterval);
-                        }
-                        loadRainForecast(locationId);
-                    } else {
-                        // Reset về trạng thái ban đầu
-                        if (countdownInterval) {
-                            clearInterval(countdownInterval);
-                        }
-                        currentRainLocationId = null;
-                        rainForecastContainer.innerHTML = `
+            // Event listener cho dropdown
+            rainLocationSelect.addEventListener('change', function () {
+                const locationId = this.value;
+                if (locationId) {
+                    // Dừng countdown cũ nếu có
+                    if (countdownInterval) {
+                        clearInterval(countdownInterval);
+                    }
+                    loadRainForecast(locationId);
+                } else {
+                    // Reset về trạng thái ban đầu
+                    if (countdownInterval) {
+                        clearInterval(countdownInterval);
+                    }
+                    currentRainLocationId = null;
+                    rainForecastContainer.innerHTML = `
                 <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.05); border-radius: 10px;">
                     <i class="fa-solid fa-umbrella" style="font-size: 48px; color: #2196F3; opacity: 0.5;"></i>
                     <p style="margin-top: 15px; color: #fff;">Chọn địa điểm để xem dự báo mưa</p>
                 </div>
             `;
-                        rainNextUpdate.style.display = 'none';
-                    }
-                });
-
-                // Khởi tạo
-                await loadRainLocations();
-
-                // Lấy vị trí đã định vị từ current-city
-                const currentCityName = getCurrentCityName();
-                let defaultLocationId = null;
-
-                if (currentCityName) {
-                    const foundLocation = await searchLocationByName(currentCityName);
-                    if (foundLocation) {
-                        defaultLocationId = foundLocation.id;
-                        console.log(`[Rain] Đã tìm thấy vị trí định vị: ${foundLocation.city_name_vn || foundLocation.city_name} (ID: ${defaultLocationId})`);
-                    }
+                    rainNextUpdate.style.display = 'none';
                 }
-
-                if (!defaultLocationId) {
-                    defaultLocationId = 30;
-                    console.log('[Rain] Không tìm thấy vị trí đã định vị, sử dụng mặc định TP.HCM');
-                }
-
-                rainLocationSelect.value = defaultLocationId;
-                loadRainForecast(defaultLocationId);
             });
+
+            // Khởi tạo
+            await loadRainLocations();
+
+            // Lắng nghe sự kiện từ location.js
+            document.addEventListener('weatherLocationUpdated', async (e) => {
+                const data = e.detail;
+                console.log('[Rain] Received location update:', data);
+                if (data && data.city) {
+                    // Reuse search logic available in this scope or replicate simple search
+                    // Since this is inside module or block, we need to check if searchLocationByName is available.
+                    // Based on file content, searchLocationByName is defined in the FIRST script block (outfit).
+                    // It is NOT globally available if defined inside 'DOMContentLoaded' of the first script.
+                    // Note: The first script (Outfit) DOES define searchLocationByName inside its DOMContentLoaded callback.
+                    // So the second script (Rain) CANNOT see it unless it is global.
+                    // However, Rain script might have its OWN search logic or variables. 
+                    // Let's check Rain script content again? 
+                    // Actually, lines 1258 use searchLocationByName. So it MUST be defined in Rain script scope too.
+                    // Yes, likely defined inside the Rain script block (lines 1140+).
+                    const foundLocation = await searchLocationByName(data.city);
+                    if (foundLocation) {
+                        rainLocationSelect.value = foundLocation.id;
+                        loadRainForecast(foundLocation.id);
+                    }
+                }
+            });
+
+            // Lắng nghe sự kiện từ location.js
+            document.addEventListener('weatherLocationUpdated', async (e) => {
+                const data = e.detail;
+                console.log('[Rain] Received location update:', data);
+                // Logic mapping city -> id để load rain forecast
+                // Vì Rain script nằm trong block riêng, cần hàm search riêng hoặc gọi lại logic
+                // Đơn giản hóa: reload rain forecast nếu mapping được
+                // (Ở đây ta giả sử hàm searchLocationByName có scope global hoặc lặp lại logic)
+                // Tuy nhiên searchLocationByName đang defined ở script trên (scope local).
+                // Nên ta copy logic search đơn giản ở đây hoặc reload page?
+                // Tốt nhất là reload page nếu user muốn đồng bộ, nhưng user muốn "auto".
+                // Ta sẽ dùng logic "search location" có sẵn trong block Rain script (nếu có).
+                // Rain script có searchLocationByName không?
+                // Check line 1258: const foundLocation = await searchLocationByName(currentCityName);
+                // Vậy là Rain script cũng có hàm này.
+                if (data && data.city) {
+                    const foundLocation = await searchLocationByName(data.city);
+                    if (foundLocation) {
+                        rainLocationSelect.value = foundLocation.id;
+                        loadRainForecast(foundLocation.id);
+                    }
+                }
+            });
+
+            // Lấy vị trí đã định vị từ current-city
+            const currentCityName = getCurrentCityName();
+            let defaultLocationId = null;
+
+            if (currentCityName) {
+                const foundLocation = await searchLocationByName(currentCityName);
+                if (foundLocation) {
+                    defaultLocationId = foundLocation.id;
+                    console.log(`[Rain] Đã tìm thấy vị trí định vị: ${foundLocation.city_name_vn || foundLocation.city_name} (ID: ${defaultLocationId})`);
+                }
+            }
+
+            if (!defaultLocationId) {
+                defaultLocationId = 30;
+                console.log('[Rain] Không tìm thấy vị trí đã định vị, sử dụng mặc định TP.HCM');
+            }
+
+            rainLocationSelect.value = defaultLocationId;
+            loadRainForecast(defaultLocationId);
+        });
     </script>
 
     <!-- Script xử lý lịch sử tìm kiếm (file riêng) -->
