@@ -20,7 +20,7 @@ class CurrentWeatherCacheAdmin(admin.ModelAdmin):
 
 @admin.register(HourlyForecast)
 class HourlyForecastAdmin(admin.ModelAdmin):
-    list_display = ('location', 'forecast_time', 'temperature', 'humidity', 'shortwave_radiation', 'updated_at')
+    list_display = ('location', 'forecast_time', 'temperature', 'humidity', 'updated_at')
     list_filter = ('location', 'forecast_time')
     ordering = ('-forecast_time',)
 

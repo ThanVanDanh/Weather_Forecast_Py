@@ -1,0 +1,43 @@
+{
+  "province": "Thai_Nguyen",
+  "order": [
+    1,
+    1,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    1,
+    24
+  ],
+  "exog_cols": [
+    "cloudcover",
+    "temperature_2m",
+    "relative_humidity_2m",
+    "wind_speed_10m",
+    "precipitation",
+    "rain",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "wet_season",
+    "solar_elevation"
+  ],
+  "metrics": {
+    "mae_all": 48.83954495233247,
+    "rmse_all": 69.03151988667095
+  },
+  "train_samples": 152,
+  "test_samples": 17,
+  "training_time": 3.8524649143218994,
+  "coordinates": [
+    21.59,
+    105.85
+  ],
+  "data_range": {
+    "start": "2022-01-01 00:00:00",
+    "end": "2026-01-24 16:00:00"
+  }
+}

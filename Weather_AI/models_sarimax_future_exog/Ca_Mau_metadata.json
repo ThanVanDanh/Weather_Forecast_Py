@@ -1,0 +1,43 @@
+{
+  "province": "Ca_Mau",
+  "order": [
+    1,
+    1,
+    1
+  ],
+  "seasonal_order": [
+    1,
+    0,
+    1,
+    24
+  ],
+  "exog_cols": [
+    "cloudcover",
+    "temperature_2m",
+    "relative_humidity_2m",
+    "wind_speed_10m",
+    "precipitation",
+    "rain",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "wet_season",
+    "solar_elevation"
+  ],
+  "metrics": {
+    "mae_all": 9.789856616374603,
+    "rmse_all": 14.35440021849949
+  },
+  "train_samples": 152,
+  "test_samples": 17,
+  "training_time": 3.9676403999328613,
+  "coordinates": [
+    9.18,
+    105.15
+  ],
+  "data_range": {
+    "start": "2022-01-01 00:00:00",
+    "end": "2026-01-24 15:00:00"
+  }
+}

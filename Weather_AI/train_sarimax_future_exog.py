@@ -1,4 +1,4 @@
-import os
+
 import json
 import time
 import numpy as np
@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore")
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
-MODEL_DIR = BASE_DIR / "models_sarimax_future"
+MODEL_DIR = BASE_DIR / "models_sarimax_future_exog"
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
 TARGET_COLUMN = 'shortwave_radiation'
@@ -71,7 +71,6 @@ PROVINCE_COORDINATES = {
 
 
 def calculate_solar_elevation(times, lat, lon):
-    """Tinh goc cao mat troi."""
     lat_rad = np.radians(lat)
     doy = times.dt.dayofyear
     declination = np.radians(23.45 * np.sin(np.radians(360 / 365 * (doy - 81))))
@@ -86,13 +85,11 @@ def calculate_solar_elevation(times, lat, lon):
 
 
 def create_features(df, province_name):
-    """Tao features cho SARIMAX."""
     df = df.copy()
     time_col = df.columns[0]
     df[time_col] = pd.to_datetime(df[time_col])
     df = df.sort_values(by=time_col).reset_index(drop=True)
 
-    # Temporal features
     df['hour'] = df[time_col].dt.hour
     df['month'] = df[time_col].dt.month
     df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
@@ -101,7 +98,6 @@ def create_features(df, province_name):
     df['month_cos'] = np.cos(2 * np.pi * df['month'] / 12)
     df['wet_season'] = df['month'].isin(WET_MONTHS).astype(np.float32)
 
-    # Solar elevation
     if province_name in PROVINCE_COORDINATES:
         lat, lon = PROVINCE_COORDINATES[province_name]
         df['solar_elevation'] = calculate_solar_elevation(df[time_col], lat, lon)
@@ -112,7 +108,6 @@ def create_features(df, province_name):
 
 
 def get_exog_columns(df):
-    """Lay danh sach cac cot exog co san."""
     base_exog = [col for col in EXOG_COLUMNS if col in df.columns]
     extra_features = ['hour_sin', 'hour_cos', 'month_sin', 'month_cos',
                       'wet_season', 'solar_elevation']
@@ -121,7 +116,6 @@ def get_exog_columns(df):
 
 
 def evaluate_model(y_true, y_pred, solar_elevation=None):
-    """Tinh cac metrics danh gia."""
     if solar_elevation is not None:
         daylight_mask = (solar_elevation > 5) & (y_true > 10)
     else:
@@ -134,7 +128,6 @@ def evaluate_model(y_true, y_pred, solar_elevation=None):
     metrics['mae_all'] = float(mae_all)
     metrics['rmse_all'] = float(rmse_all)
 
-    # Daylight hours only
     if daylight_mask.sum() > 10:
         y_true_day = y_true[daylight_mask]
         y_pred_day = y_pred[daylight_mask]
@@ -158,19 +151,16 @@ def evaluate_model(y_true, y_pred, solar_elevation=None):
     return metrics
 
 
-def train_province(province_name, months=6):
-    """Train SARIMAX cho mot tinh."""
-
+def train_province(province_name):
     data_file = DATA_DIR / f"{province_name}.csv"
     if not data_file.exists():
         return f"[X] {province_name}: File khong ton tai"
 
     print(f"\n{'=' * 60}")
-    print(f"Training SARIMAX: {province_name}")
+    print(f"TRAIN (7 DAYS) & PREDICT: {province_name}")
     print(f"{'=' * 60}")
 
     try:
-        # 1. Load va xu ly du lieu
         df = pd.read_csv(data_file)
 
         if TARGET_COLUMN not in df.columns:
@@ -179,22 +169,21 @@ def train_province(province_name, months=6):
         df = create_features(df, province_name)
         time_col = df.columns[0]
 
-        # Chi dung n thang gan nhat
-        if months > 0:
-            cutoff = df[time_col].max() - pd.Timedelta(days=months * 30)
-            df = df[df[time_col] >= cutoff].reset_index(drop=True)
-            print(f"Su dung {months} thang gan nhat: {len(df)} samples")
+        days = 7
+        cutoff = df[time_col].max() - pd.Timedelta(days=days)
+        df_train = df[df[time_col] >= cutoff].reset_index(drop=True)
 
-        df = df.ffill().bfill()
-        exog_cols = get_exog_columns(df)
+        print(
+            f"History (Last {days} days): {len(df_train)} samples (from {df_train[time_col].min()} to {df_train[time_col].max()})")
+
+        df_train = df_train.ffill().bfill()
+        exog_cols = get_exog_columns(df_train)
         print(f"Exog features: {len(exog_cols)}")
 
-        # 2. Chuan bi du lieu
-        y = df[TARGET_COLUMN].values.astype('float32')
-        X_exog = df[exog_cols].values.astype('float32')
-        solar_elevation = df['solar_elevation'].values if 'solar_elevation' in df.columns else None
+        y = df_train[TARGET_COLUMN].values.astype('float32')
+        X_exog = df_train[exog_cols].values.astype('float32')
+        solar_elevation = df_train['solar_elevation'].values if 'solar_elevation' in df_train.columns else None
 
-        # Train/Test split (90/10)
         train_size = int(len(y) * 0.9)
         y_train, y_test = y[:train_size], y[train_size:]
         X_train, X_test = X_exog[:train_size], X_exog[train_size:]
@@ -202,12 +191,11 @@ def train_province(province_name, months=6):
 
         print(f"Train: {len(y_train)}, Test: {len(y_test)}")
 
-        # 3. Scale exogenous variables
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train)
         X_test_scaled = scaler.transform(X_test)
 
-        # 4. Train SARIMAX
+        # train SARIMAX
         print(f"Training SARIMAX: order={DEFAULT_ORDER}, seasonal={DEFAULT_SEASONAL_ORDER}")
 
         start_time = time.time()
@@ -221,12 +209,11 @@ def train_province(province_name, months=6):
             enforce_invertibility=False
         )
 
-        fitted_model = model.fit(disp=False, maxiter=200, method='lbfgs')
+        fitted_model = model.fit(disp=False, maxiter=75, method='lbfgs')
 
         train_time = time.time() - start_time
         print(f"Training time: {train_time:.1f}s")
 
-        # 5. Evaluate tren test set
         y_pred = fitted_model.get_forecast(
             steps=len(y_test),
             exog=X_test_scaled
@@ -250,16 +237,14 @@ def train_province(province_name, months=6):
             print(f"   MAPE (daylight): {metrics['mape_daylight']:.2f}%")
             print(f"   ACCURACY:       {metrics['accuracy_daylight']:.2f}%")
 
-        # 6. Luu model va artifacts
+        # lưu model
         model_file = MODEL_DIR / f"{province_name}_model.pkl"
         scaler_file = MODEL_DIR / f"{province_name}_scaler.pkl"
         metadata_file = MODEL_DIR / f"{province_name}_metadata.json"
 
-        # Xoa du lieu training, residuals
         fitted_model.remove_data()
-        # Dung joblib voi nen gzip de giam dung luong (compress=3)
-        joblib.dump(fitted_model, model_file, compress=3)
-        joblib.dump(scaler, scaler_file, compress=3)
+        joblib.dump(fitted_model, model_file, compress=9)
+        joblib.dump(scaler, scaler_file, compress=9)
 
         metadata = {
             'province': province_name,
@@ -292,26 +277,26 @@ def train_province(province_name, months=6):
         traceback.print_exc()
         return f"[X] {province_name}: {str(e)}"
 
+def process_one(f):
+    return train_province(f.stem)
+
 
 def main():
     import argparse
+    from concurrent.futures import ProcessPoolExecutor
 
     parser = argparse.ArgumentParser(description="Train SARIMAX voi Future Exogenous")
     parser.add_argument("--province", type=str, default=None, help="Ten tinh")
-    parser.add_argument("--months", type=int, default=6, help="So thang du lieu")
     parser.add_argument("--all", action="store_true", help="Train tat ca cac tinh")
 
     args = parser.parse_args()
 
     if args.all:
         files = list(DATA_DIR.glob("*.csv"))
-        print(f"Training SARIMAX cho {len(files)} tinh...")
+        print(f"Found {len(files)} provinces. Starting parallel training (max_workers=4)...")
 
-        results = []
-        for f in files:
-            result = train_province(f.stem, args.months)
-            results.append(result)
-            print(result)
+        with ProcessPoolExecutor(max_workers=4) as executor:
+            results = list(executor.map(process_one, files))
 
         print("\n" + "=" * 60)
         print("SUMMARY")
@@ -320,11 +305,11 @@ def main():
             print(r)
 
     elif args.province:
-        result = train_province(args.province, args.months)
+        result = train_province(args.province)
         print(result)
 
     else:
-        result = train_province("An_Giang", args.months)
+        result = train_province("An_Giang")
         print(result)
 
 
