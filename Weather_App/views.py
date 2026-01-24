@@ -798,6 +798,7 @@ def search_history_api(request):
     """
     from .models import SearchHistory, Location
     from datetime import timedelta
+    from django.utils.text import slugify
 
     # Kiểm tra đăng nhập
     if not request.user.is_authenticated:
@@ -811,7 +812,7 @@ def search_history_api(request):
     if request.method == 'GET':
         # Lấy lịch sử tìm kiếm của user (10 mục gần nhất, trong 30 ngày)
         thirty_days_ago = timezone.now() - timedelta(days=30)
-        from django.utils.text import slugify
+
 
         history = SearchHistory.objects.filter(
             user=user,

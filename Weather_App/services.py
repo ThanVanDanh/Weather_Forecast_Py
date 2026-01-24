@@ -11,7 +11,7 @@ from pathlib import Path
 
 PROVINCE_NAME_MAPPING = {
     'Ho Chi Minh City': 'TP_Ho_Chi_Minh',
-    'Hanoi': 'Ha_Noi',
+    'Ha Noi': 'Ha_Noi',
     'Da Nang': 'Da_Nang',
     'Can Tho': 'Can_Tho',
     'Hai Phong': 'Hai_Phong',

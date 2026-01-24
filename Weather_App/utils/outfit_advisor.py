@@ -10,43 +10,31 @@ class DBOutfitAdvisor:
         self.target_date = target_date or date.today()
 
     def get_advice(self):
-        """
-        Hàm chính trả về chuỗi tư vấn trang phục.
-        Tập trung vào: Nhiệt độ, Layering, Bức xạ và Độ ẩm.
-        """
-        # 1. Lấy dữ liệu
+
         data = self._fetch_data()
 
         if data['temp_min'] is None or data['temp_max'] is None:
             return "Đang cập nhật dữ liệu thời tiết để đưa ra gợi ý trang phục..."
 
-        # 2. Phân tích các yếu tố (Bỏ qua Mưa và Gió)
         base_advice = self._analyze_base_outfit(data['temp_min'], data['temp_max'])
         layering_advice = self._analyze_layering(data['temp_min'], data['temp_max'])
         sun_humid_advice = self._analyze_sun_and_heat(data['max_rad'], data['avg_hum'], data['temp_max'])
 
-        # 3. Tổng hợp lời khuyên
         full_advice = [
             base_advice,
             layering_advice,
             sun_humid_advice
         ]
 
-        # Loại bỏ chuỗi rỗng và nối lại
         return " ".join([advice for advice in full_advice if advice])
 
     def _fetch_data(self):
-        """
-        Lấy dữ liệu từ DB (Daily + Hourly) và fallback sang Cache.
-        Chỉ lấy: Nhiệt độ, Bức xạ, Độ ẩm.
-        """
-        # A. Lấy nhiệt độ từ Daily
+
         daily_record = DailyForecast.objects.filter(
             location_id=self.location_id,
             forecast_date=self.target_date
         ).first()
 
-        # B. Lấy chi tiết từ Hourly (Chỉ lấy Bức xạ và Độ ẩm)
         hourly_stats = HourlyForecast.objects.filter(
             location_id=self.location_id,
             forecast_time__date=self.target_date
@@ -58,7 +46,6 @@ class DBOutfitAdvisor:
         temp_min = None
         temp_max = None
 
-        # C. Ưu tiên DB, Fallback sang Cache
         if daily_record:
             temp_min = daily_record.temp_min
             temp_max = daily_record.temp_max
@@ -81,7 +68,6 @@ class DBOutfitAdvisor:
         }
 
     def _analyze_base_outfit(self, low, high):
-        """Gợi ý trang phục cơ bản dựa trên nhiệt độ cao nhất trong ngày"""
 
         if high >= 35:
             return "Trời cực kỳ nóng bức. Hãy ưu tiên áo ba lỗ, áo phông cotton mỏng hoặc vải linen thoáng mát. Quần short là lựa chọn tốt nhất."
@@ -99,7 +85,6 @@ class DBOutfitAdvisor:
             return "Trời rất rét. Hãy trang bị áo phao, áo đại hàn, khăn quàng cổ và găng tay để giữ ấm."
 
     def _analyze_layering(self, low, high):
-        """Xử lý chênh lệch nhiệt độ (Layering)"""
         if low is None or high is None: return ""
 
         diff = high - low
@@ -110,22 +95,17 @@ class DBOutfitAdvisor:
         return ""
 
     def _analyze_sun_and_heat(self, radiation, humidity, max_temp):
-        """Xử lý nắng, UV và độ ẩm (Sensory feel)"""
         parts = []
-
-        # Logic UV/Nắng
         if radiation > 800:
             parts.append("Nắng rất gắt, chỉ số UV cao. Đừng quên kính râm và bôi kem chống nắng kỹ càng.")
         elif radiation > 500:
             parts.append("Trời có nắng rõ, nên đội mũ nón khi ra ngoài trời lâu.")
 
-        # Logic Độ ẩm (Chỉ cảnh báo khi trời nóng hoặc rất lạnh)
         if max_temp > 28 and humidity > 80:
             parts.append("Độ ẩm cao gây cảm giác oi bức, nên chọn quần áo rộng rãi, thấm hút mồ hôi.")
         elif max_temp > 28 and humidity < 40:
             parts.append("Trời hanh khô, nhớ uống nhiều nước và dưỡng ẩm da.")
 
-        # Thêm logic hanh khô cho mùa đông (nếu lạnh và ẩm thấp)
         elif max_temp < 20 and humidity < 50:
             parts.append("Trời lạnh và hanh khô, nên dùng kem dưỡng ẩm và son dưỡng.")
 

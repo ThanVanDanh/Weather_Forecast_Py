@@ -130,87 +130,6 @@ def fetch_weather_forecast(lat, lon, start_date, end_date):
         return df
     except:
         return pd.DataFrame()
-
-
-def predict_dual(province_name):
-    past_csv = DATA_DIR / f"{province_name}.csv"
-    future_csv = FUTURE_DIR / f"{province_name}.csv"
-    model_path = MODEL_DIR / f"{province_name}.keras"
-    scaler_x_path = MODEL_DIR / f"scaler_X_{province_name}.pkl"
-    scaler_y_path = MODEL_DIR / f"scaler_Y_{province_name}.pkl"
-
-    if not past_csv.exists() or not model_path.exists():
-        print(f"Loi: Thieu file cho {province_name}")
-        return
-
-    try:
-        model = load_model(model_path)
-        scaler_X = joblib.load(scaler_x_path)
-        scaler_Y = joblib.load(scaler_y_path)
-
-        df_past_raw = pd.read_csv(past_csv)
-        df_past, exog_cols = process_features_for_prediction(df_past_raw, province_name)
-        if len(df_past) < SEQ_LENGTH: return
-
-        last_past_time = df_past.iloc[-1, 0]
-        start_pred_time = last_past_time + pd.Timedelta(hours=1)
-        end_pred_time = last_past_time + pd.Timedelta(hours=FORECAST_HORIZON)
-
-        df_future_raw = pd.DataFrame()
-        if future_csv.exists():
-            df_future_raw = pd.read_csv(future_csv)
-            t_col = df_future_raw.columns[0]
-            df_future_raw[t_col] = pd.to_datetime(df_future_raw[t_col])
-            if df_future_raw.empty or df_future_raw[t_col].min() > start_pred_time or df_future_raw[
-                t_col].max() < end_pred_time:
-                df_future_raw = pd.DataFrame()
-
-        if df_future_raw.empty:
-            lat, lon = PROVINCE_COORDINATES[province_name]
-            df_future_raw = fetch_weather_forecast(lat, lon, start_pred_time.date(),
-                                                   (end_pred_time + pd.Timedelta(days=1)).date())
-            if not df_future_raw.empty: df_future_raw.to_csv(future_csv, index=False)
-
-        if df_future_raw.empty: return
-
-        t_col = df_future_raw.columns[0]
-        df_future_raw[t_col] = pd.to_datetime(df_future_raw[t_col])
-        mask = (df_future_raw[t_col] >= start_pred_time) & (df_future_raw[t_col] <= end_pred_time)
-        df_future_target = df_future_raw.loc[mask].head(FORECAST_HORIZON).copy()
-
-        if len(df_future_target) < FORECAST_HORIZON: return
-
-        future_timeline = df_future_target[t_col].reset_index(drop=True)
-        feature_cols = ['shortwave_radiation'] + exog_cols + ['hour_sin', 'hour_cos', 'month_sin', 'month_cos',
-                                                              'wet_season', 'solar_elevation']
-
-        last_seq = df_past.tail(SEQ_LENGTH)[feature_cols].values.astype('float32')
-        input_past = np.expand_dims(scaler_X.transform(last_seq), axis=0)
-
-        df_future_processed, _ = process_features_for_prediction(df_future_target, province_name)
-        future_req_cols = exog_cols + ['hour_sin', 'hour_cos', 'month_sin', 'month_cos', 'wet_season',
-                                       'solar_elevation']
-        future_vals = df_future_processed[future_req_cols].values.astype('float32')
-
-        future_full_scaled = scaler_X.transform(np.hstack([np.zeros((FORECAST_HORIZON, 1)), future_vals]))
-        input_future = np.expand_dims(future_full_scaled[:, 1:], axis=0)
-
-        pred_scaled = model.predict([input_past, input_future], verbose=0)
-        pred_values = scaler_Y.inverse_transform(pred_scaled.reshape(-1, 1)).flatten()
-        pred_values = np.maximum(pred_values, 0)
-
-        night_mask = df_future_processed['solar_elevation'].values <= 0
-        pred_values[night_mask] = 0.0
-
-        result_df = pd.DataFrame(
-            {'Time': future_timeline, 'Radiation_Forecast': pred_values, 'Province': province_name})
-        result_df.to_csv(RESULT_DIR / f"forecast_{province_name}.csv", index=False)
-        print(f"Hoan tat: {province_name}")
-
-    except Exception as e:
-        print(f"Loi {province_name}: {e}")
-
-
 def predict_for_date(province_name, target_date):
     """Predict shortwave radiation for 00:00..23:00 of a specific date."""
     past_csv = DATA_DIR / f"{province_name}.csv"
@@ -302,33 +221,26 @@ def predict_for_date(province_name, target_date):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('province', nargs='?', help='Ten tinh (vd: Ha_Noi)')
-    parser.add_argument('--date', dest='date', help='YYYY-MM-DD (predict 00-23h of that day)')
-    parser.add_argument(
-        '--rolling',
-        action='store_true',
-        help='Predict next 24h starting from last past timestamp (old behavior)'
-    )
+    parser = argparse.ArgumentParser(description="Du bao buc xa mat troi theo ngay.")
+    parser.add_argument('province', help='Ten tinh (vd: Ha_Noi)')
+    parser.add_argument('--date', dest='date', help='YYYY-MM-DD (Du bao 00h-23h cua ngay nay)')
+
     args = parser.parse_args()
 
-    if not args.province:
-        print("Cach dung: python predict_solar_lstm_34.py <Ten_Tinh> [--date YYYY-MM-DD] [--rolling]")
-        raise SystemExit(1)
-
-    if args.rolling:
-        predict_dual(args.province)
-    elif args.date:
+    # Xác định ngày cần dự báo
+    if args.date:
         try:
             target_date = pd.to_datetime(args.date).date()
         except Exception:
-            print("Sai dinh dang --date, dung YYYY-MM-DD")
-            raise SystemExit(1)
-        predict_for_date(args.province, target_date)
+            print("Loi: Sai dinh dang ngay. Hay dung: YYYY-MM-DD")
+            sys.exit(1)
     else:
-        # Default: forecast 00:00..23:00 of today in Vietnam time
+        # Mặc định là hôm nay
         if ZoneInfo is not None:
-            today_vn = py_datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date()
+            target_date = py_datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date()
         else:
-            today_vn = py_datetime.now().date()
-        predict_for_date(args.province, today_vn)
+            target_date = py_datetime.now().date()
+        print(f"Khong nhap ngay, mac dinh du bao cho hom nay: {target_date}")
+
+    # Chạy dự báo
+    predict_for_date(args.province, target_date)

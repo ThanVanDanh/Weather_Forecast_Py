@@ -1,13 +1,22 @@
 import os
 import time
-import random
 import requests
 import pandas as pd
 from tqdm import tqdm
+from datetime import datetime, timedelta
 
-# ==========================
-# CẤU HÌNH TỈNH THÀNH
-# ==========================
+# --- CẤU HÌNH ---
+# Thư mục lưu dữ liệu tương lai (để riêng biệt với dữ liệu huấn luyện)
+OUTPUT_DIR = "data_future"
+API_FORECAST = "https://api.open-meteo.com/v1/forecast"
+TIMEZONE = "Asia/Bangkok"
+
+# Cấu hình ngày: Bắt đầu từ ngày 23 (như trong ảnh của bạn)
+# Bạn có thể sửa ngày này tùy ý
+START_DATE_STR = "2026-01-23"
+DAYS_TO_FETCH = 7  # Lấy dữ liệu cho 7 ngày tính từ ngày bắt đầu
+
+# Danh sách tỉnh (Full)
 PROVINCE_COORDINATES = {
     "Tuyen_Quang": (21.82356, 105.21424),
     "Lao_Cai": (21.72000, 104.91000),
@@ -45,120 +54,81 @@ PROVINCE_COORDINATES = {
     "Cao_Bang": (22.66556, 106.26067),
 }
 
-# ==========================
-# API & FIELDS
-# ==========================
-
-# [QUAN TRỌNG] Đổi sang API Forecast để lấy dữ liệu "nóng" (gần nhất/tương lai)
-# Archive API thường bị trễ 5 ngày so với hiện tại.
-API = "https://archive-api.open-meteo.com/v1/archive"
-TIMEZONE = "Asia/Bangkok"
-
+# Các trường dữ liệu cần thiết cho mô hình
 FIELDS = [
-    "temperature_2m",
-    "apparent_temperature",
-    "relative_humidity_2m",
-    "dewpoint_2m",
-    "surface_pressure",
-    "pressure_msl",
-    "wind_speed_10m",
-    "wind_direction_10m",
-    "wind_gusts_10m",
-    "cloudcover",
-    "cloudcover_low",
-    "cloudcover_mid",
-    "cloudcover_high",
-    "precipitation",
-    "rain",
-    "snowfall",
-    "weathercode",
-    "shortwave_radiation",
-    "direct_radiation",
-    "diffuse_radiation",
-    "uv_index",
-    "visibility",
+    "temperature_2m", "relative_humidity_2m",
+    "cloudcover",  # API trả về cái này
+    "precipitation", "rain", "wind_speed_10m"
 ]
-HOURLY = ",".join(FIELDS)
-
-# Lưu vào thư mục data_future để dùng cho file predict.py
-OUTPUT_DIR = "data_future"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-# ==========================
-# Hàm xử lý retry 429
-# ==========================
-def fetch_with_retry(params, max_retry=5):
-    for attempt in range(max_retry):
-        try:
-            r = requests.get(API, params=params, timeout=120)
-            r.raise_for_status()
-            return r.json()
-        except requests.exceptions.HTTPError as e:
-            if "429" in str(e):
-                wait = 5 + attempt * 3
-                print(f" → 429 Too Many Requests — chờ {wait}s...")
-                time.sleep(wait)
-            else:
-                raise
-        except Exception as e:
-            wait = 5 + attempt * 3
-            print(f" → Lỗi {e} — chờ {wait}s...")
-            time.sleep(wait)
-    raise Exception("Không thể lấy dữ liệu sau nhiều lần retry")
-
-
-# ==========================
-# Hàm lấy dữ liệu (Hybrid: Past + Forecast)
-# ==========================
-def fetch_future_dataset(lat, lon):
+def fetch_future_weather(lat, lon, start_date, end_date):
     params = {
         "latitude": lat,
         "longitude": lon,
-        # Chỉ lấy dữ liệu năm 2026 để làm input dự báo
-        "start_date": "2026-01-02",
-        "end_date": "2026-01-07",
-        "hourly": HOURLY,
+        "start_date": start_date,
+        "end_date": end_date,
+        "hourly": ",".join(FIELDS),
         "timezone": TIMEZONE,
     }
 
-    data = fetch_with_retry(params)
+    try:
+        r = requests.get(API_FORECAST, params=params, timeout=30)
+        r.raise_for_status()
+        data = r.json()
 
-    if "hourly" not in data:
-        raise ValueError("API không trả về dữ liệu hourly")
+        hourly = data.get("hourly", {})
+        if not hourly:
+            return pd.DataFrame()
 
-    hourly = data["hourly"]
-    df = pd.DataFrame({"time": hourly["time"]})
+        df = pd.DataFrame(hourly)
 
-    for field in FIELDS:
-        df[field] = hourly.get(field)
+        # Đổi tên cột time cho chuẩn
+        if "time" in df.columns:
+            df.rename(columns={"time": "Time"}, inplace=True)
 
-    df["time"] = pd.to_datetime(df["time"])
-    df = df.set_index("time").asfreq("H")
-    df = df.ffill().bfill()
-    return df
+        # Xử lý format thời gian
+        df["Time"] = pd.to_datetime(df["Time"])
+
+        # QUAN TRỌNG: Tạo cột cloud_cover (có underscore) từ cloudcover
+        # Vì trong ảnh của bạn có cả cột cloud_cover
+        if "cloudcover" in df.columns:
+            df["cloud_cover"] = df["cloudcover"]
+
+        return df
+
+    except Exception as e:
+        print(f"Lỗi API: {e}")
+        return pd.DataFrame()
 
 
-# ==========================
-# Main
-# ==========================
 if __name__ == "__main__":
-    print(f"=== Crawl Data 2026 (01/01 -> 07/01) vào folder '{OUTPUT_DIR}' ===")
-    print("🚀 Sử dụng Forecast API để đảm bảo dữ liệu mới nhất...")
+    if not os.path.exists(OUTPUT_DIR):
+        os.makedirs(OUTPUT_DIR)
+
+    # Tính toán ngày kết thúc
+    start_dt = pd.to_datetime(START_DATE_STR)
+    end_dt = start_dt + timedelta(days=DAYS_TO_FETCH)
+    end_date_str = end_dt.strftime("%Y-%m-%d")
+
+    print(f"--- BẮT ĐẦU TẢI DỮ LIỆU TƯƠNG LAI ---")
+    print(f"Khoảng thời gian: {START_DATE_STR} đến {end_date_str}")
+    print(f"Lưu tại thư mục: {OUTPUT_DIR}/")
 
     for province, (lat, lon) in tqdm(PROVINCE_COORDINATES.items()):
-        try:
-            df = fetch_future_dataset(lat, lon)
 
-            filename = f"{province}.csv"
-            save_path = os.path.join(OUTPUT_DIR, filename)
+        df = fetch_future_weather(lat, lon, START_DATE_STR, end_date_str)
 
-            df.to_csv(save_path, index_label="time")
-            # print(f"✔ {province}: {len(df)} dòng") # Tắt print đỡ rối màn hình
-        except Exception as e:
-            print(f" Lỗi {province}: {e}")
+        if not df.empty:
+            # Lưu file CSV
+            file_path = os.path.join(OUTPUT_DIR, f"{province}.csv")
+            df.to_csv(file_path, index=False)
+            # print(f"Đã lưu: {province}") # Comment lại cho đỡ rối màn hình
+        else:
+            print(f"⚠️ {province}: Không lấy được dữ liệu.")
 
-        # Nghỉ nhẹ
-        time.sleep(random.uniform(1.0, 2.0))
+        # Nghỉ nhẹ để tránh spam API
+        time.sleep(0.5)
 
-    print(f"\n🎉 DONE! Dữ liệu đã sẵn sàng tại thư mục: {OUTPUT_DIR}")
+    print(f"\n✅ HOÀN TẤT! Dữ liệu đã sẵn sàng trong thư mục '{OUTPUT_DIR}'.")
+    print(f"Bạn có thể dùng các file này để chạy mô hình dự báo.")
