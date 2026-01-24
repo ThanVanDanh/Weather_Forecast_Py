@@ -22,23 +22,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const DEFAULT_LOCATION_ID = 30; // TP.HCM
 
-    // 1. Lấy city_name_vn cho TP.HCM nếu có
-    fetch(`/api/weather/search/?city=Ho Chi Minh City`)
-        .then(res => res.json())
-        .then(locations => {
-            if (locations.length > 0) {
-                const loc = locations[0];
-                const cityNameDisplay = loc.city_name_vn || loc.city_name;
-                const lat = loc.latitude;
-                const lon = loc.longitude;
-                loadWeatherForLocation(DEFAULT_LOCATION_ID, cityNameDisplay, lat, lon);
-            } else {
+    // Kiểm tra xem có location đã lưu từ định vị trước đó không
+    const savedLocation = localStorage.getItem('userLocatedCity');
+    
+    if (savedLocation) {
+        // Nếu có location đã lưu, sử dụng nó
+        try {
+            const locData = JSON.parse(savedLocation);
+            console.log('[DEBUG] Loading saved location:', locData);
+            loadWeatherForLocation(
+                locData.locationId, 
+                locData.cityName, 
+                locData.lat, 
+                locData.lon
+            );
+        } catch (e) {
+            console.error('[DEBUG] Error parsing saved location:', e);
+            // Fallback về TP.HCM nếu parse lỗi
+            loadDefaultLocation();
+        }
+    } else {
+        // Nếu chưa định vị, load TP.HCM mặc định
+        loadDefaultLocation();
+    }
+
+    // Hàm load location mặc định (TP.HCM)
+    function loadDefaultLocation() {
+        fetch(`/api/weather/search/?city=Ho Chi Minh City`)
+            .then(res => res.json())
+            .then(locations => {
+                if (locations.length > 0) {
+                    const loc = locations[0];
+                    const cityNameDisplay = loc.city_name_vn || loc.city_name;
+                    const lat = loc.latitude;
+                    const lon = loc.longitude;
+                    loadWeatherForLocation(DEFAULT_LOCATION_ID, cityNameDisplay, lat, lon);
+                } else {
+                    loadWeatherForLocation(DEFAULT_LOCATION_ID, "Ho Chi Minh City", null, null);
+                }
+            })
+            .catch(() => {
                 loadWeatherForLocation(DEFAULT_LOCATION_ID, "Ho Chi Minh City", null, null);
-            }
-        })
-        .catch(() => {
-            loadWeatherForLocation(DEFAULT_LOCATION_ID, "Ho Chi Minh City", null, null);
-        });
+            });
+    }
 
     // 2. Tải các thành phố nổi bật
     loadFeaturedCities();
@@ -376,49 +402,40 @@ function getWeatherVideoName(code, isDay) {
         case 1: // Nắng nhẹ
             return "troisang.mp4";
 
-        // --- NHÓM CÓ MÂY ---
         case 2: // Mây rải rác
         // return "mayrairac.mp4";
         case 3: // Nhiều mây
-            return "nhieumay.mp4"; // Video mây trôi (hoặc troimoc.mp4 như bạn đang dùng)
-
-        // --- NHÓM SƯƠNG MÙ ---
+            return "nhieumay.mp4";
         case 45:
         case 48:
             return "amu.mp4";
-
-        // --- NHÓM MƯA (Gộp nhiều code mưa lại) ---
         case 51: case 53: case 55: // Mưa phùn
         case 61: case 63: case 65: // Mưa thường
         case 80: case 81: case 82: // Mưa rào
-            return "rain6.mp4"; // Video mưa rơi (rain5.mp4)
+            return "rain6.mp4";
 
-        // --- NHÓM MƯA LẠNH / TUYẾT ---
-        case 56: case 57: // Mưa phùn lạnh
-        case 66: case 67: // Mưa lạnh
-        case 71: case 73: case 75: case 77: // Tuyết
-        case 85: case 86: // Mưa tuyết
-            return "tuyet.mp4"; // Hoặc dùng chung video mưa nếu ở VN ít tuyết
+        // TUYẾT
+        case 56: case 57:
+        case 66: case 67:
+        case 71: case 73: case 75: case 77:
+        case 85: case 86:
+            return "tuyet.mp4";
 
-        // --- NHÓM GIÔNG BÃO ---
+        // nhóm giông bão
         case 95: // Có giông
         case 96: case 99: // Giông mưa đá
-            return "giong.mp4"; // Video sấm chớp, mưa to
+            return "giong.mp4";
 
         default:
             return "nhieumay.mp4";
     }
 }
+// update backgound
 function updateBackgroundVideo(code, isDay) {
     const videoElement = document.getElementById('global-bg-video');
-
-    // Nếu không tìm thấy thẻ video (ví dụ đang ở trang khác không có video bg) thì thoát
     if (!videoElement) return;
-
     const fileName = getWeatherVideoName(code, isDay);
-    const newSrc = `/static/video/${fileName}`; // Đường dẫn tới thư mục static
-
-    // Kiểm tra xem source hiện tại có trùng với cái mới không (tránh reload lại video nếu không cần thiết)
+    const newSrc = `/static/video/${fileName}`;
     const currentSrc = videoElement.querySelector('source').getAttribute('src');
 
     if (currentSrc && currentSrc.includes(fileName)) {
@@ -428,15 +445,10 @@ function updateBackgroundVideo(code, isDay) {
 
     console.log(`[Video] Đổi background sang: ${fileName}`);
 
-    // Cập nhật source và reload video
     videoElement.querySelector('source').src = newSrc;
-    videoElement.load(); // Bắt buộc gọi load() để trình duyệt nhận file mới
+    videoElement.load();
     videoElement.play().catch(e => console.log("Autoplay bị chặn hoặc lỗi:", e));
 }
-
-// =======================================================
-// HÀM TIỆN ÍCH
-// =======================================================
 
 function getWeatherIcon(code, isDay = 1) {
     if (code === 0) return isDay === 1 ? "ngay.png" : "dem.png";
@@ -451,10 +463,8 @@ function getWeatherIcon(code, isDay = 1) {
     return "mayden.png";
 }
 
-// SỬA LỖI: Đổi tên tham số thứ 2 từ 'isCurrent' thành 'isDay' để khớp với logic bên trong
 function getWeatherStatusFromCode(code, isDay = 1) {
     if (code === null || code === undefined) return "--";
-
     switch (code) {
         case 0:
             return isDay ? "Trời nắng" : "Trời quang đãng";

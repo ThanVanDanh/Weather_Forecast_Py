@@ -102,6 +102,36 @@ document.addEventListener("DOMContentLoaded", () => {
       cityEl.innerText = data.city;
       console.log("Location found:", data);
 
+      // Cập nhật current-city-name trên trang chính (index.html)
+      const currentCityName = document.getElementById('current-city-name');
+      if (currentCityName) {
+        currentCityName.innerText = `Thời tiết ${data.city}`;
+      }
+
+      // Lưu location đã định vị vào localStorage để giữ lại khi reload trang
+      if (data.matched_location_id) {
+        const locationId = data.matched_location_id;
+        const cityName = data.city;
+        const lat = data.coordinates?.lat;
+        const lon = data.coordinates?.lon;
+        
+        const locationData = {
+          locationId: locationId,
+          cityName: cityName,
+          lat: lat,
+          lon: lon,
+          savedAt: new Date().toISOString()
+        };
+        localStorage.setItem('userLocatedCity', JSON.stringify(locationData));
+        console.log('[Location] Saved to localStorage:', locationData);
+
+        // Load lại dữ liệu thời tiết cho tỉnh vừa định vị (nếu đang ở trang index)
+        if (typeof loadWeatherForLocation === 'function') {
+          console.log(`[Location] Reloading weather for: ${cityName} (ID: ${locationId})`);
+          loadWeatherForLocation(locationId, cityName, lat, lon);
+        }
+      }
+
       // Phát sự kiện để các trang khác (như Customer Care) bắt được
       const event = new CustomEvent('weatherLocationUpdated', { detail: data });
       document.dispatchEvent(event);

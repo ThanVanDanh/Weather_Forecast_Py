@@ -32,7 +32,7 @@ PREDICT_HORIZON = 24  # Dự đoán 24 giờ tiếp theo
 # Mapping tên file/province → tên Location trong DB
 PROVINCE_TO_LOCATION = {
     'TP_Ho_Chi_Minh': 'Ho Chi Minh City',
-    'Ha_Noi': 'Hanoi',
+    'Ha_Noi': 'Ha Noi',
     'Da_Nang': 'Da Nang',
     'Can_Tho': 'Can Tho',
     'Hai_Phong': 'Hai Phong',
