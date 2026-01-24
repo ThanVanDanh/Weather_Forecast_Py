@@ -1,5 +1,3 @@
-// Hàm tiện ích để cập nhật DOM
-// province-template.js
 function updateCurrentWeatherDOM(data, cityName) {
     console.log("Dữ liệu API trả về:", data);
     console.log("Hourly Temp:", data?.hourly?.temperature_2m);
@@ -12,11 +10,9 @@ function updateCurrentWeatherDOM(data, cityName) {
     const hourly = data.hourly;
     const daily = data.daily;
 
-    // Lấy giờ hiện tại để tra cứu trong mảng hourly (0-23)
     const now = new Date();
     const currentHourIndex = now.getHours();
 
-    // 1. Cập nhật Nhiệt độ chính (lấy từ temperature_2m tại giờ hiện tại)
     let currentTemp = current.temperature; // Fallback
     if (hourly && hourly.temperature_2m && hourly.temperature_2m[currentHourIndex]) {
         currentTemp = hourly.temperature_2m[currentHourIndex];
@@ -24,8 +20,6 @@ function updateCurrentWeatherDOM(data, cityName) {
     const tempElement = document.getElementById('current-temperature');
     if (tempElement) tempElement.textContent = `${Math.round(currentTemp)}°`;
 
-    // 2. Cập nhật Trạng thái chữ & Icon
-    // Normalize is_day to 0/1 number (API/Django may return boolean/string)
     const isDay = Number(current.is_day) === 1 ? 1 : 0;
 
 
@@ -40,18 +34,15 @@ function updateCurrentWeatherDOM(data, cityName) {
     const iconName = getWeatherIcon(current.weathercode, isDay);
     const iconContainer = document.getElementById('current-icon');
     if (iconContainer) {
-        // Thay thế icon cũ bằng thẻ img
         iconContainer.innerHTML = `<img src="/static/image/${iconName}" alt="${statusText}" style="width: 80px; height: 80px;">`;
     }
 
-    // 3. Cập nhật Cảm giác như (Apparent Temperature)
     if (hourly && hourly.apparent_temperature) {
         const feelsLike = Math.round(hourly.apparent_temperature[currentHourIndex]);
         const feelsLikeElement = document.getElementById('current-feels-like');
         if (feelsLikeElement) feelsLikeElement.textContent = `${feelsLike}°`;
     }
 
-    // 4. Cập nhật Min/Max trong ngày
     if (daily && daily.temperature_2m_min && daily.temperature_2m_max) {
         const tempMin = Math.round(daily.temperature_2m_min[0]);
         const tempMax = Math.round(daily.temperature_2m_max[0]);
@@ -59,44 +50,36 @@ function updateCurrentWeatherDOM(data, cityName) {
         if (minMaxElement) minMaxElement.textContent = `${tempMin}°/${tempMax}°`;
     }
 
-    // 5. Cập nhật Độ ẩm (Lấy theo giờ hiện tại)
     if (hourly && hourly.relativehumidity_2m) {
         const humidity = hourly.relativehumidity_2m[currentHourIndex];
         const humidityElement = document.getElementById('detail-humidity');
         if (humidityElement) humidityElement.textContent = `${humidity}%`;
     }
 
-    // 6. Cập nhật Áp suất
     if (hourly && hourly.pressure_msl) {
         const pressure = Math.round(hourly.pressure_msl[currentHourIndex]);
         const pressureElement = document.getElementById('detail-pressure');
         if (pressureElement) pressureElement.textContent = `${pressure} hPa`;
     }
 
-    // 7. Cập nhật Tầm nhìn (đổi m sang km)
     if (hourly && hourly.visibility) {
         const visibilityKm = (hourly.visibility[currentHourIndex] / 1000).toFixed(1);
         const visElement = document.getElementById('detail-visibility');
         if (visElement) visElement.textContent = `${visibilityKm} km`;
     }
 
-    // 8. Cập nhật Gió
     const windElement = document.getElementById('detail-wind-speed');
     if (windElement) windElement.textContent = `${current.windspeed} km/h`;
 
-    // 9. Cập nhật UV Max
     if (daily && daily.uv_index_max) {
         const uvMax = daily.uv_index_max[0];
         const uvElement = document.getElementById('detail-uv-max');
         if (uvElement) uvElement.textContent = uvMax;
     }
-    // Nhiệt độ theo khoảng thời gian (Ngày/Đêm)
     if (hourly && hourly.temperature_2m) {
         const hourlyTemps = hourly.temperature_2m;
 
-        // Ngày: 7h sáng đến 7h tối (12 tiếng)
         const NGAY_HOURS = [6,7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
-        // Đêm: 7h tối đến 7h sáng (12 tiếng, bao gồm qua nửa đêm)
         const DEM_HOURS = [18,19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5];
 
         const tempNgayElement = document.getElementById('temp-ngay');
@@ -105,7 +88,7 @@ function updateCurrentWeatherDOM(data, cityName) {
         const tempDemElement = document.getElementById('temp-dem');
         if (tempDemElement) tempDemElement.textContent = getMinMaxTempForPeriod(hourlyTemps, DEM_HOURS);
     }
-    //Cập nhật Bình minh / Hoàng hôn ===
+
     if (daily && daily.sunrise && daily.sunset) {
         // API trả về dạng: "2023-11-01T06:05" -> Cần format thành "06:05 AM"
         const sunriseTime = formatTime(daily.sunrise[0]);
@@ -129,29 +112,27 @@ function getWeatherVideoName(code, isDay) {
         case 1: // Nắng nhẹ
             return "troisang.mp4";
 
-        // --- NHÓM CÓ MÂY ---
         case 2: // Mây rải rác
             return "mayrairac.mp4";
         case 3: // Nhiều mây
             return "nhieumay.mp4";
 
-        // --- NHÓM SƯƠNG MÙ ---
+        //  NHÓM SƯƠNG MÙ
         case 45:
         case 48:
             return "amu.mp4";
 
-        // --- NHÓM MƯA (Gộp nhiều code mưa lại) ---
+        //  NHÓM MƯA
         case 51: case 53: case 55: // Mưa phùn
         case 61: case 63: case 65: // Mưa thường
         case 80: case 81: case 82: // Mưa rào
             return "rain6.mp4";
 
-        // --- NHÓM MƯA LẠNH / TUYẾT ---
+        //  NHÓM MƯA LẠNH / TUYẾT
         case 56: case 57: // Mưa phùn lạnh
         case 66: case 67: // Mưa lạnh
             return "rain6.mp4";
 
-        // Không có video tuyết trong static/video -> fallback
         case 71: case 73: case 75: case 77: // Tuyết
         case 85: case 86: // Mưa tuyết
             return "nhieumay.mp4";
@@ -159,7 +140,6 @@ function getWeatherVideoName(code, isDay) {
         // --- NHÓM GIÔNG BÃO ---
         case 95: // Có giông
         case 96: case 99: // Giông mưa đá
-            // Không có giong.mp4 trong static/video -> dùng video mưa
             return "rain6.mp4";
 
         default:
@@ -167,7 +147,6 @@ function getWeatherVideoName(code, isDay) {
     }
 }
 
-// ============== AIR QUALITY UPDATE ==============
 function updateAirQualityDOM(data) {
     if (!data || !data.current) {
         console.error("Dữ liệu Air Quality không hợp lệ");
@@ -176,7 +155,6 @@ function updateAirQualityDOM(data) {
     
     const current = data.current;
     
-    // European AQI: 0-20 Good, 20-40 Fair, 40-60 Moderate, 60-80 Poor, 80-100 Very Poor, 100+ Extremely Poor
     const eaqi = current.european_aqi || 0;
     
     let level, color, desc;
@@ -202,7 +180,7 @@ function updateAirQualityDOM(data) {
         desc = 'Nguy hiểm! Tránh hoạt động ngoài trời';
     }
     
-    // Cập nhật gauge
+
     const gaugeElement = document.querySelector('.aqi-gauge span');
     if (gaugeElement) {
         gaugeElement.textContent = level;
@@ -210,13 +188,13 @@ function updateAirQualityDOM(data) {
         gaugeElement.style.fontWeight = 'bold';
     }
     
-    // Cập nhật description
+
     const descElement = document.querySelector('.aqi-main p');
     if (descElement) {
         descElement.textContent = desc;
     }
     
-    // Cập nhật các thành phần (chuyển từ µg/m³ sang số đẹp hơn)
+
     const detailsGrid = document.querySelector('.aqi-details-grid');
     if (detailsGrid) {
         detailsGrid.innerHTML = `
@@ -234,7 +212,7 @@ function updateAirQualityDOM(data) {
 function updateBackgroundVideo(code, isDay) {
     const videoElement = document.getElementById('global-bg-video');
 
-    // Nếu không tìm thấy thẻ video (ví dụ đang ở trang khác không có video bg) thì thoát
+
     if (!videoElement) return;
 
     const availableVideos = new Set([
@@ -251,9 +229,8 @@ function updateBackgroundVideo(code, isDay) {
         console.warn('[Video] File không tồn tại trong static/video, fallback:', fileName);
         fileName = 'nhieumay.mp4';
     }
-    const newSrc = `/static/video/${fileName}`; // Đường dẫn tới thư mục static
+    const newSrc = `/static/video/${fileName}`;
 
-    // Kiểm tra xem source hiện tại có trùng với cái mới không (tránh reload lại video nếu không cần thiết)
     const currentSrc = videoElement.querySelector('source').getAttribute('src');
 
     if (currentSrc && currentSrc.includes(fileName)) {
@@ -263,13 +240,12 @@ function updateBackgroundVideo(code, isDay) {
 
     console.log(`[Video] Đổi background sang: ${fileName}`);
 
-    // Cập nhật source và reload video
+
     videoElement.querySelector('source').src = newSrc;
-    videoElement.load(); // Bắt buộc gọi load() để trình duyệt nhận file mới
+    videoElement.load();
     videoElement.play().catch(e => console.log("Autoplay bị chặn hoặc lỗi:", e));
 }
 
-// ============== WEATHER HELPER FUNCTIONS ==============
 function getWeatherIcon(code, isDay = 1) {
     if (code === 0) return isDay === 1 ? "ngay.png" : "dem.png";
     if (code === 1 || code === 2) return isDay === 1 ? "nangcomay.png" : "demcomay.png";
@@ -314,8 +290,6 @@ function getWeatherStatusFromCode(code, isDay = 1) {
     }
 }
 
-// ============== FORECAST RENDER FUNCTIONS ==============
-// Hàm render dự báo 24h
 function renderHourlyForecast(hourlyData) {
     const container = document.getElementById('hourly-forecast-container');
     if (!container) return;
@@ -326,11 +300,9 @@ function renderHourlyForecast(hourlyData) {
         container.innerHTML = '<p>Không có dữ liệu dự báo 24h</p>';
         return;
     }
-    
-    // Lấy thời gian hiện tại
+
     const now = new Date();
-    
-    // Lọc chỉ lấy các giờ trong tương lai (forecast_time > now)
+
     const futureHours = hourlyData.filter(hour => {
         const forecastTime = new Date(hour.forecast_time);
         return forecastTime > now;
@@ -347,8 +319,7 @@ function renderHourlyForecast(hourlyData) {
     futureHours.slice(0, 24).forEach(hour => {
         const date = new Date(hour.forecast_time);
         const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-        
-        // Dự đoán weathercode từ nhiệt độ (vì không có weathercode)
+
         let weatherCode = 1;
         if (hour.temperature > 35) weatherCode = 0;
         else if (hour.temperature > 30) weatherCode = 1;
@@ -360,8 +331,7 @@ function renderHourlyForecast(hourlyData) {
         
         const div = document.createElement('div');
         div.className = 'hourly-item';
-        
-        // Format humidity: nếu có thì hiển thị, không thì '--'
+
         const humidityDisplay = hour.humidity !== null && hour.humidity !== undefined 
             ? `${Math.round(hour.humidity)}%` 
             : '--';
@@ -393,16 +363,14 @@ function renderDailyForecast(dailyData, hourlyData) {
         const date = new Date(day.forecast_date);
         const dayOfWeek = date.toLocaleDateString('vi-VN', { weekday: 'short' });
         const dayMonth = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-        
-        // Backend dự báo từ ngày mai, nên index 0 = ngày mai
+
         let label;
         if (index === 0) {
             label = `${dayOfWeek} ${dayMonth}`;
         } else {
             label = `${dayOfWeek} ${dayMonth}`;
         }
-        
-        // Dự đoán weathercode từ nhiệt độ
+
         let weatherCode = 1;
         if (day.temp_max > 35) weatherCode = 0;
         else if (day.temp_max > 30) weatherCode = 1;
@@ -431,7 +399,7 @@ async function loadProvinceDetails(locationId, cityName, lat, lon) {
     }
 
     try {
-        // === BƯỚC 1: Load Current Weather NGAY (rất nhanh - Open-Meteo API) ===
+
         console.log('[DEBUG] Loading current weather for:', cityName, 'lat:', lat, 'lon:', lon);
         
         const meteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=Asia/Ho_Chi_Minh&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset&hourly=temperature_2m,apparent_temperature,relativehumidity_2m,pressure_msl,visibility`;
@@ -444,11 +412,9 @@ async function loadProvinceDetails(locationId, cityName, lat, lon) {
         
         const currentData = await currentResponse.json();
         console.log('[DEBUG] ✅ Current weather loaded instantly');
-        
-        // Hiển thị current weather NGAY LẬP TỨC
+
         updateCurrentWeatherDOM(currentData, cityName);
-        
-        // === BƯỚC 1.5: Load Air Quality (cũng rất nhanh - Open-Meteo) ===
+
         console.log('[DEBUG] Loading air quality...');
         const airQualityUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=european_aqi,us_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,ammonia`;
         
@@ -461,8 +427,7 @@ async function loadProvinceDetails(locationId, cityName, lat, lon) {
             .catch(err => {
                 console.error('[DEBUG] ❌ Air Quality error:', err);
             });
-        
-        // === BƯỚC 2: Hiển thị Loading cho Forecasts ===
+
         const hourlyContainer = document.getElementById('hourly-forecast-container');
         const dailyContainer = document.getElementById('daily-forecast-container');
         
@@ -472,8 +437,7 @@ async function loadProvinceDetails(locationId, cityName, lat, lon) {
         if (dailyContainer) {
             dailyContainer.innerHTML = '<p style="text-align:center;padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dự báo 5 ngày...</p>';
         }
-        
-        // === BƯỚC 3: Load Forecasts SAU (có thể mất 2-3s do predict) ===
+
         console.log('[DEBUG] Loading forecasts (may take 2-3s)...');
         const forecastResponse = await fetch(`/api/weather/forecast/?location_id=${locationId}`);
         
@@ -505,7 +469,7 @@ async function loadProvinceDetails(locationId, cityName, lat, lon) {
                 console.error('[ERROR] No daily_forecast in response');
                 if (dailyContainer) dailyContainer.innerHTML = '<p>Không có dữ liệu dự báo 5 ngày</p>';
             }
-            // Sau khi có dữ liệu dự báo từ backend, nếu có hourly_forecast thì vẽ lại biểu đồ 12h
+            // biểu đồ 12h
             if (forecastData.hourly_forecast && forecastData.hourly_forecast.length >= 12) {
                 const loader = document.getElementById('hourlyChart12h-loader');
                 const chartCanvas = document.getElementById('hourlyChart12h');
@@ -519,7 +483,7 @@ async function loadProvinceDetails(locationId, cityName, lat, lon) {
                     let humidityData = [];
                     for (let i = 0; i < 12; i++) {
                         const hour = forecastData.hourly_forecast[i];
-                        // Nếu backend trả về forecast_time dạng ISO
+
                         let date = hour.forecast_time ? new Date(hour.forecast_time) : null;
                         let label = date ? (date.getHours()<10?'0':'')+date.getHours()+':00' : (i<10?'0':'')+i+':00';
                         hourLabels.push(label);
@@ -529,7 +493,7 @@ async function loadProvinceDetails(locationId, cityName, lat, lon) {
                     drawHourlyChart12h(hourLabels, tempData, humidityData);
                     if (loader) loader.style.display = 'none';
                     if (chartCanvas) chartCanvas.style.display = '';
-                }, 200); // chỉ delay nhẹ để UX mượt
+                }, 200);
             }
         } else {
             console.error('[ERROR] Forecast API failed:', forecastResponse.status);
@@ -544,12 +508,7 @@ async function loadProvinceDetails(locationId, cityName, lat, lon) {
 }
 
 //Hàm tiện ích để tính Min/Max nhiệt độ
-    /**
-     * Tính toán nhiệt độ Min/Max trong một khoảng giờ (ví dụ: Sáng, Tối)
-     * @param {Array<number>} hourlyTemps Mảng nhiệt độ theo giờ (24 giá trị)
-     * @param {number[]} hoursToInclude Các chỉ số giờ cần tính (ví dụ: [5, 6, 7, 8, 9, 10])
-     * @returns {string} Chuỗi định dạng "Min°/Max°"
-     */
+
     function getMinMaxTempForPeriod(hourlyTemps, hoursToInclude) {
         if (!hourlyTemps || hourlyTemps.length < 24) return "--°/--°";
 
@@ -563,28 +522,24 @@ async function loadProvinceDetails(locationId, cityName, lat, lon) {
         return `${minTemp}°/${maxTemp}°`;
     }
 
-// === HÀM TIỆN ÍCH chuyển đổi thoi gian ===
-/**
- * Hàm chuyển đổi thời gian ISO (2023-11-01T06:05) sang giờ phút (06:05 AM)
- */
+// ===  chuyển đổi thoi gian ===
+
 function formatTime(isoString) {
     if (!isoString) return '--:--';
     const date = new Date(isoString);
     // Format theo kiểu 12 giờ (AM/PM)
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
-// Chờ cho toàn bộ HTML tải xong mới chạy
+
 document.addEventListener('DOMContentLoaded', () => {
     // Dữ liệu giả lập (thay cho dữ liệu thật từ API)
     if (typeof LOCATION_ID !== 'undefined' && LOCATION_ID && typeof LAT !== 'undefined' && typeof LON !== 'undefined') {
         loadProvinceDetails(LOCATION_ID, CITY_NAME, LAT, LON);
     }
-    // //////////////////////////////////////////////////////////////////////////////
-    // Đăng ký plugin datalabels cho tất cả biểu đồ
+
     Chart.register(ChartDataLabels);
 
-    // Giữ biểu đồ 12h tới & lượng mưa theo dữ liệu placeholder hiện tại
-    // (biểu đồ min/max 5 ngày sẽ vẽ lazy sau khi API daily_forecast trả về)
+
     const hourlyLabels = ['16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00', '00:00', '01:00', '02:00', '03:00'];
     const hourlyTemps = [27, 25, 24, 23, 20, 21, 21, 21, 21, 21, 21, 20];
     const hourlyRain = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -682,9 +637,7 @@ function drawDailyMinMaxChart(labels, minData, maxData) {
     });
 }
 
-// ==========================================================
-// HÀM VẼ BIỂU ĐỒ 1: #hourlyChart
-// ==========================================================
+
 function drawHourlyChart(labels, tempData, rainData) {
     const ctx = document.getElementById('hourlyChart');
     if (!ctx) return;
@@ -722,13 +675,10 @@ function drawHourlyChart(labels, tempData, rainData) {
                 }
             ]
         },
-        options: sharedLineChartOptions() // Dùng chung options
+        options: sharedLineChartOptions()
     });
 }
 
-// ==========================================================
-// HÀM VẼ BIỂU ĐỒ 2: #dailyWeatherChart
-// ==========================================================
 function drawDailyWeatherChart(labels, tempData, rainData) {
     const ctx = document.getElementById('dailyWeatherChart');
     if (!ctx) return;
@@ -766,13 +716,10 @@ function drawDailyWeatherChart(labels, tempData, rainData) {
                 }
             ]
         },
-        options: sharedLineChartOptions() // Dùng chung options
+        options: sharedLineChartOptions()
     });
 }
 
-// ==========================================================
-// HÀM VẼ BIỂU ĐỒ 3: #dailyRainChart (Bar Chart)
-// ==========================================================
 function drawDailyRainChart(labels, data) {
     const ctx = document.getElementById('dailyRainChart');
     if (!ctx) return;
@@ -821,9 +768,7 @@ function drawDailyRainChart(labels, data) {
     });
 }
 
-// ==========================================================
-// HÀM CHIA SẺ OPTIONS CHO 2 BIỂU ĐỒ ĐƯỜNG
-// ==========================================================
+
 function sharedLineChartOptions() {
     return {
         responsive: true,
@@ -856,9 +801,6 @@ function sharedLineChartOptions() {
     };
 }
 
-// ==========================================================
-// HÀM VẼ BIỂU ĐỒ 12H: #hourlyChart12h (Nhiệt độ & Độ ẩm)
-// ==========================================================
 function drawHourlyChart12h(labels, tempData, humidityData) {
     const ctx = document.getElementById('hourlyChart12h');
     if (!ctx) return;
